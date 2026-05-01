@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Behaviour and Daily Functioning Questionnaire</title>
+    <style>
+        :root {
+            --primary: #0891b2;
+            --primary-dark: #0e7490;
+            --success: #16a34a;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --border: #e2e8f0;
+            --text: #1e293b;
+            --text-secondary: #64748b;
+            --warning: #f59e0b;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; padding: 20px; }
+        .container { max-width: 900px; margin: 0 auto; }
+        .header { background: var(--primary); color: white; padding: 30px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .header h1 { margin-bottom: 5px; font-size: 26px; font-weight: 600; }
+        .header p { font-size: 14px; opacity: 0.95; margin: 3px 0; }
+        .submission-box { background: #cffafe; border: 2px solid #06b6d4; padding: 20px; margin-bottom: 20px; border-radius: 8px; }
+        .submission-box h3 { color: #0e7490; margin-bottom: 10px; font-size: 16px; display: flex; align-items: center; gap: 8px; }
+        .submission-box ul { margin-left: 20px; margin-top: 8px; }
+        .submission-box li { margin: 5px 0; color: #0e7490; font-size: 14px; }
+        .disclaimer-box { background: #fef3c7; border-left: 4px solid #f59e0b; padding: 18px; margin-bottom: 20px; border-radius: 4px; font-size: 14px; }
+        .disclaimer-box strong { color: #92400e; font-size: 15px; }
+        .info-box { background: #ecfeff; border-left: 4px solid var(--primary); padding: 16px; margin-bottom: 16px; border-radius: 4px; font-size: 14px; }
+        .warning-box { background: #fff7ed; border-left: 4px solid #ea580c; padding: 15px; margin-bottom: 20px; border-radius: 4px; }
+        .progress-bar { background: var(--border); height: 8px; border-radius: 4px; overflow: hidden; margin-bottom: 30px; }
+        .progress-fill { background: var(--success); height: 100%; transition: width 0.3s ease; }
+        .progress-text { text-align: center; margin-bottom: 10px; color: var(--text-secondary); font-size: 14px; font-weight: 500; }
+        .card { background: var(--card-bg); padding: 24px; border-radius: 12px; margin-bottom: 24px; border: 1px solid var(--border); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .patient-info { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        .form-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 5px; font-weight: 500; color: var(--text); font-size: 14px; }
+        input[type="text"], input[type="email"], input[type="date"], input[type="number"] { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 15px; }
+        .question-item { margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid var(--border); }
+        .question-item:last-child { border-bottom: none; }
+        .question-text { font-weight: 500; margin-bottom: 10px; color: var(--text); font-size: 15px; }
+        .question-number { display: inline-block; background: var(--primary); color: white; min-width: 28px; height: 28px; border-radius: 50%; text-align: center; line-height: 28px; margin-right: 10px; font-size: 14px; font-weight: 600; padding: 0 8px; }
+        .radio-group { display: flex; gap: 20px; flex-wrap: wrap; }
+        .radio-option { display: flex; align-items: center; gap: 6px; padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px; cursor: pointer; transition: all 0.2s; }
+        .radio-option:hover { background: #ecfeff; border-color: var(--primary); }
+        .radio-option input[type="radio"] { width: 18px; height: 18px; cursor: pointer; }
+        .radio-option label { margin: 0; cursor: pointer; font-weight: normal; font-size: 14px; }
+        .scale-labels { display: flex; justify-content: space-between; margin-bottom: 15px; padding: 12px; background: #ecfeff; border-radius: 6px; font-size: 13px; color: var(--text-secondary); font-weight: 500; }
+        .button-group { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 24px; }
+        button { padding: 12px 24px; border: none; border-radius: 6px; font-size: 15px; font-weight: 500; cursor: pointer; transition: all 0.2s; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { background: var(--primary-dark); }
+        .btn-success { background: var(--success); color: white; }
+        .btn-success:hover { opacity: 0.9; }
+        .btn-secondary { background: var(--border); color: var(--text); }
+        .btn-secondary:hover { background: #cbd5e1; }
+        .hidden { display: none; }
+        #exportSection { background: #f0fdf4; border: 2px solid var(--success); padding: 25px; border-radius: 12px; margin-top: 30px; }
+        .validation-error { background: #fee2e2; border: 1px solid #dc2626; color: #991b1b; padding: 15px; border-radius: 6px; font-size: 14px; margin-top: 20px; }
+        .completion-message { background: white; padding: 20px; border-radius: 6px; margin: 20px 0; text-align: center; }
+        .completion-message h3 { color: var(--success); margin-bottom: 10px; font-size: 20px; }
+        @media (max-width: 768px) {
+            body { padding: 10px; }
+            .header { padding: 20px; }
+            .card { padding: 16px; }
+            .scale-labels { flex-direction: column; gap: 5px; }
+            .radio-group { flex-direction: column; }
+            .button-group { flex-direction: column; }
+            .button-group button { width: 100%; }
+        }
+        .form-nav { display: flex; gap: 12px; flex-wrap: wrap; justify-content: space-between; align-items: center; margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--border); }
+        .nav-btn { display: inline-block; padding: 11px 20px; border-radius: 6px; font-size: 14px; font-weight: 500; text-decoration: none; transition: all 0.2s; }
+        .nav-btn-back { background: var(--border); color: var(--text); }
+        .nav-btn-back:hover { background: #cbd5e1; }
+        .nav-btn-next { background: var(--success); color: white; }
+        .nav-btn-next:hover { opacity: 0.9; }
+        .recorded-badge { display: inline-flex; align-items: center; gap: 6px; background: #f0fdf4; border: 1px solid #86efac; color: #166534; font-size: 13px; padding: 6px 14px; border-radius: 20px; margin-top: 12px; font-weight: 500; opacity: 0; pointer-events: none; }
+        .question-item.skipped { background: #fff5f5; border-left: 3px solid #dc2626; padding-left: 12px; border-radius: 4px; }
+        @keyframes answeredFlash { 0% { background: #dcfce7; } 100% { background: transparent; } }
+        .question-item.just-answered { animation: answeredFlash 0.8s ease-out; }
+        @keyframes badgePop { 0% { opacity: 0; transform: translateY(4px); } 15% { opacity: 1; transform: translateY(0); } 80% { opacity: 1; } 100% { opacity: 0; } }
+        .recorded-badge.flashing { animation: badgePop 2.5s ease-out forwards; }
+        .bottom-progress { text-align: center; margin-top: 16px; padding: 10px; background: #f1f5f9; border-radius: 6px; font-size: 14px; color: var(--text-secondary); font-weight: 500; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Behaviour and Daily Functioning Questionnaire</h1>
+            <p>Self-Assessment of Daily Activities and Habits</p>
+            <p style="margin-top: 5px; font-size: 13px;">Self-Report Form</p>
+        </div>
+
+        <div class="submission-box">
+            <h3>📧 How to Submit Your Results</h3>
+            <p style="margin-bottom: 8px; font-size: 14px;">After completing this questionnaire, you'll be able to:</p>
+            <ul>
+                <li><strong>Email directly to Dr. Shah</strong> - Click a button to open your email app with pre-filled details</li>
+                <li><strong>Download and send yourself</strong> - Download the results file and email it to: <strong><a href="mailto:draanashah@protonmail.com">draanashah@protonmail.com</a></strong></li>
+            </ul>
+        </div>
+
+        <div class="disclaimer-box">
+            <strong>Important Notice:</strong><br>
+            This questionnaire is for <strong>information gathering purposes only</strong> and is not diagnostic. The responses you provide will be reviewed by your clinician as part of a comprehensive clinical assessment. Only a qualified healthcare professional can make diagnostic or treatment decisions. Please answer honestly based on your actual experiences.
+        </div>
+
+        <div class="info-box">
+            <strong>Privacy:</strong> All data is processed locally on your device. Nothing is sent anywhere until you choose to download and share your results file with your clinician.
+        </div>
+
+        <div class="info-box" style="background: #eff6ff; border-left: 4px solid #3b82f6;">
+            <strong>📝 Instructions:</strong> On the following pages is a list of statements about behaviors over the <strong>past month</strong>. Please answer all items the best you can. Indicate if each behavior is:
+            <ul style="margin-top: 8px; margin-left: 20px;">
+                <li><strong>Never</strong> a problem</li>
+                <li><strong>Sometimes</strong> a problem</li>
+                <li><strong>Often</strong> a problem</li>
+            </ul>
+        </div>
+
+        <div class="progress-text" id="progressText">0 of 75 items answered (75 skipped) (0%)</div>
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+        </div>
+
+        <div class="card">
+            <h2 style="margin-bottom: 20px; font-size: 20px;">Your Information</h2>
+            <div class="patient-info">
+                <div class="form-group">
+                    <label>Full Name *</label>
+                    <input type="text" id="patientName" placeholder="John Doe" required>
+                </div>
+                <div class="form-group">
+                    <label>Date of Birth *</label>
+                    <input type="date" id="dob" required>
+                </div>
+                <div class="form-group">
+                    <label>Completion Date</label>
+                    <input type="date" id="completionDate" readonly>
+                </div>
+            </div>
+            <input type="hidden" id="patientEmail" value="">
+            <input type="hidden" id="age" value="">
+            <input type="hidden" id="gender" value="Not specified">
+            <input type="hidden" id="yearsEducation" value="">
+            <input type="hidden" id="educationLevel" value="Not specified">
+        </div>
+
+        <div class="card">
+            <h2 style="margin-bottom: 15px; color: var(--primary); font-size: 20px;">BRIEF-A Items</h2>
+            
+            <div class="warning-box">
+                <strong>During the past month, how often has each of the following behaviors been a problem?</strong>
+            </div>
+
+            <div class="scale-labels">
+                <span><strong>N</strong> = Never</span>
+                <span><strong>S</strong> = Sometimes</span>
+                <span><strong>O</strong> = Often</span>
+            </div>
+
+            <div id="questions"></div>
+        </div>
+
+        <div class="button-group">
+            <button class="btn-secondary" onclick="saveProgress()">💾 Save Progress</button>
+            <button class="btn-primary" onclick="loadProgress()">📂 Load Saved Progress</button>
+            <button class="btn-success" onclick="validateAndExport()">✓ Complete Questionnaire</button>
+        </div>
+        <div class="bottom-progress" id="progressTextBottom">0 of 75 items answered (75 skipped) (0%)</div>
+        <div id="recordedBadge" class="recorded-badge">✓ Latest response recorded</div>
+
+        <div id="validationErrors" class="validation-error hidden"></div>
+
+        <div id="exportSection" class="hidden">
+            <h2 style="color: var(--success); margin-bottom: 20px; font-size: 22px;">✓ Questionnaire Complete</h2>
+            
+            <div class="completion-message">
+                <h3>Thank you for completing this questionnaire</h3>
+                <p style="margin-top: 10px; color: var(--text-secondary); font-size: 14px;">
+                    Your responses have been saved. Please send your results to Dr. Shah using one of the options below.
+                </p>
+            </div>
+
+            <div style="margin: 20px 0;">
+                <h3 style="font-size: 18px; margin-bottom: 15px;">Send Results to Dr. Shah:</h3>
+                <div class="button-group">
+                    <button class="btn-primary" onclick="emailToClinician()" style="font-size: 16px; padding: 14px 28px;">✉️ Email Results</button>
+                    <button class="btn-secondary" onclick="downloadJSON()" style="font-size: 16px; padding: 14px 28px;">⬇️ Download Results File</button>
+                </div>
+                <p style="margin-top: 15px; font-size: 13px; color: var(--text-secondary); padding: 12px; background: #f8fafc; border-radius: 6px;">
+                    <strong>Option 1:</strong> Click "Email Results" to open your email app with everything pre-filled. Just attach the file and send.<br>
+                    <strong>Option 2:</strong> Download the file and email it to <strong><a href="mailto:draanashah@protonmail.com">draanashah@protonmail.com</a></strong> yourself.
+                </p>
+            </div>
+        </div>
+        <div class="form-nav">
+            <a href="index.html" class="nav-btn nav-btn-back">← All questionnaires</a>
+            <a href="cbs_patient_self_FINAL.html" class="nav-btn nav-btn-next">Next: Behaviour Questionnaire →</a>
+        </div>
+    </div>
+
+    <script>
+        /*
+         * Script Organization
+         * 1) CONFIG
+         * 2) HELPERS
+         * 3) IMPORT/EXPORT
+         * 4) SCORING
+         * 5) UI MAPPING
+         * 6) EVENT LISTENERS
+         */
+
+        // ====================
+        // CONFIG
+        // ====================
+        const CLINIC_MASTER_KEY = "Key123"; // must match clinician tool exactly
+        const IDENTITY_KEY = 'adhd_patient_identity';
+
+        function saveIdentity() {
+            const name = document.getElementById('patientName').value;
+            const dob = document.getElementById('dob').value;
+            if (name || dob) localStorage.setItem(IDENTITY_KEY, JSON.stringify({patientName: name, dob: dob}));
+        }
+
+        function loadIdentity() {
+            const saved = localStorage.getItem(IDENTITY_KEY);
+            if (!saved) return;
+            try {
+                const id = JSON.parse(saved);
+                const nameEl = document.getElementById('patientName');
+                const dobEl = document.getElementById('dob');
+                if (id.patientName && nameEl && !nameEl.value) nameEl.value = id.patientName;
+                if (id.dob && dobEl && !dobEl.value) { dobEl.value = id.dob; syncDerivedDemographics(); }
+            } catch(e) {}
+        }
+
+        // BRIEF-A Items (all 75 items)
+        const items = [
+            {id: 1, text: "I have angry outbursts", validity: false},
+            {id: 2, text: "I make careless errors when completing tasks", validity: false},
+            {id: 3, text: "I am disorganized", validity: false},
+            {id: 4, text: "I have trouble concentrating on tasks (such as chores, reading, or work)", validity: false},
+            {id: 5, text: "I tap my fingers or bounce my legs", validity: false},
+            {id: 6, text: "I need to be reminded to begin a task even when I am willing", validity: false},
+            {id: 7, text: "I have a messy closet", validity: false},
+            {id: 8, text: "I have trouble changing from one activity or task to another", validity: false},
+            {id: 9, text: "I get overwhelmed by large tasks", validity: false},
+            {id: 10, text: "I forget my name", validity: true},
+            {id: 11, text: "I have trouble with jobs or tasks that have more than one step", validity: false},
+            {id: 12, text: "I overreact emotionally", validity: false},
+            {id: 13, text: "I don't notice when I cause others to feel bad or get mad until it is too late", validity: false},
+            {id: 14, text: "I have trouble getting ready for the day", validity: false},
+            {id: 15, text: "I have trouble prioritizing activities", validity: false},
+            {id: 16, text: "I have trouble sitting still", validity: false},
+            {id: 17, text: "I forget what I am doing in the middle of things", validity: false},
+            {id: 18, text: "I don't check my work for mistakes", validity: false},
+            {id: 19, text: "I have emotional outbursts for little reason", validity: false},
+            {id: 20, text: "I lie around the house a lot", validity: false},
+            {id: 21, text: "I start tasks (such as cooking, projects) without the right materials", validity: false},
+            {id: 22, text: "I have trouble accepting different ways to solve problems with work, friends or tasks", validity: false},
+            {id: 23, text: "I talk at the wrong time", validity: false},
+            {id: 24, text: "I misjudge how difficult or easy tasks will be", validity: false},
+            {id: 25, text: "I have problems getting started on my own", validity: false},
+            {id: 26, text: "I have trouble staying on the same topic when talking", validity: false},
+            {id: 27, text: "I get tired", validity: false},
+            {id: 28, text: "I react more emotionally to situations than my friends", validity: false},
+            {id: 29, text: "I have problems waiting my turn", validity: false},
+            {id: 30, text: "People say that I am disorganized", validity: false},
+            {id: 31, text: "I lose things (such as keys, money, wallet, homework, etc.)", validity: false},
+            {id: 32, text: "I have trouble thinking of a different way to solve a problem when stuck", validity: false},
+            {id: 33, text: "I overreact to small problems", validity: false},
+            {id: 34, text: "I don't plan ahead for future activities", validity: false},
+            {id: 35, text: "I have a short attention span", validity: false},
+            {id: 36, text: "I make inappropriate sexual comments", validity: false},
+            {id: 37, text: "When people seem upset with me, I don't understand why", validity: false},
+            {id: 38, text: "I have trouble counting to three", validity: true},
+            {id: 39, text: "I have unrealistic goals", validity: false},
+            {id: 40, text: "I leave the bathroom a mess", validity: false},
+            {id: 41, text: "I make careless mistakes", validity: false},
+            {id: 42, text: "I get emotionally upset easily", validity: false},
+            {id: 43, text: "I make decisions that get me into trouble (legally, financially, socially)", validity: false},
+            {id: 44, text: "I am bothered by having to deal with changes", validity: false},
+            {id: 45, text: "I have difficulty getting excited about things", validity: false},
+            {id: 46, text: "I forget instructions easily", validity: false},
+            {id: 47, text: "I have good ideas but cannot get them on paper", validity: false},
+            {id: 48, text: "I make mistakes", validity: false},
+            {id: 49, text: "I have trouble getting started on tasks", validity: false},
+            {id: 50, text: "I say things without thinking", validity: false},
+            {id: 51, text: "My anger is intense but ends quickly", validity: false},
+            {id: 52, text: "I have trouble finishing tasks (such as chores, work)", validity: false},
+            {id: 53, text: "I start things at the last minute (such as assignments, chores, tasks)", validity: false},
+            {id: 54, text: "I have difficulty finishing a task on my own", validity: false},
+            {id: 55, text: "People say that I am easily distracted", validity: false},
+            {id: 56, text: "I have trouble remembering things, even for a few minutes (such as directions, phone numbers)", validity: false},
+            {id: 57, text: "People say that I am too emotional", validity: false},
+            {id: 58, text: "I rush through things", validity: false},
+            {id: 59, text: "I get annoyed", validity: false},
+            {id: 60, text: "I leave my room or home a mess", validity: false},
+            {id: 61, text: "I get disturbed by unexpected changes in my daily routine", validity: false},
+            {id: 62, text: "I have trouble coming up with ideas for what to do with my free time", validity: false},
+            {id: 63, text: "I don't plan ahead for tasks", validity: false},
+            {id: 64, text: "People say I don't think before acting", validity: false},
+            {id: 65, text: "I have trouble finding things in my room, closet, or desk", validity: false},
+            {id: 66, text: "I have problems organizing activities", validity: false},
+            {id: 67, text: "After having a problem, I don't get over it easily", validity: false},
+            {id: 68, text: "I have trouble doing more than one thing at a time", validity: false},
+            {id: 69, text: "My mood changes frequently", validity: false},
+            {id: 70, text: "I don't think about the consequences before doing something", validity: false},
+            {id: 71, text: "I have trouble organizing work", validity: false},
+            {id: 72, text: "I get upset quickly or easily over little things", validity: false},
+            {id: 73, text: "I am impulsive", validity: false},
+            {id: 74, text: "I don't pick up after myself", validity: false},
+            {id: 75, text: "I have problems completing my work", validity: false}
+        ];
+
+        // ====================
+        // UI MAPPING
+        // ====================
+        function renderQuestions() {
+            const container = document.getElementById('questions');
+            items.forEach(function(item) {
+                const div = document.createElement('div');
+                div.className = 'question-item';
+                div.id = 'qitem_q' + item.id;
+
+                let html = '<div class="question-text">';
+                html += '<span class="question-number">' + item.id + '</span>';
+                html += item.text;
+                html += '</div>';
+                html += '<div class="radio-group">';
+
+                const options = [
+                    {value: 1, label: 'N - Never'},
+                    {value: 2, label: 'S - Sometimes'},
+                    {value: 3, label: 'O - Often'}
+                ];
+
+                options.forEach(function(opt) {
+                    html += '<div class="radio-option">';
+                    html += '<input type="radio" name="q' + item.id + '" value="' + opt.value + '" id="q' + item.id + '_' + opt.value + '" onchange="onQuestionChange(this)">';
+                    html += '<label for="q' + item.id + '_' + opt.value + '">' + opt.label + '</label>';
+                    html += '</div>';
+                });
+                
+                html += '</div>';
+                
+                div.innerHTML = html;
+                container.appendChild(div);
+            });
+        }
+
+        // ====================
+        // EVENT LISTENERS
+        // ====================
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('completionDate').valueAsDate = new Date();
+            const dobEl = document.getElementById('dob');
+            if (dobEl) dobEl.addEventListener('change', syncDerivedDemographics);
+            renderQuestions();
+            loadAutoSave();
+            loadIdentity();
+            document.getElementById('patientName').addEventListener('input', saveIdentity);
+            document.getElementById('dob').addEventListener('change', saveIdentity);
+        });
+
+        // ====================
+        // HELPERS
+        // ====================
+        function calculateAgeFromDOB(dobValue) {
+            if (!dobValue) return null;
+            const dob = new Date(dobValue);
+            if (isNaN(dob.getTime())) return null;
+            const today = new Date();
+            let age = today.getFullYear() - dob.getFullYear();
+            const monthDiff = today.getMonth() - dob.getMonth();
+            if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
+                age--;
+            }
+            return age >= 0 ? age : null;
+        }
+
+        function syncDerivedDemographics() {
+            const dobEl = document.getElementById('dob');
+            const ageEl = document.getElementById('age');
+            if (!dobEl || !ageEl) return;
+            const derivedAge = calculateAgeFromDOB(dobEl.value);
+            ageEl.value = derivedAge !== null ? String(derivedAge) : '';
+        }
+
+        let _hasValidated = false;
+
+        function onQuestionChange(radioEl) {
+            if (_hasValidated) {
+                const item = radioEl.closest('.question-item');
+                if (item) {
+                    item.classList.remove('skipped');
+                    item.classList.remove('just-answered');
+                    void item.offsetWidth;
+                    item.classList.add('just-answered');
+                }
+            }
+            updateProgress();
+        }
+
+        function highlightSkipped() {
+            for (let i = 1; i <= 75; i++) {
+                const item = document.getElementById('qitem_q' + i);
+                if (!item) continue;
+                item.classList.toggle('skipped', !document.querySelector('input[name="q' + i + '"]:checked'));
+            }
+        }
+
+        function updateProgress() {
+            autoSave();
+            let completed = 0;
+            const required = 75;
+            for (let i = 1; i <= 75; i++) {
+                if (document.querySelector('input[name="q' + i + '"]:checked')) completed++;
+            }
+            const skipped = required - completed;
+            const percent = Math.round((completed / required) * 100);
+            let progressText = completed + ' of ' + required + ' items answered';
+            if (skipped > 0) progressText += ' (' + skipped + ' skipped)';
+            progressText += ' (' + percent + '%)';
+            document.getElementById('progressText').textContent = progressText;
+            document.getElementById('progressFill').style.width = percent + '%';
+            const btm = document.getElementById('progressTextBottom');
+            if (btm) btm.textContent = progressText;
+            if (_hasValidated) highlightSkipped();
+        }
+
+        function getResponses() {
+            const responses = [];
+            for (let i = 1; i <= 75; i++) {
+                const selected = document.querySelector('input[name="q' + i + '"]:checked');
+                responses.push(selected ? parseInt(selected.value) : null);
+            }
+            return responses;
+        }
+
+        // Validity check
+        // ====================
+        // SCORING
+        // ====================
+        function checkValidity(responses) {
+            return window.ADHDScoring.brief.checkValidity(responses);
+        }
+
+        function calculateScales(responses) {
+            const age = parseInt(document.getElementById('age').value);
+            return window.ADHDScoring.brief.calculateScales(responses, {
+                age: age,
+                normativeTables: normativeTables,
+                confidenceIntervals: confidenceIntervals
+            });
+        }
+
+        // Normative tables for T-score conversion (ages 18-49) - FROM BRIEF-A MANUAL
+        const normativeTables = {
+            "18-29": {
+                "Inhibit": {8:36,9:40,10:43,11:46,12:50,13:53,14:57,15:60,16:63,17:67,18:70,19:74,20:77,21:80,22:84,23:87,24:91},
+                "Shift": {6:39,7:43,8:47,9:51,10:56,11:60,12:64,13:69,14:73,15:77,16:81,17:86,18:90},
+                "Emotional Control": {10:38,11:40,12:43,13:45,14:47,15:49,16:51,17:54,18:56,19:58,20:60,21:63,22:65,23:67,24:69,25:72,26:74,27:76,28:78,29:80,30:83},
+                "Self-Monitor": {6:37,7:42,8:46,9:50,10:54,11:59,12:63,13:67,14:72,15:76,16:80,18:89},
+                "Initiate": {8:37,9:40,10:43,11:47,12:50,13:53,14:56,15:60,16:63,17:66,18:69,19:73,20:76,21:79,22:82,23:85,24:89},
+                "Working Memory": {8:39,9:43,10:46,11:49,12:53,13:56,14:59,15:63,16:66,17:69,18:73,19:76,20:79,21:83,22:86,23:89,24:93},
+                "Plan/Organize": {10:38,11:41,12:44,13:46,14:49,15:52,16:54,17:57,18:60,19:62,20:65,21:68,22:70,23:73,24:76,25:78,26:81,27:84,28:86,29:89,30:92},
+                "Task Monitor": {6:36,7:45,8:45,9:50,10:54,11:59,12:63,13:68,14:72,15:77,16:81,17:86,18:90},
+                "Organization of Materials": {8:36,9:39,10:42,11:45,12:47,13:50,14:53,15:56,16:58,17:61,18:64,19:67,20:69,21:72,22:75,23:78,24:81},
+                "BRI": {30:35,31:36,32:37,33:38,34:39,35:40,36:41,37:42,38:43,39:44,40:45,41:46,42:47,43:48,44:49,45:50,46:51,47:52,48:53,49:54,50:55,51:56,52:57,53:58,54:59,55:60,56:61,57:62,58:63,59:64,60:65,61:66,62:67,63:68,64:69,65:70,66:71,67:72,68:73,69:74,70:75,71:76,72:77,73:78,74:79,75:80,76:81,77:82,78:83,79:84,80:85,81:86,82:87,83:88,84:89,85:90,86:91,87:92,88:93,89:94,90:95},
+                "MI": {40:39,45:44,50:50,55:56,60:62,65:68,70:73,75:79,80:85,85:88,90:73,91:73,92:74,93:75,94:76,95:76,96:77,97:78,98:79,99:79,100:80,101:81,102:82,103:82,104:83,105:84,106:85,107:85,108:86,109:87,110:88,111:88,112:89,113:90,114:91,115:91,116:92,117:93,118:94,119:94,120:95},
+                "GEC": {70:39,71:35,72:35,73:35,74:36,75:36,76:37,77:37,78:38,79:38,80:39,81:39,82:40,83:40,84:41,85:41,86:41,87:42,88:42,89:43,90:43,91:44,92:44,93:45,94:45,95:46,96:46,97:47,98:47,99:47,100:48,101:48,102:49,103:49,104:50,105:50,106:51,107:51,108:52,109:52,110:53,111:53,112:53,113:54,114:54,115:55,116:55,117:56,118:56,119:57,120:57,121:58,122:58,123:59,124:59,125:59,126:60,127:60,128:61,129:61,130:62,131:62,132:63,133:63,134:64,135:64,136:65,137:65,138:65,139:66,140:66,141:67,142:67,143:68,144:68,145:68,146:69,147:70,148:70,149:71,150:71,151:71,152:72,153:72,154:73,155:73,156:74,157:74,158:75,159:75,160:76,161:76,162:77,163:77,164:77,165:78,166:78,167:79,168:79,169:80,170:80,171:81,172:81,173:82,174:82,175:83,176:83,177:83,178:84,179:84,180:85,181:85,182:86,183:86,184:87,185:87,186:88,187:88,188:89,189:89,190:89,191:90,192:90,193:91,194:91,195:92,196:92,197:93,198:93,199:94,200:94,201:95,202:95,203:95,204:96,205:96,206:97,207:97,208:98,209:98,210:99}
+            },
+            "30-39": {
+                "Inhibit": {8:37,9:41,10:44,11:48,12:51,13:55,14:58,15:61,16:65,17:68,18:71,19:75,20:78,21:82,22:85,23:88,24:92},
+                "Shift": {6:39,7:43,8:48,9:52,10:56,11:61,12:65,13:69,14:74,15:78,16:83,17:87,18:91},
+                "Emotional Control": {10:38,11:41,12:43,13:46,14:48,15:50,16:53,17:55,18:57,19:60,20:62,21:64,22:67,23:69,24:71,25:74,26:76,27:79,28:81,29:83,30:86},
+                "Self-Monitor": {6:37,7:42,8:46,9:51,10:55,11:59,12:64,13:68,14:72,15:77,16:81,17:86,18:90},
+                "Initiate": {8:37,9:41,10:44,11:47,12:51,13:54,14:57,15:61,16:64,17:68,18:71,19:74,20:78,21:81,22:84,23:88,24:91},
+                "Working Memory": {8:39,9:43,10:46,11:50,12:53,13:57,14:60,15:64,16:67,17:71,18:74,19:78,20:81,21:85,22:88,23:91,24:95},
+                "Plan/Organize": {10:39,11:42,12:44,13:47,14:50,15:53,16:55,17:58,18:61,19:64,20:66,21:69,22:72,23:75,24:77,25:80,26:83,27:86,28:88,29:91,30:94},
+                "Task Monitor": {6:37,7:42,8:46,9:51,10:56,11:60,12:65,13:69,14:74,15:79,16:83,17:88,18:93},
+                "Organization of Materials": {8:37,9:40,10:43,11:45,12:48,13:51,14:54,15:57,16:60,17:63,18:66,19:69,20:71,21:74,22:77,23:80,24:83},
+                "BRI": {30:35,31:37,32:38,33:39,34:40,35:41,36:42,37:43,38:44,39:45,40:46,41:47,42:48,43:49,44:50,45:51,46:52,47:53,48:54,49:55,50:56,51:57,52:58,53:59,54:60,55:61,56:62,57:63,58:64,59:65,60:66,61:68,62:69,63:70,64:71,65:72,66:73,67:74,68:75,69:76,70:77,71:78,72:79,73:80,74:81,75:82,76:83,77:84,78:85,79:86,80:87,81:88,82:89,83:90,84:91,85:92,86:93,87:94,88:95,89:96,90:97,91:75,92:76,93:77,94:78,95:78,96:79,97:80,98:81,99:82,100:82,101:83,102:84,103:85,104:85,105:86,106:87,107:88,108:88,109:89,110:90,111:91,112:92,113:92,114:93,115:94,116:95,117:95,118:96,119:97,120:98},
+                "MI": {30:36,31:37,32:38,33:39,34:40,35:41,36:42,37:43,38:44,39:45,40:46,41:47,42:48,43:49,44:50,45:51,46:52,47:53,48:54,49:55,50:56,51:57,52:58,53:59,54:61,55:61,56:61,57:61,58:61,59:65,60:65,61:68,62:68,63:69,64:71,65:71,66:73,67:74,68:75,69:76,70:77,71:78,72:79,73:80,74:81,75:82,76:83,77:84,78:85,79:86,80:87,81:88,82:89,83:90,84:91,85:92,86:93,87:94,88:95,89:96,90:97,91:75,92:76,93:77,94:78,95:78,96:79,97:80,98:81,99:82,100:82,101:83,102:84,103:85,104:85,105:86,106:87,107:88,108:88,109:89,110:90,111:91,112:92,113:92,114:93,115:94,116:95,117:95,118:96,119:97,120:98},
+                "GEC": {70:35,71:35,72:35,73:36,74:36,75:37,76:37,77:38,78:38,79:39,80:39,81:40,82:40,83:41,84:41,85:42,86:42,87:43,88:43,89:44,90:44,91:45,92:45,93:46,94:46,95:46,96:47,97:47,98:48,99:48,100:49,101:49,102:50,103:50,104:51,105:51,106:52,107:52,108:53,109:53,110:54,111:54,112:55,113:55,114:56,115:56,116:57,117:57,118:57,119:58,120:58,121:59,122:59,123:60,124:60,125:61,126:61,127:62,128:62,129:63,130:63,131:64,132:64,133:65,134:65,135:66,136:66,137:67,138:67,139:68,140:68,141:68,142:69,143:69,144:70,145:70,146:71,147:71,148:72,149:72,150:73,151:73,152:74,153:74,154:75,155:75,156:76,157:76,158:77,159:77,160:78,161:78,162:79,163:79,164:80,165:80,166:80,167:81,168:81,169:82,170:82,171:83,172:83,173:84,174:84,175:85,176:85,177:86,178:86,179:87,180:87,181:88,182:88,183:89,184:89,185:90,186:90,187:90,188:91,189:91,190:92,191:92,192:93,193:93,194:94,195:94,196:95,197:95,198:96,199:96,200:97,201:97,202:98,203:98,204:99,205:99,206:100,207:100,208:100,209:101,210:101}
+            },
+            "40-49": {
+                "Inhibit": {8:38,9:42,10:45,11:49,12:52,13:55,14:59,15:62,16:66,17:69,18:73,19:76,20:79,21:83,22:86,23:90,24:93},
+                "Shift": {6:39,7:44,8:48,9:53,10:57,11:61,12:66,13:70,14:76,15:79,16:84,17:88,18:93},
+                "Emotional Control": {10:39,11:41,12:44,13:46,14:49,15:51,16:54,17:56,18:59,19:61,20:64,21:66,22:69,23:71,24:74,25:76,26:79,27:81,28:84,29:86,30:89},
+                "Self-Monitor": {6:37,7:42,8:46,9:51,10:55,11:60,12:64,13:69,14:73,15:78,16:82,17:87,18:91},
+                "Initiate": {8:38,9:41,10:45,11:48,12:52,13:55,14:59,15:62,16:66,17:69,18:73,19:76,20:80,21:83,22:87,23:90,24:94},
+                "Working Memory": {8:40,9:43,10:47,11:50,12:54,13:58,14:61,15:65,16:68,17:72,18:76,19:79,20:83,21:86,22:90,23:94,24:97},
+                "Plan/Organize": {10:39,11:42,12:45,13:48,14:51,15:53,16:56,17:59,18:62,19:65,20:68,21:71,22:74,23:76,24:79,25:82,26:85,27:88,28:91,29:94,30:97},
+                "Task Monitor": {6:38,7:42,8:47,9:52,10:57,11:61,12:66,13:71,14:76,15:80,16:85,17:90,18:95},
+                "Organization of Materials": {8:37,9:40,10:43,11:46,12:49,13:52,14:55,15:59,16:62,17:65,18:68,19:71,20:74,21:77,22:80,23:83,24:86},
+                "BRI": {30:36,31:37,32:38,33:39,34:40,35:41,36:42,37:43,38:45,39:46,40:47,41:48,42:49,43:50,44:51,45:52,46:53,47:54,48:55,49:56,50:57,51:59,52:60,53:61,54:62,55:63,56:64,57:65,58:66,59:67,60:68,61:69,62:70,63:71,64:72,65:74,66:75,67:76,68:77,69:78,70:79,71:80,72:81,73:82,74:83,75:84,76:85,77:86,78:88,79:89,80:90,81:91,82:92,83:93,84:94,85:95,86:96,87:97,88:98,89:99,90:100},
+                "MI": {36:36,37:37,38:38,39:39,40:40,41:41,42:42,43:43,44:44,45:45,46:46,47:47,48:48,49:49,50:50,51:51,52:52,53:53,54:54,55:55,56:56,57:57,58:51,59:51,60:52,61:53,62:54,63:55,64:56,65:56,66:57,67:58,68:59,69:60,70:60,71:61,72:62,73:63,74:64,75:64,76:65,77:66,78:67,79:68,80:68,81:69,82:70,83:71,84:72,85:72,86:73,87:74,88:75,89:76,90:77,91:77,92:78,93:79,94:80,95:81,96:81,97:82,98:83,99:84,100:85,101:85,102:86,103:87,104:88,105:89,106:89,107:90,108:91,109:92,110:93,111:93,112:94,113:95,114:96,115:97,116:97,117:98,118:99,119:100,120:101},
+                "GEC": {70:35,71:35,72:36,73:36,74:36,75:37,76:38,77:38,78:39,79:39,80:40,81:40,82:41,83:41,84:42,85:42,86:43,87:43,88:43,89:44,90:45,91:45,92:46,93:46,94:47,95:47,96:48,97:48,98:49,99:49,100:50,101:50,102:51,103:51,104:52,105:52,106:53,107:53,108:54,109:54,110:55,111:55,112:56,113:56,114:57,115:57,116:58,117:58,118:59,119:59,120:60,121:60,122:61,123:61,124:62,125:62,126:63,127:63,128:64,129:64,130:65,131:65,132:66,133:66,134:67,135:67,136:68,137:68,138:69,139:69,140:70,141:70,142:71,143:71,144:72,145:72,146:73,147:73,148:74,149:74,150:75,151:75,152:76,153:76,154:77,155:77,156:78,157:78,158:79,159:79,160:80,161:80,162:81,163:81,164:82,165:82,166:83,167:83,168:84,169:84,170:85,171:85,172:86,173:86,174:87,175:87,176:88,177:88,178:89,179:89,180:90,181:90,182:91,183:91,184:92,185:92,186:93,187:93,188:94,189:94,190:95,191:95,192:95,193:96,194:96,195:97,196:97,197:98,198:98,199:99,200:99,201:100,202:100,203:101,204:101,205:102,206:102,207:103,208:103,209:104,210:104}
+            }
+        };
+
+        function getAgeGroup(age) {
+            if (age >= 18 && age <= 29) return '18-29';
+            if (age >= 30 && age <= 39) return '30-39';
+            if (age >= 40 && age <= 49) return '40-49';
+            return null;
+        }
+
+        function lookupTScore(ageGroup, scale, rawScore) {
+            const table = normativeTables[ageGroup]?.[scale];
+            if (!table || rawScore === null) return null;
+            
+            // Direct lookup if exact match
+            if (table[rawScore]) return table[rawScore];
+            
+            // Interpolation between values
+            const keys = Object.keys(table).map(Number).sort((a,b) => a - b);
+            
+            // Below range
+            if (rawScore <= keys[0]) return table[keys[0]];
+            
+            // Above range
+            if (rawScore >= keys[keys.length - 1]) return table[keys[keys.length - 1]];
+            
+            // Interpolate between two values
+            for (let i = 0; i < keys.length - 1; i++) {
+                if (rawScore > keys[i] && rawScore < keys[i + 1]) {
+                    const lower = table[keys[i]];
+                    const upper = table[keys[i + 1]];
+                    const ratio = (rawScore - keys[i]) / (keys[i + 1] - keys[i]);
+                    return Math.round(lower + ratio * (upper - lower));
+                }
+            }
+            
+            return null;
+        }
+
+        // Convert T-score to Percentile Rank
+        // Uses cumulative normal distribution approximation
+        function tScoreToPercentile(tScore) {
+            if (tScore === null) return null;
+            
+            // T-score has mean=50, SD=10
+            // Convert to z-score: z = (T - 50) / 10
+            const z = (tScore - 50) / 10;
+            
+            // Cumulative normal distribution approximation
+            const t = 1 / (1 + 0.2316419 * Math.abs(z));
+            const d = 0.3989423 * Math.exp(-z * z / 2);
+            const probability = d * t * (0.3193815 + t * (-0.3565638 + t * (1.781478 + t * (-1.821256 + t * 1.330274))));
+            
+            let percentile;
+            if (z >= 0) {
+                percentile = (1 - probability) * 100;
+            } else {
+                percentile = probability * 100;
+            }
+            
+            return Math.round(percentile);
+        }
+
+        // 90% Confidence Interval (CI) values from manual
+        const confidenceIntervals = {
+            "18-29": {
+                "Inhibit": 8, "Shift": 8, "Emotional Control": 5, "Self-Monitor": 8,
+                "Initiate": 8, "Working Memory": 7, "Plan/Organize": 7,
+                "Task Monitor": 9, "Organization of Materials": 6,
+                "BRI": 4, "MI": 4, "GEC": 3
+            },
+            "30-39": {
+                "Inhibit": 8, "Shift": 8, "Emotional Control": 5, "Self-Monitor": 7,
+                "Initiate": 7, "Working Memory": 7, "Plan/Organize": 6,
+                "Task Monitor": 7, "Organization of Materials": 7,
+                "BRI": 5, "MI": 4, "GEC": 3
+            },
+            "40-49": {
+                "Inhibit": 9, "Shift": 8, "Emotional Control": 5, "Self-Monitor": 8,
+                "Initiate": 8, "Working Memory": 8, "Plan/Organize": 6,
+                "Task Monitor": 9, "Organization of Materials": 7,
+                "BRI": 5, "MI": 4, "GEC": 3
+            }
+        };
+
+        function getClinicalInterpretation(tScore, scaleName) {
+            if (tScore === null) return null;
+            
+            // T-score interpretation:
+            // T < 65: Average/Normal range
+            // T >= 65: Clinically Elevated (1.5 SD above mean)
+            // T >= 70: Highly Elevated (2 SD above mean)
+            
+            if (tScore >= 70) {
+                return {
+                    level: "Highly Elevated",
+                    description: `${scaleName} score indicates significant executive dysfunction (≥2 SD above mean)`,
+                    clinical_significance: true
+                };
+            } else if (tScore >= 65) {
+                return {
+                    level: "Elevated",
+                    description: `${scaleName} score indicates executive dysfunction (≥1.5 SD above mean)`,
+                    clinical_significance: true
+                };
+            } else {
+                return {
+                    level: "Average",
+                    description: `${scaleName} score is within normal limits`,
+                    clinical_significance: false
+                };
+            }
+        }
+
+        // ====================
+        // IMPORT/EXPORT
+        // ====================
+        function collectData() {
+            syncDerivedDemographics();
+            return {
+                patientName: document.getElementById('patientName').value,
+                patientEmail: document.getElementById('patientEmail').value,
+                age: document.getElementById('age').value,
+                dob: document.getElementById('dob').value,
+                gender: document.getElementById('gender').value,
+                yearsEducation: document.getElementById('yearsEducation').value,
+                educationLevel: document.getElementById('educationLevel').value,
+                completionDate: document.getElementById('completionDate').value,
+                responses: getResponses()
+            };
+        }
+
+        function autoSave() {
+            localStorage.setItem('briefa_autosave', JSON.stringify(collectData()));
+        }
+
+        function loadAutoSave() {
+            const saved = localStorage.getItem('briefa_autosave');
+            if (saved) {
+                const data = JSON.parse(saved);
+                if (confirm('Found saved progress. Continue where you left off?')) {
+                    loadData(data);
+                }
+            }
+        }
+
+        function flashBadge() {
+            const b = document.getElementById('recordedBadge');
+            if (!b) return;
+            b.classList.remove('flashing');
+            void b.offsetWidth;
+            b.classList.add('flashing');
+        }
+
+        function saveProgress() {
+            localStorage.setItem('briefa_manual', JSON.stringify(collectData()));
+            flashBadge();
+        }
+
+        function loadProgress() {
+            const saved = localStorage.getItem('briefa_manual');
+            if (saved) {
+                loadData(JSON.parse(saved));
+                alert('Progress loaded!');
+            } else {
+                alert('No saved progress found.');
+            }
+        }
+
+        function loadData(data) {
+            if (data.patientName) document.getElementById('patientName').value = data.patientName;
+            if (data.patientEmail && document.getElementById('patientEmail')) document.getElementById('patientEmail').value = data.patientEmail;
+            if (data.dob) document.getElementById('dob').value = data.dob;
+            if (data.age && document.getElementById('age')) document.getElementById('age').value = data.age;
+            if (data.gender && document.getElementById('gender')) document.getElementById('gender').value = data.gender;
+            if (data.yearsEducation && document.getElementById('yearsEducation')) document.getElementById('yearsEducation').value = data.yearsEducation;
+            if (data.educationLevel && document.getElementById('educationLevel')) document.getElementById('educationLevel').value = data.educationLevel;
+            syncDerivedDemographics();
+            
+            data.responses.forEach(function(val, idx) {
+                if (val !== null) {
+                    const radio = document.querySelector('input[name="q' + (idx+1) + '"][value="' + val + '"]');
+                    if (radio) radio.checked = true;
+                }
+            });
+            
+            updateProgress();
+        }
+
+        function validateAndExport() {
+            const data = collectData();
+            const errors = [];
+            const ageNum = parseInt(data.age, 10);
+            
+            if (!data.patientName) errors.push('Please enter your name');
+            if (!data.dob) errors.push('Please enter your date of birth');
+            if (!data.age || isNaN(ageNum) || ageNum < 18 || ageNum > 90) {
+                errors.push('Date of birth must correspond to an age between 18 and 90 years');
+            }
+            
+            if (errors.length > 0) {
+                const errorDiv = document.getElementById('validationErrors');
+                errorDiv.innerHTML = '<strong>Please complete:</strong><br>' + errors.join('<br>');
+                errorDiv.classList.remove('hidden');
+                errorDiv.scrollIntoView({behavior: 'smooth'});
+                return;
+            }
+            
+            const total = data.responses.length;
+            const skipped = data.responses.filter(function(x) { return x === null; }).length;
+            const skippedPercent = Math.round((skipped / total) * 100);
+            
+            if (skippedPercent > 10) {
+                const proceed = confirm('You have skipped ' + skipped + ' out of ' + total + ' questions (' + skippedPercent + '%).\n\nFor accurate results, it\'s recommended to answer at least 90% of questions.\n\nDo you want to continue anyway?');
+                if (!proceed) return;
+            }
+            
+            document.getElementById('validationErrors').classList.add('hidden');
+            _hasValidated = true;
+            highlightSkipped();
+
+            const exportData = {
+                toolVersion: "4.0",
+                dataType: "BRIEF_A",
+                patientName: data.patientName,
+                patientEmail: data.patientEmail,
+                age: data.age,
+                dob: data.dob,
+                gender: data.gender,
+                yearsEducation: data.yearsEducation,
+                educationLevel: data.educationLevel,
+                completionDate: data.completionDate,
+                completionStats: {
+                    totalQuestions: total,
+                    answered: total - skipped,
+                    skipped: skipped,
+                    completionPercent: 100 - skippedPercent
+                },
+                responses: data.responses
+            };
+            
+            document.getElementById('exportSection').classList.remove('hidden');
+            document.getElementById('exportSection').scrollIntoView({behavior: 'smooth'});
+            flashBadge();
+            window.exportData = exportData;
+        }
+
+        function downloadJSON() {
+            if (!window.exportData) {
+                alert('Please complete the form first.');
+                return;
+            }
+            try {
+                const dataStr = JSON.stringify(window.exportData);
+                const hash = CryptoJS.SHA256(dataStr).toString();
+                const ciphertext = CryptoJS.AES.encrypt(dataStr, CLINIC_MASTER_KEY).toString();
+                const envelope = JSON.stringify({v: 2, ciphertext: ciphertext, hash: hash});
+                const blob = new Blob([envelope], {type: 'text/plain'});
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = 'BRIEF_A_' + window.exportData.patientName.replace(/\s+/g, '_') + '_' + window.exportData.completionDate + '.enc';
+                link.click();
+                URL.revokeObjectURL(url);
+                alert('Secure file downloaded. Please email this .enc file to your clinician.');
+            } catch (e) {
+                alert('Encryption error. Please try again.');
+            }
+        }
+
+        function emailToClinician() {
+            const data = window.exportData;
+            const subject = encodeURIComponent('BRIEF-A Questionnaire - ' + data.patientName + ' - ' + data.completionDate);
+            const body = encodeURIComponent('Dear Dr. Shah,\n\nPlease find attached my completed BRIEF-A questionnaire.\n\nPatient Name: ' + data.patientName + '\nAge: ' + data.age + '\nDate of Birth: ' + data.dob + '\nCompletion Date: ' + data.completionDate + '\n\nInstructions:\n1. Download the results file using the "Download Results File" button\n2. Attach the downloaded .enc file to this email\n3. Send\n\nThank you.\n\nBest regards,\n' + data.patientName);
+            
+            var a = document.createElement('a');
+            a.href = 'mailto:draanashah@protonmail.com?subject=' + subject + '&body=' + body;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+    </script>
+</body>
+</html>

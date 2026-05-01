@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Behaviour Questionnaire - Patient</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1e40af;
+            --success: #16a34a;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --border: #e2e8f0;
+            --text: #1e293b;
+            --text-secondary: #64748b;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; padding: 20px; }
+        .container { max-width: 900px; margin: 0 auto; }
+        .header { background: var(--primary); color: white; padding: 30px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .header h1 { margin-bottom: 5px; font-size: 26px; font-weight: 600; }
+        .header p { font-size: 14px; opacity: 0.95; margin: 3px 0; }
+        .submission-box { background: #dbeafe; border: 2px solid #3b82f6; padding: 20px; margin-bottom: 20px; border-radius: 8px; }
+        .submission-box h3 { color: #1e40af; margin-bottom: 10px; font-size: 16px; display: flex; align-items: center; gap: 8px; }
+        .submission-box ul { margin-left: 20px; margin-top: 8px; }
+        .submission-box li { margin: 5px 0; color: #1e40af; font-size: 14px; }
+        .disclaimer-box { background: #fef3c7; border-left: 4px solid #f59e0b; padding: 18px; margin-bottom: 20px; border-radius: 4px; font-size: 14px; }
+        .disclaimer-box strong { color: #92400e; font-size: 15px; }
+        .info-box { background: #f0f9ff; border-left: 4px solid var(--primary); padding: 16px; margin-bottom: 16px; border-radius: 4px; font-size: 14px; }
+        .warning-box { background: #fff7ed; border-left: 4px solid #ea580c; padding: 15px; margin-bottom: 20px; border-radius: 4px; }
+        .progress-bar { background: var(--border); height: 8px; border-radius: 4px; overflow: hidden; margin-bottom: 30px; }
+        .progress-fill { background: var(--success); height: 100%; transition: width 0.3s ease; }
+        .progress-text { text-align: center; margin-bottom: 10px; color: var(--text-secondary); font-size: 14px; font-weight: 500; }
+        .card { background: var(--card-bg); padding: 24px; border-radius: 12px; margin-bottom: 24px; border: 1px solid var(--border); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .patient-info { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        .form-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 5px; font-weight: 500; color: var(--text); font-size: 14px; }
+        input[type="text"], input[type="email"], input[type="date"], input[type="number"] { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 15px; }
+        .question-item { margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid var(--border); }
+        .question-item:last-child { border-bottom: none; }
+        .question-text { font-weight: 500; margin-bottom: 10px; color: var(--text); font-size: 15px; }
+        .question-number { display: inline-block; background: var(--primary); color: white; width: 28px; height: 28px; border-radius: 50%; text-align: center; line-height: 28px; margin-right: 10px; font-size: 14px; font-weight: 600; }
+        .radio-group { display: flex; gap: 15px; flex-wrap: wrap; }
+        .radio-option { display: flex; align-items: center; gap: 6px; }
+        .radio-option input[type="radio"] { width: 18px; height: 18px; cursor: pointer; }
+        .radio-option label { margin: 0; cursor: pointer; font-weight: normal; font-size: 14px; }
+        .scale-labels { display: flex; justify-content: space-between; margin-bottom: 15px; padding: 10px; background: #f1f5f9; border-radius: 6px; font-size: 13px; color: var(--text-secondary); font-weight: 500; }
+        .button-group { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 24px; }
+        button { padding: 12px 24px; border: none; border-radius: 6px; font-size: 15px; font-weight: 500; cursor: pointer; transition: all 0.2s; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { background: var(--primary-dark); }
+        .btn-success { background: var(--success); color: white; }
+        .btn-success:hover { opacity: 0.9; }
+        .btn-secondary { background: var(--border); color: var(--text); }
+        .btn-secondary:hover { background: #cbd5e1; }
+        .hidden { display: none; }
+        #exportSection { background: #f0fdf4; border: 2px solid var(--success); padding: 25px; border-radius: 12px; margin-top: 30px; }
+        .validation-error { background: #fee2e2; border: 1px solid #dc2626; color: #991b1b; padding: 15px; border-radius: 6px; font-size: 14px; margin-top: 20px; }
+        .completion-message { background: white; padding: 20px; border-radius: 6px; margin: 20px 0; text-align: center; }
+        .completion-message h3 { color: var(--success); margin-bottom: 10px; font-size: 20px; }
+        @media (max-width: 768px) {
+            body { padding: 10px; }
+            .header { padding: 20px; }
+            .card { padding: 16px; }
+            .scale-labels { flex-direction: column; gap: 5px; }
+            .button-group { flex-direction: column; }
+            .button-group button { width: 100%; }
+        }
+        .form-nav { display: flex; gap: 12px; flex-wrap: wrap; justify-content: space-between; align-items: center; margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--border); }
+        .nav-btn { display: inline-block; padding: 11px 20px; border-radius: 6px; font-size: 14px; font-weight: 500; text-decoration: none; transition: all 0.2s; }
+        .nav-btn-back { background: var(--border); color: var(--text); }
+        .nav-btn-back:hover { background: #cbd5e1; }
+        .nav-btn-next { background: var(--success); color: white; }
+        .nav-btn-next:hover { opacity: 0.9; }
+        .recorded-badge { display: inline-flex; align-items: center; gap: 6px; background: #f0fdf4; border: 1px solid #86efac; color: #166534; font-size: 13px; padding: 6px 14px; border-radius: 20px; margin-top: 12px; font-weight: 500; opacity: 0; pointer-events: none; }
+        .question-item.skipped { background: #fff5f5; border-left: 3px solid #dc2626; padding-left: 12px; border-radius: 4px; }
+        @keyframes answeredFlash { 0% { background: #dcfce7; } 100% { background: transparent; } }
+        .question-item.just-answered { animation: answeredFlash 0.8s ease-out; }
+        @keyframes badgePop { 0% { opacity: 0; transform: translateY(4px); } 15% { opacity: 1; transform: translateY(0); } 80% { opacity: 1; } 100% { opacity: 0; } }
+        .recorded-badge.flashing { animation: badgePop 2.5s ease-out forwards; }
+        .bottom-progress { text-align: center; margin-top: 16px; padding: 10px; background: #f1f5f9; border-radius: 6px; font-size: 14px; color: var(--text-secondary); font-weight: 500; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Behaviour Questionnaire</h1>
+            <p>Current and Childhood Behaviour Assessment</p>
+            <p style="margin-top: 5px; font-size: 13px;">Patient Self-Report</p>
+        </div>
+
+        <div class="submission-box">
+            <h3>📧 How to Submit Your Results</h3>
+            <p style="margin-bottom: 8px; font-size: 14px;">After completing this questionnaire, you'll be able to:</p>
+            <ul>
+                <li><strong>Email directly to Dr. Shah</strong> - Click a button to open your email app with pre-filled details</li>
+                <li><strong>Download and send yourself</strong> - Download the results file and email it to: <strong><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="b0d4c2d1d1ded1c3d8d1d8f0c0c2dfc4dfdeddd1d9dc9ed3dfdd">[email&#160;protected]</a></strong></li>
+            </ul>
+        </div>
+
+        <div class="disclaimer-box">
+            <strong>Important Notice:</strong><br>
+            This questionnaire is for <strong>information gathering purposes only</strong> and is not diagnostic. The responses you provide will be reviewed by your clinician as part of a comprehensive clinical assessment. Only a qualified healthcare professional can make diagnostic or treatment decisions. Please answer honestly based on your actual experiences.
+        </div>
+
+        <div class="info-box">
+            <strong>Privacy:</strong> All data is processed locally on your device. Nothing is sent anywhere until you choose to download and share your results file with your clinician.
+        </div>
+
+        <div class="info-box" style="background: #eff6ff; border-left: 4px solid #3b82f6;">
+            <strong>📝 Answering Questions:</strong> You may leave questions blank if you're unsure or they don't apply to you. Don't guess - skipped items will be excluded from score calculations. However, try to answer as many as you can for accurate results.
+        </div>
+
+        <div class="progress-text" id="progressText">0 of 54 items answered (54 skipped) (0%)</div>
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+        </div>
+
+        <div class="card">
+            <h2 style="margin-bottom: 20px; font-size: 20px;">Your Information</h2>
+            <div class="patient-info">
+                <div class="form-group">
+                    <label>Full Name *</label>
+                    <input type="text" id="patientName" placeholder="John Doe" required>
+                </div>
+                <div class="form-group">
+                    <label>Date of Birth *</label>
+                    <input type="date" id="dob" required>
+                </div>
+                <div class="form-group">
+                    <label>Completion Date</label>
+                    <input type="date" id="completionDate" readonly>
+                </div>
+            </div>
+            <input type="hidden" id="patientEmail" value="">
+        </div>
+
+        <div class="card">
+            <h2 style="margin-bottom: 15px; color: var(--primary); font-size: 20px;">Part 1: Current Behaviour (Past 6 Months)</h2>
+            
+            <div class="warning-box">
+                <strong>Instructions:</strong> Rate your behaviour <strong>during the past six months</strong>
+            </div>
+
+            <div class="scale-labels">
+                <span>0 = Never/rarely</span>
+                <span>1 = Sometimes</span>
+                <span>2 = Often</span>
+                <span>3 = Very often (several times per hour/day)</span>
+            </div>
+
+            <div id="currentSymptoms"></div>
+
+            <h3 style="margin-top: 30px; margin-bottom: 15px; font-size: 18px;">Age When Problems Began</h3>
+            <div class="form-group">
+                <label>If you experienced problems with attention, concentration, impulsiveness or restlessness, at what age did these begin?</label>
+                <input type="number" id="onsetAge" placeholder="e.g., 8" min="0" max="100">
+            </div>
+
+            <h3 style="margin-top: 30px; margin-bottom: 15px; font-size: 18px;">Impact on Daily Life (Current)</h3>
+            <p style="margin-bottom: 15px; color: var(--text-secondary); font-size: 14px;">
+                To what extent do these behaviours interfere with your ability to function in each area?
+            </p>
+            <div class="scale-labels">
+                <span>0 = Never/rarely</span>
+                <span>1 = Sometimes</span>
+                <span>2 = Often</span>
+                <span>3 = Very often (several times per hour/day)</span>
+            </div>
+            <div id="currentImpairment"></div>
+        </div>
+
+        <div class="card">
+            <h2 style="margin-bottom: 15px; color: var(--primary); font-size: 20px;">Part 2: Childhood Behaviour (Ages 7-12)</h2>
+            
+            <div class="warning-box">
+                <strong>Important:</strong> Rate your behaviour <strong>between 7 and 12 years of age</strong>. Try to remember how you were during those childhood years.
+            </div>
+
+            <div class="scale-labels">
+                <span>0 = Never/rarely</span>
+                <span>1 = Sometimes</span>
+                <span>2 = Often</span>
+                <span>3 = Very often (several times per hour/day)</span>
+            </div>
+
+            <div id="childhoodSymptoms"></div>
+
+            <h3 style="margin-top: 30px; margin-bottom: 15px; font-size: 18px;">Impact on Daily Life (Childhood, ages 7-12)</h3>
+            <p style="margin-bottom: 15px; color: var(--text-secondary); font-size: 14px;">
+                To what extent did these behaviours interfere with your functioning between ages 7-12?
+            </p>
+            <div class="scale-labels">
+                <span>0 = Never/rarely</span>
+                <span>1 = Sometimes</span>
+                <span>2 = Often</span>
+                <span>3 = Very often (several times per hour/day)</span>
+            </div>
+            <div id="childhoodImpairment"></div>
+        </div>
+
+        <div class="button-group">
+            <button class="btn-secondary" onclick="saveProgress()">💾 Save Progress</button>
+            <button class="btn-primary" onclick="loadProgress()">📂 Load Saved Progress</button>
+            <button class="btn-success" onclick="validateAndExport()">✓ Complete Questionnaire</button>
+        </div>
+        <div class="bottom-progress" id="progressTextBottom">0 of 54 items answered (54 skipped) (0%)</div>
+        <div id="recordedBadge" class="recorded-badge">✓ Latest response recorded</div>
+
+        <div id="validationErrors" class="validation-error hidden"></div>
+
+        <div id="exportSection" class="hidden">
+            <h2 style="color: var(--success); margin-bottom: 20px; font-size: 22px;">✓ Questionnaire Complete</h2>
+            
+            <div class="completion-message">
+                <h3>Thank you for completing this questionnaire</h3>
+                <p style="margin-top: 10px; color: var(--text-secondary); font-size: 14px;">
+                    Your responses have been saved. Please send your results to Dr. Shah using one of the options below.
+                </p>
+            </div>
+
+            <div style="margin: 20px 0;">
+                <h3 style="font-size: 18px; margin-bottom: 15px;">Send Results to Dr. Shah:</h3>
+                <div class="button-group">
+                    <button class="btn-primary" onclick="emailToClinician()" style="font-size: 16px; padding: 14px 28px;">✉️ Email Results</button>
+                    <button class="btn-secondary" onclick="downloadJSON()" style="font-size: 16px; padding: 14px 28px;">⬇️ Download Results File</button>
+                </div>
+                <p style="margin-top: 15px; font-size: 13px; color: var(--text-secondary); padding: 12px; background: #f8fafc; border-radius: 6px;">
+                    <strong>Option 1:</strong> Click "Email Results" to open your email app with everything pre-filled. Just attach the file and send.<br>
+                    <strong>Option 2:</strong> Download the file and email it to <strong><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="7a1e081b1b141b09121b123a0a08150e1514171b131654191517">[email&#160;protected]</a></strong> yourself.
+                </p>
+            </div>
+        </div>
+        <div class="form-nav">
+            <a href="index.html" class="nav-btn nav-btn-back">← All questionnaires</a>
+            <a href="wurs45_FINAL.html" class="nav-btn nav-btn-next">Next: Wender Scale →</a>
+        </div>
+    </div>
+
+    <script>
+        /*
+         * Script Organization
+         * 1) CONFIG
+         * 2) HELPERS
+         * 3) IMPORT/EXPORT
+         * 4) SCORING
+         * 5) UI MAPPING
+         * 6) EVENT LISTENERS
+         */
+
+        // ====================
+        // CONFIG
+        // ====================
+        const CLINIC_MASTER_KEY = "Key123";
+        const IDENTITY_KEY = 'adhd_patient_identity';
+
+        function saveIdentity() {
+            const name = document.getElementById('patientName').value;
+            const dob = document.getElementById('dob').value;
+            if (name || dob) localStorage.setItem(IDENTITY_KEY, JSON.stringify({patientName: name, dob: dob}));
+        }
+
+        function loadIdentity() {
+            const saved = localStorage.getItem(IDENTITY_KEY);
+            if (!saved) return;
+            try {
+                const id = JSON.parse(saved);
+                const nameEl = document.getElementById('patientName');
+                const dobEl = document.getElementById('dob');
+                if (id.patientName && nameEl && !nameEl.value) nameEl.value = id.patientName;
+                if (id.dob && dobEl && !dobEl.value) dobEl.value = id.dob;
+            } catch(e) {}
+        }
+
+        const items = [
+            {num: 1, text: "Fail to give close attention to details or make careless mistakes in my work"},
+            {num: 2, text: "Fidget with hands or feet or squirm in seat"},
+            {num: 3, text: "Have difficulty sustaining my attention in tasks or fun activities"},
+            {num: 4, text: "Leave my seat in situations in which sitting is expected"},
+            {num: 5, text: "Don't listen when spoken to directly"},
+            {num: 6, text: "Feel restless"},
+            {num: 7, text: "Don't follow through on instructions and fail to finish work"},
+            {num: 8, text: "Have difficulty engaging in leisure activities or doing fun things quietly"},
+            {num: 9, text: "Have difficulty organising tasks and activities"},
+            {num: 10, text: "Feel 'on the go' or 'driven by a motor'"},
+            {num: 11, text: "Avoid, dislike or reluctant to engage in work that requires sustained mental effort"},
+            {num: 12, text: "Talk excessively"},
+            {num: 13, text: "Lose things necessary for tasks or activities"},
+            {num: 14, text: "Blurt out answers before questions have been completed"},
+            {num: 15, text: "Easily distracted"},
+            {num: 16, text: "Have difficulty awaiting turn"},
+            {num: 17, text: "Forgetful in daily activities"},
+            {num: 18, text: "Interrupt or intrude on others"}
+        ];
+
+        const impairmentCurrent = [
+            "Home life with immediate family",
+            "Work or occupation",
+            "Social interactions with others",
+            "Activities or dealings in the community",
+            "Educational activities",
+            "Dating or marital relationship",
+            "Management of money",
+            "Driving of a motor vehicle",
+            "Leisure or recreational activities",
+            "Management of daily responsibilities"
+        ];
+
+        const impairmentChildhood = [
+            "In your home life with your immediate family",
+            "In your social interactions with other children",
+            "In your activities or dealings in the community",
+            "In school",
+            "In sports, clubs or other organisations",
+            "In learning to take care of yourself",
+            "In your play, leisure or recreational activities",
+            "In your handling of your daily chores or other responsibilities"
+        ];
+
+        // ====================
+        // UI MAPPING
+        // ====================
+        function renderSymptoms(containerId, prefix) {
+            const container = document.getElementById(containerId);
+            items.forEach(function(item) {
+                const div = document.createElement('div');
+                div.className = 'question-item';
+                div.id = 'qitem_' + prefix + item.num;
+
+                let html = '<div class="question-text"><span class="question-number">' + item.num + '</span>' + item.text + '</div>';
+                html += '<div class="radio-group">';
+                for (let val = 0; val <= 3; val++) {
+                    html += '<div class="radio-option">';
+                    html += '<input type="radio" name="' + prefix + item.num + '" value="' + val + '" id="' + prefix + item.num + '_' + val + '" onchange="onQuestionChange(this)">';
+                    html += '<label for="' + prefix + item.num + '_' + val + '">' + val + '</label>';
+                    html += '</div>';
+                }
+                html += '</div>';
+                
+                div.innerHTML = html;
+                container.appendChild(div);
+            });
+        }
+
+        function renderImpairment(containerId, prefix, domains) {
+            const container = document.getElementById(containerId);
+            domains.forEach(function(domain, idx) {
+                const div = document.createElement('div');
+                div.className = 'question-item';
+                div.id = 'qitem_' + prefix + idx;
+
+                let html = '<div class="question-text">' + domain + '</div>';
+                html += '<div class="radio-group">';
+                for (let val = 0; val <= 3; val++) {
+                    html += '<div class="radio-option">';
+                    html += '<input type="radio" name="' + prefix + idx + '" value="' + val + '" id="' + prefix + idx + '_' + val + '" onchange="onQuestionChange(this)">';
+                    html += '<label for="' + prefix + idx + '_' + val + '">' + val + '</label>';
+                    html += '</div>';
+                }
+                html += '</div>';
+                
+                div.innerHTML = html;
+                container.appendChild(div);
+            });
+        }
+
+        // ====================
+        // EVENT LISTENERS
+        // ====================
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('completionDate').valueAsDate = new Date();
+            renderSymptoms('currentSymptoms', 'cur');
+            renderSymptoms('childhoodSymptoms', 'chd');
+            renderImpairment('currentImpairment', 'curImp', impairmentCurrent);
+            renderImpairment('childhoodImpairment', 'chdImp', impairmentChildhood);
+            loadAutoSave();
+            loadIdentity();
+            document.getElementById('patientName').addEventListener('input', saveIdentity);
+            document.getElementById('dob').addEventListener('change', saveIdentity);
+        });
+
+        let _hasValidated = false;
+
+        function onQuestionChange(radioEl) {
+            if (_hasValidated) {
+                const item = radioEl.closest('.question-item');
+                if (item) {
+                    item.classList.remove('skipped');
+                    item.classList.remove('just-answered');
+                    void item.offsetWidth;
+                    item.classList.add('just-answered');
+                }
+            }
+            updateProgress();
+        }
+
+        function highlightSkipped() {
+            items.forEach(function(item) {
+                ['cur', 'chd'].forEach(function(prefix) {
+                    const el = document.getElementById('qitem_' + prefix + item.num);
+                    if (!el) return;
+                    el.classList.toggle('skipped', !document.querySelector('input[name="' + prefix + item.num + '"]:checked'));
+                });
+            });
+            impairmentCurrent.forEach(function(_, idx) {
+                const el = document.getElementById('qitem_curImp' + idx);
+                if (!el) return;
+                el.classList.toggle('skipped', !document.querySelector('input[name="curImp' + idx + '"]:checked'));
+            });
+            impairmentChildhood.forEach(function(_, idx) {
+                const el = document.getElementById('qitem_chdImp' + idx);
+                if (!el) return;
+                el.classList.toggle('skipped', !document.querySelector('input[name="chdImp' + idx + '"]:checked'));
+            });
+        }
+
+        function updateProgress() {
+            autoSave();
+            let completed = 0;
+            const required = 54;
+            items.forEach(function(item) {
+                if (document.querySelector('input[name="cur' + item.num + '"]:checked')) completed++;
+                if (document.querySelector('input[name="chd' + item.num + '"]:checked')) completed++;
+            });
+            impairmentCurrent.forEach(function(_, idx) {
+                if (document.querySelector('input[name="curImp' + idx + '"]:checked')) completed++;
+            });
+            impairmentChildhood.forEach(function(_, idx) {
+                if (document.querySelector('input[name="chdImp' + idx + '"]:checked')) completed++;
+            });
+            const skipped = required - completed;
+            const percent = Math.round((completed / required) * 100);
+            let progressText = completed + ' of ' + required + ' items answered';
+            if (skipped > 0) progressText += ' (' + skipped + ' skipped)';
+            progressText += ' (' + percent + '%)';
+            document.getElementById('progressText').textContent = progressText;
+            document.getElementById('progressFill').style.width = percent + '%';
+            const btm = document.getElementById('progressTextBottom');
+            if (btm) btm.textContent = progressText;
+            if (_hasValidated) highlightSkipped();
+        }
+
+        // ====================
+        // HELPERS
+        // ====================
+        function getScores(prefix) {
+            return items.map(function(item) {
+                const selected = document.querySelector('input[name="' + prefix + item.num + '"]:checked');
+                return selected ? parseInt(selected.value) : null;
+            });
+        }
+
+        function getImpairment(prefix, count) {
+            const scores = [];
+            for (let i = 0; i < count; i++) {
+                const selected = document.querySelector('input[name="' + prefix + i + '"]:checked');
+                scores.push(selected ? parseInt(selected.value) : null);
+            }
+            return scores;
+        }
+
+        // ====================
+        // SCORING
+        // ====================
+        function calculateCounts(scores) {
+            return window.ADHDScoring.cbs.calculateCounts(scores);
+        }
+
+        // ====================
+        // IMPORT/EXPORT
+        // ====================
+        function collectData() {
+            const emailEl = document.getElementById('patientEmail');
+            return {
+                patientName: document.getElementById('patientName').value,
+                patientEmail: emailEl ? emailEl.value : '',
+                dob: document.getElementById('dob').value,
+                completionDate: document.getElementById('completionDate').value,
+                onsetAge: document.getElementById('onsetAge').value,
+                current: {
+                    symptoms: getScores('cur'),
+                    impairment: getImpairment('curImp', 10)
+                },
+                childhood: {
+                    symptoms: getScores('chd'),
+                    impairment: getImpairment('chdImp', 8)
+                }
+            };
+        }
+
+        function autoSave() {
+            localStorage.setItem('behaviour_patient_autosave', JSON.stringify(collectData()));
+        }
+
+        function loadAutoSave() {
+            const saved = localStorage.getItem('behaviour_patient_autosave');
+            if (saved) {
+                const data = JSON.parse(saved);
+                if (confirm('Found saved progress. Continue where you left off?')) {
+                    loadData(data);
+                }
+            }
+        }
+
+        function flashBadge() {
+            const b = document.getElementById('recordedBadge');
+            if (!b) return;
+            b.classList.remove('flashing');
+            void b.offsetWidth;
+            b.classList.add('flashing');
+        }
+
+        function saveProgress() {
+            localStorage.setItem('behaviour_patient_manual', JSON.stringify(collectData()));
+            flashBadge();
+        }
+
+        function loadProgress() {
+            const saved = localStorage.getItem('behaviour_patient_manual');
+            if (saved) {
+                loadData(JSON.parse(saved));
+                alert('Progress loaded!');
+            } else {
+                alert('No saved progress found.');
+            }
+        }
+
+        function loadData(data) {
+            if (data.patientName) document.getElementById('patientName').value = data.patientName;
+            if (data.patientEmail && document.getElementById('patientEmail')) document.getElementById('patientEmail').value = data.patientEmail;
+            if (data.dob) document.getElementById('dob').value = data.dob;
+            if (data.onsetAge) document.getElementById('onsetAge').value = data.onsetAge;
+            
+            data.current.symptoms.forEach(function(val, idx) {
+                if (val !== null) {
+                    const radio = document.querySelector('input[name="cur' + (idx+1) + '"][value="' + val + '"]');
+                    if (radio) radio.checked = true;
+                }
+            });
+            data.childhood.symptoms.forEach(function(val, idx) {
+                if (val !== null) {
+                    const radio = document.querySelector('input[name="chd' + (idx+1) + '"][value="' + val + '"]');
+                    if (radio) radio.checked = true;
+                }
+            });
+            data.current.impairment.forEach(function(val, idx) {
+                if (val !== null) {
+                    const radio = document.querySelector('input[name="curImp' + idx + '"][value="' + val + '"]');
+                    if (radio) radio.checked = true;
+                }
+            });
+            data.childhood.impairment.forEach(function(val, idx) {
+                if (val !== null) {
+                    const radio = document.querySelector('input[name="chdImp' + idx + '"][value="' + val + '"]');
+                    if (radio) radio.checked = true;
+                }
+            });
+            
+            updateProgress();
+        }
+
+        function validateAndExport() {
+            const data = collectData();
+            const errors = [];
+            
+            if (!data.patientName) errors.push('Please enter your name');
+            if (!data.dob) errors.push('Please enter your date of birth');
+            
+            if (errors.length > 0) {
+                const errorDiv = document.getElementById('validationErrors');
+                errorDiv.innerHTML = '<strong>Please complete:</strong><br>' + errors.join('<br>');
+                errorDiv.classList.remove('hidden');
+                errorDiv.scrollIntoView({behavior: 'smooth'});
+                return;
+            }
+            
+            // Count all responses
+            const allResponses = [].concat(
+                data.current.symptoms,
+                data.current.impairment,
+                data.childhood.symptoms,
+                data.childhood.impairment
+            );
+            const total = allResponses.length;
+            const skipped = allResponses.filter(function(x) { return x === null; }).length;
+            const skippedPercent = Math.round((skipped / total) * 100);
+            
+            // Warning if too many skipped (but allow to continue)
+            if (skippedPercent > 25) {
+                const proceed = confirm('You have skipped ' + skipped + ' out of ' + total + ' questions (' + skippedPercent + '%).\n\nFor accurate results, it\'s recommended to answer at least 75% of questions.\n\nDo you want to continue anyway?');
+                if (!proceed) return;
+            }
+            
+            document.getElementById('validationErrors').classList.add('hidden');
+            _hasValidated = true;
+            highlightSkipped();
+
+            const exportData = {
+                toolVersion: "4.0",
+                dataType: "CBS_CUBS_PATIENT_SELF",
+                patientName: data.patientName,
+                patientEmail: data.patientEmail,
+                dob: data.dob,
+                completionDate: data.completionDate,
+                onsetAge: data.onsetAge || null,
+                completionStats: {
+                    totalQuestions: total,
+                    answered: total - skipped,
+                    skipped: skipped,
+                    completionPercent: 100 - skippedPercent
+                },
+                current: {
+                    symptoms: data.current.symptoms,
+                    impairment: data.current.impairment
+                },
+                childhood: {
+                    symptoms: data.childhood.symptoms,
+                    impairment: data.childhood.impairment
+                }
+            };
+            
+            document.getElementById('exportSection').classList.remove('hidden');
+            document.getElementById('exportSection').scrollIntoView({behavior: 'smooth'});
+            flashBadge();
+            window.exportData = exportData;
+        }
+        function downloadJSON() {
+            if (!window.exportData) {
+        alert('Please complete the form first.');
+        return;
+    }
+
+    try {
+        window.exportData.assessmentType = "CBS-Self";
+
+        // 2. Convert to string, hash, and encrypt
+       const dataStr = JSON.stringify(window.exportData);
+        const hash = CryptoJS.SHA256(dataStr).toString();
+        const ciphertext = CryptoJS.AES.encrypt(dataStr, CLINIC_MASTER_KEY).toString();
+        const envelope = JSON.stringify({v: 2, ciphertext: ciphertext, hash: hash});
+           
+            const blob = new Blob([envelope], {type: 'text/plain'});
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+            const fileName = 'Behaviour_Self_' + window.exportData.patientName.replace(/\s+/g, '_') + '.enc';
+        
+        link.download = fileName;
+        link.click();
+        URL.revokeObjectURL(url);
+        
+        alert('Secure file downloaded. Please email this .enc file to your clinician.');
+    } catch (e) {
+        console.error(e);
+        alert('Encryption error. Please try again.');
+    }
+}
+
+        function emailToClinician() {
+            const data = window.exportData;
+            const subject = encodeURIComponent('Behaviour Questionnaire - ' + data.patientName + ' - ' + data.completionDate);
+            const body = encodeURIComponent('Dear Dr. Shah,\n\nPlease find attached my completed behaviour questionnaire.\n\nPatient Name: ' + data.patientName + '\nDate of Birth: ' + data.dob + '\nCompletion Date: ' + data.completionDate + '\n\nInstructions:\n1. Download the results file using the "Download Results File" button\n2. Attach the downloaded .enc file to this email\n3. Send\n\nThank you.\n\nBest regards,\n' + data.patientName);
+            
+            var a = document.createElement('a');
+            a.href = 'mailto:draanashah@protonmail.com?subject=' + subject + '&body=' + body;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+    </script>
+</body>
+</html>
+    

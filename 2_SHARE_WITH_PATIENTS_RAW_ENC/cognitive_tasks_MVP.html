@@ -1,0 +1,1199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Cognitive Tasks</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1e40af;
+            --success: #16a34a;
+            --danger: #dc2626;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --border: #dbe3ef;
+            --text: #172033;
+            --text-secondary: #667085;
+        }
+        * { box-sizing: border-box; }
+        body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); line-height: 1.5; padding: 20px; }
+        .container { max-width: 960px; margin: 0 auto; }
+        .header { background: var(--primary); color: white; padding: 28px; border-radius: 10px; margin-bottom: 18px; }
+        .header h1 { margin: 0 0 6px; font-size: 26px; }
+        .header p { margin: 4px 0; font-size: 14px; opacity: 0.95; }
+        .box { background: white; border: 1px solid var(--border); border-radius: 8px; padding: 18px; margin-bottom: 16px; }
+        .warning { background: #fff7ed; border-left: 4px solid #ea580c; }
+        .privacy { background: #eff6ff; border-left: 4px solid var(--primary); }
+        .env-check { background: #f0fdf4; border: 2px solid #16a34a; border-radius: 10px; padding: 28px; margin-bottom: 20px; text-align: center; }
+        .intro-screen { background: white; border: 1px solid var(--border); border-radius: 12px; padding: 36px 32px 30px; margin-bottom: 20px; max-width: 640px; margin-left: auto; margin-right: auto; }
+        .intro-screen h2 { margin: 0 0 6px; font-size: 22px; color: var(--primary-dark); }
+        .intro-screen .intro-sub { font-size: 14px; color: var(--text-secondary); margin: 0 0 24px; }
+        .intro-checklist { list-style: none; padding: 0; margin: 0 0 24px; display: flex; flex-direction: column; gap: 12px; }
+        .intro-checklist li { display: flex; align-items: flex-start; gap: 12px; font-size: 15px; line-height: 1.5; }
+        .intro-checklist li .icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+        .intro-checklist li strong { display: block; font-size: 15px; }
+        .intro-checklist li span { font-size: 13px; color: var(--text-secondary); }
+        .intro-divider { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
+        .intro-small { font-size: 12px; color: var(--text-secondary); line-height: 1.6; margin: 0 0 22px; }
+        .intro-begin-btn { width: 100%; padding: 14px; font-size: 16px; border-radius: 8px; }
+        .env-check h2 { margin: 0 0 10px; color: #166534; font-size: 20px; }
+        .env-check p { margin: 0 0 20px; font-size: 16px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 14px; }
+        label { display: block; font-size: 14px; font-weight: 600; margin-bottom: 6px; }
+        input[type="text"], input[type="date"] { width: 100%; border: 1px solid var(--border); border-radius: 6px; padding: 10px; font-size: 15px; }
+        .task { background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; padding: 20px; margin: 18px 0; min-height: 360px; }
+        .task h2 { margin: 0 0 6px; font-size: 20px; color: var(--primary-dark); display: flex; align-items: center; gap: 10px; }
+        .task-num { display: inline-flex; align-items: center; justify-content: center; background: var(--primary); color: white; border-radius: 50%; width: 28px; height: 28px; font-size: 14px; font-weight: 700; flex-shrink: 0; }
+        .task-screen { min-height: 230px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; border: 1px solid var(--border); border-radius: 8px; background: #fbfdff; padding: 16px; margin: 16px 0; }
+        .stimulus { font-size: 48px; font-weight: 700; letter-spacing: 0.08em; }
+        .big-symbol { font-size: 100px; font-weight: 700; font-family: monospace; line-height: 1; }
+        .blocks { display: grid; grid-template-columns: repeat(3, 76px); grid-template-rows: repeat(3, 76px); gap: 12px; justify-content: center; }
+        .block { border: 2px solid #94a3b8; border-radius: 8px; background: #e2e8f0; cursor: pointer; }
+        .block.active { background: #2563eb; border-color: #1e40af; }
+        .block.selected { background: #16a34a; border-color: #15803d; }
+        @keyframes blockPulse { 0% { transform: scale(1.22); } 100% { transform: scale(1); } }
+        .block.pulse { animation: blockPulse 0.22s ease-out; }
+        .direction-banner { text-align: center; padding: 8px 0; }
+        .direction-banner-label { font-size: 36px; font-weight: 700; color: var(--primary-dark); letter-spacing: 0.05em; }
+        .direction-banner-sub { margin-top: 8px; font-size: 15px; color: var(--text-secondary); }
+        .target { width: 150px; height: 150px; border-radius: 50%; background: #16a34a; display: flex; align-items: center; justify-content: center; color: white; font-size: 32px; font-weight: 700; }
+        .target.nogo { border-radius: 10px; background: #dc2626; }
+        .letters { font-size: 70px; font-weight: 800; letter-spacing: 0.12em; }
+        .buttons { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+        button { border: none; border-radius: 6px; padding: 11px 18px; background: var(--primary); color: white; font-size: 15px; font-weight: 600; cursor: pointer; }
+        button.secondary { background: #e2e8f0; color: var(--text); }
+        button.success { background: var(--success); }
+        button.env-btn { padding: 14px 36px; font-size: 17px; margin: 6px; border-radius: 8px; }
+        button.env-btn.yes-btn { background: var(--success); }
+        button.env-btn.no-btn { background: #64748b; }
+        button:disabled { opacity: 0.45; cursor: not-allowed; }
+        .status { font-size: 14px; color: var(--text-secondary); margin-top: 8px; }
+        .digit-input-wrap { text-align: center; padding: 10px 0; }
+        .digit-input { width: 100%; max-width: 340px; border: 2px solid var(--primary); border-radius: 8px; padding: 12px 14px; font-size: 24px; text-align: center; letter-spacing: 0.15em; }
+        .ps-key { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; background: #f1f5f9; border-radius: 8px; padding: 10px 14px; margin-bottom: 12px; }
+        .ps-key-item { background: white; border: 1px solid var(--border); border-radius: 6px; padding: 6px 12px; font-family: monospace; font-size: 15px; font-weight: 700; }
+        .ps-options { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 16px; }
+        .ps-option { width: 76px; height: 76px; font-size: 26px; font-weight: 700; border-radius: 10px; background: #e0e7ff; color: var(--primary-dark); border: 2px solid #c7d2fe; cursor: pointer; }
+        .ps-option:hover:not(:disabled) { background: #c7d2fe; }
+        .ps-timer { font-size: 22px; font-weight: 700; color: var(--primary-dark); text-align: center; margin-bottom: 8px; }
+        .hidden { display: none; }
+        .complete-section { background: #f0fdf4; border: 2px solid var(--success); border-radius: 10px; padding: 32px; text-align: center; margin-top: 24px; }
+        .complete-section h2 { color: var(--success); margin: 0 0 10px; font-size: 22px; }
+        .complete-section p { color: #166534; margin: 0 0 22px; font-size: 16px; }
+        @media (max-width: 600px) {
+            body { padding: 10px; }
+            .header { padding: 20px; }
+            .blocks { grid-template-columns: repeat(3, 64px); grid-template-rows: repeat(3, 64px); gap: 8px; }
+            .stimulus { font-size: 38px; }
+            .big-symbol { font-size: 72px; }
+            .ps-option { width: 62px; height: 62px; font-size: 22px; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+
+    <!-- ── Intro screen ─────────────────────────────────────────────────── -->
+    <div class="intro-screen" id="introScreen">
+        <h2>Cognitive Tasks</h2>
+        <p class="intro-sub">Patient self-administered battery &nbsp;·&nbsp; 5 tasks &nbsp;·&nbsp; approximately 20 minutes</p>
+
+        <ul class="intro-checklist">
+            <li>
+                <span class="icon">🕐</span>
+                <div><strong>Do this in one sitting</strong><span>Set aside around 20 minutes and complete all five tasks without stopping. Closing the tab and resuming later is possible but not ideal — it reduces the usefulness of some results.</span></div>
+            </li>
+            <li>
+                <span class="icon">🔇</span>
+                <div><strong>Find a quiet space</strong><span>Background noise and distractions affect your response times and accuracy. A quiet room with minimal interruptions gives the most accurate picture.</span></div>
+            </li>
+            <li>
+                <span class="icon">📱</span>
+                <div><strong>Use whichever device you're most comfortable with</strong><span>Phone, tablet, or computer all work. If using a computer, use the spacebar for the tapping tasks — it's faster and more accurate than clicking.</span></div>
+            </li>
+            <li>
+                <span class="icon">🪟</span>
+                <div><strong>Keep this tab open and in the foreground</strong><span>Switching apps or minimising the browser during a task may interfere with timing. If you need a break, finish the current task first.</span></div>
+            </li>
+        </ul>
+
+        <hr class="intro-divider">
+        <p class="intro-small">
+            <strong>These tasks do not produce a diagnosis.</strong> Results are one input among many and will be interpreted by your clinician alongside other assessments. Performance can be affected by sleep, stress, anxiety, medication, and many other factors.<br><br>
+            <strong>Privacy:</strong> All responses are processed locally in your browser. Nothing leaves your device until you choose to download and share the encrypted results file.
+        </p>
+
+        <button class="intro-begin-btn" onclick="beginIntro()">I'm ready — Begin →</button>
+    </div>
+
+    <!-- ── Main content (revealed after intro) ──────────────────────────── -->
+    <div id="mainContent" class="hidden">
+
+    <div class="header">
+        <h1>Cognitive Tasks</h1>
+        <p>Patient self-administered battery: 5 tasks</p>
+    </div>
+
+    <div class="box warning">
+        <strong>Important:</strong> These tasks are for information gathering only. They are not diagnostic by themselves. Performance can be affected by sleep, stress, anxiety, medication, device speed, distractions, and practice effects.
+    </div>
+    <div class="box privacy">
+        <strong>Privacy:</strong> Everything runs locally in this browser. Nothing is sent anywhere until you download and share the encrypted results file with your clinician.
+    </div>
+
+    <div class="box">
+        <h2 style="margin-top:0;">Your Information</h2>
+        <div class="grid">
+            <div>
+                <label for="patientName">Full Name *</label>
+                <input id="patientName" type="text" placeholder="John Doe">
+            </div>
+            <div>
+                <label for="dob">Date of Birth *</label>
+                <input id="dob" type="date">
+            </div>
+            <div>
+                <label for="completionDate">Completion Date</label>
+                <input id="completionDate" type="date" readonly>
+            </div>
+        </div>
+    </div>
+
+    <!-- Environment check — must complete before tasks appear -->
+    <div class="env-check" id="envCheck">
+        <h2>Before you start</h2>
+        <p>Are you currently in a <strong>quiet, distraction-free</strong> place?</p>
+        <div>
+            <button class="env-btn yes-btn" onclick="setEnvCheck(true)">Yes, I'm ready</button>
+            <button class="env-btn no-btn" onclick="setEnvCheck(false)">No, I have interruptions</button>
+        </div>
+    </div>
+
+    <!-- Task area — revealed after environment check -->
+    <div id="taskArea" class="hidden">
+
+        <!-- TASK 1: Digit Span -->
+        <div class="task" id="digitTask">
+            <h2><span class="task-num">1</span>Digit Span</h2>
+            <p>Digits will appear one at a time. You will do <strong>10 FORWARD trials first</strong> (type digits in the same order you saw them), then <strong>10 BACKWARD trials</strong> (type them in reverse order). A banner will appear clearly before the direction changes.</p>
+            <div style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;padding:12px 16px;font-size:13px;color:#0c4a6e;margin:0 0 8px;line-height:1.8;">
+              <strong>Examples</strong><br>
+              <span style="display:inline-block;margin-top:4px;">
+                <strong>Forward:</strong> screen shows <code style="background:#e0f2fe;padding:1px 6px;border-radius:4px;">1 → 2 → 3</code> &nbsp;→&nbsp; you type <code style="background:#e0f2fe;padding:1px 6px;border-radius:4px;">123</code>
+              </span><br>
+              <span style="display:inline-block;margin-top:2px;">
+                <strong>Backward:</strong> screen shows <code style="background:#e0f2fe;padding:1px 6px;border-radius:4px;">3 → 2 → 1</code> &nbsp;→&nbsp; you type <code style="background:#e0f2fe;padding:1px 6px;border-radius:4px;">123</code> &nbsp;<span style="color:#0369a1;">(last digit first)</span>
+              </span>
+            </div>
+            <p style="background:#fff7ed;border-left:3px solid #ea580c;padding:8px 12px;font-size:13px;margin:0 0 4px;border-radius:0 4px 4px 0;"><strong>Important:</strong> Please do not write down or type the digits anywhere else while they are showing. The task is testing your memory, not your note-taking. Do your best to hold them in mind.</p>
+            <div class="task-screen" id="digitScreen"><span>Press Start when ready.</span></div>
+            <div class="digit-input-wrap hidden" id="digitInputArea">
+                <input class="digit-input" id="digitInput" type="text" inputmode="numeric" placeholder="e.g. 3 8 4" autocomplete="off" autocorrect="off" spellcheck="false">
+                <div style="margin-top: 10px;">
+                    <button id="digitSubmitBtn" onclick="submitDigitResponse()">Submit</button>
+                </div>
+            </div>
+            <div class="buttons" id="digitBtns">
+                <button id="digitStart" onclick="startDigitSpan()">Start Digit Span</button>
+            </div>
+            <div class="status" id="digitStatus"></div>
+        </div>
+
+        <!-- TASK 2: CPT -->
+        <div class="task" id="cptTask">
+            <h2><span class="task-num">2</span>Continuous Performance Test</h2>
+            <p>Press <kbd>Space</kbd> or tap the box only when you see <strong>X</strong>. For all other letters, do nothing.</p>
+            <div class="task-screen" id="cptHitArea" onclick="recordCptResponse()" style="cursor:pointer;">
+                <div id="cptScreen">Press Start when ready.</div>
+            </div>
+            <div class="buttons">
+                <button id="cptStart" onclick="startCpt()">Start CPT</button>
+            </div>
+            <div class="status" id="cptStatus"></div>
+        </div>
+
+        <!-- TASK 3: Corsi -->
+        <div class="task" id="corsiTask">
+            <h2><span class="task-num">3</span>Corsi Block Task</h2>
+            <p>Watch the highlighted block sequence. You will do <strong>10 FORWARD trials first</strong> (tap blocks in the same order), then <strong>10 BACKWARD trials</strong> (tap them in reverse order). A banner will appear clearly before the direction changes.</p>
+            <div class="task-screen">
+                <div id="corsiDirectionBanner" class="direction-banner hidden">
+                    <div id="corsiDirectionLabel" class="direction-banner-label"></div>
+                    <div id="corsiDirectionSub" class="direction-banner-sub"></div>
+                </div>
+                <div class="blocks" id="corsiBlocks"></div>
+            </div>
+            <div class="buttons">
+                <button id="corsiStart" onclick="startCorsi()">Start Corsi</button>
+                <button class="secondary" id="corsiClear" onclick="clearCorsiResponse()" disabled>Clear</button>
+                <button class="secondary" id="corsiSubmit" onclick="submitCorsiResponse()" disabled>Submit Response</button>
+            </div>
+            <div class="status" id="corsiStatus"></div>
+        </div>
+
+        <!-- TASK 4: Go/No-Go -->
+        <div class="task" id="goNoGoTask">
+            <h2><span class="task-num">4</span>Go / No-Go</h2>
+            <p>Press <kbd>Space</kbd> or tap the box for <strong style="color:#16a34a;">green circles (GO)</strong>. Do <strong>not</strong> respond to <strong style="color:#dc2626;">red squares (STOP)</strong>.</p>
+            <div class="task-screen" id="goNoGoHitArea" onclick="recordGoNoGoResponse()" style="cursor:pointer;">
+                <div id="goNoGoScreen">Press Start when ready.</div>
+            </div>
+            <div class="buttons">
+                <button id="goNoGoStart" onclick="startGoNoGo()">Start Go / No-Go</button>
+            </div>
+            <div class="status" id="goNoGoStatus"></div>
+        </div>
+
+        <!-- TASK 5: Processing Speed -->
+        <div class="task" id="psTask">
+            <h2><span class="task-num">5</span>Processing Speed</h2>
+            <p>The <strong>code key above</strong> maps each symbol (like @, #, $) to a digit (1–9). When a symbol appears in the box, <strong>tap or click on the matching digit button on screen</strong> (do not use your keyboard). Work as quickly and accurately as you can. The key stays visible throughout the 90-second task.</p>
+            <div class="ps-key" id="psKeyDisplay"></div>
+            <div class="ps-timer hidden" id="psTimer"></div>
+            <div class="task-screen" id="psScreen">
+                <div id="psSymbolArea">Press Start when ready.</div>
+                <div class="ps-options hidden" id="psOptions"></div>
+            </div>
+            <div class="buttons">
+                <button id="psStart" onclick="startProcessingSpeed()">Start Processing Speed</button>
+            </div>
+            <div class="status" id="psStatus"></div>
+        </div>
+
+    </div><!-- end #taskArea -->
+
+    <!-- Complete section — shown only when all tasks done -->
+    <div class="complete-section hidden" id="downloadSection">
+        <h2>All Tasks Complete</h2>
+        <p>Thank you. Please download your encrypted results file and send it to your clinician.</p>
+        <button class="success" style="font-size: 17px; padding: 14px 32px;" onclick="downloadResults()">Download Results File</button>
+        <p id="downloadError" class="hidden" style="color:#dc2626;margin-top:14px;font-size:14px;font-weight:500;"></p>
+    </div>
+
+    </div><!-- end #mainContent -->
+
+</div><!-- end .container -->
+
+<script>
+    // ── Symbol-digit key for Processing Speed ────────────────────────────────
+    const PS_SYMBOLS = ['@', '#', '$', '%', '&', '*', '+', '~', '='];
+    const PS_DIGITS  = [  1,   2,   3,   4,   5,   6,   7,   8,   9];
+    const PS_DURATION_MS = 90000;
+
+    // ── State ────────────────────────────────────────────────────────────────
+    const state = {
+        environmentCheck: null,
+        digitSpan: {
+            trials: [], index: 0, current: null,
+            promptedAt: null, startedAt: null, endedAt: null,
+            earlyStop: false
+        },
+        cpt: {
+            trials: [], index: 0, active: false,
+            responseLocked: false, stimulusAt: null,
+            startedAt: null, endedAt: null
+        },
+        corsi: {
+            trials: [], index: 0, current: null, response: [],
+            sequenceEndedAt: null, startedAt: null, endedAt: null,
+            earlyStop: false
+        },
+        goNoGo: {
+            trials: [], index: 0, active: false,
+            responseLocked: false, stimulusAt: null,
+            startedAt: null, endedAt: null
+        },
+        processingSpeed: {
+            trials: [], active: false, stimulusAt: null,
+            timerEnd: null, completed: false,
+            startedAt: null, endedAt: null
+        }
+    };
+
+    // ── Task plans ───────────────────────────────────────────────────────────
+    // Plans are generated fresh each time a task starts so resume/restart sessions
+    // always get a new structure rather than reusing the same load-time plan.
+    const SPAN_PLAN_LENGTH = 20; // 2 modes × 5 spans (3–7) × 2 reps
+    let digitPlan = null;
+    let corsiPlan = null;
+    const LETTERS = 'ABCDEFGHJKLMNPQRSTUVWYZ'.split(''); // X excluded — it is the CPT target
+
+    // ── Init ─────────────────────────────────────────────────────────────────
+    document.getElementById('completionDate').value = new Date().toISOString().slice(0, 10);
+    renderCorsiBlocks();
+    renderPsKey();
+
+    document.addEventListener('keydown', function(e) {
+        const tag = document.activeElement && document.activeElement.tagName;
+        const isTyping = tag === 'INPUT' || tag === 'TEXTAREA';
+        if (e.code === 'Space' && !isTyping) {
+            e.preventDefault();
+            recordCptResponse();
+            recordGoNoGoResponse();
+        }
+        if (e.code === 'Enter' && state.digitSpan.promptedAt !== null && !isTyping) {
+            submitDigitResponse();
+        }
+    });
+
+    // ── Environment check ────────────────────────────────────────────────────
+    function setEnvCheck(quietPlace) {
+        state.environmentCheck = { quietPlace: quietPlace, recordedAt: new Date().toISOString() };
+        document.getElementById('envCheck').classList.add('hidden');
+        document.getElementById('taskArea').classList.remove('hidden');
+    }
+
+    // ── Utility ──────────────────────────────────────────────────────────────
+    function buildSpanPlan(modes, minLen, maxLen, reps) {
+        const plan = [];
+        modes.forEach(function(mode) {
+            for (let len = minLen; len <= maxLen; len++) {
+                for (let r = 0; r < reps; r++) plan.push({ mode: mode, length: len });
+            }
+        });
+        return plan;
+    }
+
+    // Stopping rule: returns true if both trials at the previous span length failed,
+    // signalling that the current mode should be discontinued.
+    // Called at the start of each trial; only fires at span-length boundaries.
+    function spanShouldStop(taskTrials, planArr, currentIndex) {
+        const plan = planArr[currentIndex];
+        if (!plan) return false;
+        const prev = currentIndex > 0 ? planArr[currentIndex - 1] : null;
+        // Only act at a boundary: same mode, span just increased
+        if (!prev || prev.mode !== plan.mode || prev.length >= plan.length) return false;
+        const prevLen = prev.length;
+        const prevSpanTrials = taskTrials.filter(function(t) {
+            return t.mode === plan.mode && t.length === prevLen;
+        });
+        return prevSpanTrials.length >= 2 && prevSpanTrials.every(function(t) { return !t.correct; });
+    }
+
+    function randomDigits(length) {
+        const out = [];
+        while (out.length < length) {
+            const next = String(Math.floor(Math.random() * 10));
+            if (out[out.length - 1] !== next) out.push(next);
+        }
+        return out;
+    }
+
+    function randomCorsiSequence(length) {
+        const out = [];
+        while (out.length < length) {
+            const next = Math.floor(Math.random() * 9);
+            if (out[out.length - 1] !== next) out.push(next);
+        }
+        return out;
+    }
+
+    function setText(id, text) { document.getElementById(id).textContent = text; }
+    function setHTML(id, html) { document.getElementById(id).innerHTML = html; }
+
+    function jitteredISI() { return 350 + Math.floor(Math.random() * 300); }
+
+    function mean(values) {
+        if (!values.length) return null;
+        return values.reduce(function(a, v) { return a + v; }, 0) / values.length;
+    }
+
+    function sdCalc(values) {
+        if (values.length < 2) return null;
+        const m = mean(values);
+        const v = values.reduce(function(a, x) { return a + Math.pow(x - m, 2); }, 0) / (values.length - 1);
+        return Math.sqrt(v);
+    }
+
+    function roundTo(val, dec) {
+        if (val === null || val === undefined || !isFinite(val)) return null;
+        return Math.round(val * Math.pow(10, dec)) / Math.pow(10, dec);
+    }
+
+    function pct(num, den) { return den ? roundTo((num / den) * 100, 1) : null; }
+
+    function computeSeconds(startIso, endIso) {
+        if (!startIso || !endIso) return null;
+        return roundTo((new Date(endIso) - new Date(startIso)) / 1000, 1);
+    }
+
+    // ── TASK 1 — Digit Span ──────────────────────────────────────────────────
+    function startDigitSpan() {
+        digitPlan = buildSpanPlan(['forward', 'backward'], 3, 7, 2);
+        state.digitSpan.trials = [];
+        state.digitSpan.index = 0;
+        state.digitSpan.startedAt = new Date().toISOString();
+        document.getElementById('digitStart').disabled = true;
+        document.getElementById('digitBtns').classList.add('hidden');
+        runNextDigitTrial();
+    }
+
+    function runNextDigitTrial() {
+        // Stopping rule: discontinue a mode after failing both trials at the same span
+        if (state.digitSpan.index < digitPlan.length &&
+            spanShouldStop(state.digitSpan.trials, digitPlan, state.digitSpan.index)) {
+            const stoppedMode = digitPlan[state.digitSpan.index].mode;
+            state.digitSpan.earlyStop = true;
+            while (state.digitSpan.index < digitPlan.length &&
+                   digitPlan[state.digitSpan.index].mode === stoppedMode) {
+                state.digitSpan.index++;
+            }
+        }
+
+        const plan = digitPlan[state.digitSpan.index];
+        if (!plan) {
+            state.digitSpan.endedAt = new Date().toISOString();
+            state.digitSpan.current = null;
+            document.getElementById('digitInputArea').classList.add('hidden');
+            setHTML('digitScreen', '<span style="color:var(--success);font-weight:600;font-size:18px;">✓ Digit Span complete!</span>');
+            setText('digitStatus', state.digitSpan.trials.length + ' trials completed. Scroll down for Task 2.');
+            checkAllComplete();
+            return;
+        }
+        const prevPlan = state.digitSpan.index > 0 ? digitPlan[state.digitSpan.index - 1] : null;
+        if (!prevPlan || prevPlan.mode !== plan.mode) {
+            const label = plan.mode === 'backward' ? 'BACKWARD' : 'FORWARD';
+            const sub = plan.mode === 'backward' ? 'Type each sequence in reverse order' : 'Type each sequence in the same order';
+            setHTML('digitScreen', '<div class="direction-banner"><div class="direction-banner-label">' + label + '</div><div class="direction-banner-sub">' + sub + '</div></div>');
+            setText('digitStatus', label + ' trials starting...');
+            setTimeout(_runDigitTrial, 1800);
+            return;
+        }
+        _runDigitTrial();
+    }
+
+    function _runDigitTrial() {
+        const plan = digitPlan[state.digitSpan.index];
+        if (!plan) { runNextDigitTrial(); return; }
+        const seq = randomDigits(plan.length);
+        state.digitSpan.current = { mode: plan.mode, length: plan.length, sequence: seq, startedAt: new Date().toISOString() };
+        state.digitSpan.promptedAt = null;
+        document.getElementById('digitInputArea').classList.add('hidden');
+        document.getElementById('digitInput').value = '';
+        const dir = plan.mode === 'backward' ? 'BACKWARD (reverse order)' : 'FORWARD (same order)';
+        setText('digitStatus', dir + ' · trial ' + (state.digitSpan.index + 1) + ' of ' + SPAN_PLAN_LENGTH + ' · span ' + plan.length);
+        showDigitSequence(seq, function() {
+            const prompt = plan.mode === 'backward'
+                ? 'Type the digits in REVERSE order, then press Submit.'
+                : 'Type the digits in the SAME order, then press Submit.';
+            setHTML('digitScreen', '<span>' + prompt + '</span>');
+            state.digitSpan.promptedAt = performance.now();
+            document.getElementById('digitInputArea').classList.remove('hidden');
+            document.getElementById('digitInput').focus();
+        });
+    }
+
+    function showDigitSequence(seq, done) {
+        let idx = 0;
+        function step() {
+            if (idx >= seq.length) {
+                setHTML('digitScreen', '');
+                setTimeout(done, 600);
+                return;
+            }
+            setHTML('digitScreen', '<div class="stimulus">' + seq[idx] + '</div>');
+            idx++;
+            setTimeout(function() {
+                setHTML('digitScreen', '');
+                setTimeout(step, 250);
+            }, 850);
+        }
+        step();
+    }
+
+    function submitDigitResponse() {
+        if (!state.digitSpan.current || state.digitSpan.promptedAt === null) return;
+        const rt = Math.round(performance.now() - state.digitSpan.promptedAt);
+        const raw = document.getElementById('digitInput').value.trim().replace(/\s+/g, '');
+        const current = state.digitSpan.current;
+        const fwd = current.sequence.join('');
+        const bwd = current.sequence.slice().reverse().join('');
+        const correct = current.mode === 'backward' ? (raw === bwd) : (raw === fwd);
+        state.digitSpan.trials.push({
+            mode: current.mode, length: current.length,
+            sequence: current.sequence, userResponse: raw,
+            correct: correct, responseTimeMs: rt,
+            startedAt: current.startedAt, scoredAt: new Date().toISOString()
+        });
+        state.digitSpan.index++;
+        state.digitSpan.current = null;
+        state.digitSpan.promptedAt = null;
+        document.getElementById('digitInputArea').classList.add('hidden');
+        runNextDigitTrial();
+    }
+
+    // ── TASK 2 — CPT (25% targets, ISI jitter) ───────────────────────────────
+    function buildCptTrials() {
+        const out = [];
+        for (let i = 0; i < 80; i++) {
+            const target = Math.random() < 0.25;
+            out.push({
+                index: i + 1, target: target,
+                stimulus: target ? 'X' : LETTERS[Math.floor(Math.random() * LETTERS.length)],
+                responded: false, rt: null
+            });
+        }
+        return out;
+    }
+
+    function startCpt() {
+        state.cpt.trials = buildCptTrials();
+        state.cpt.index = 0;
+        state.cpt.active = true;
+        state.cpt.startedAt = new Date().toISOString();
+        document.getElementById('cptStart').disabled = true;
+        runNextCptTrial();
+    }
+
+    function runNextCptTrial() {
+        if (!state.cpt.active || state.cpt.index >= state.cpt.trials.length) {
+            state.cpt.active = false;
+            state.cpt.endedAt = new Date().toISOString();
+            document.getElementById('cptStart').disabled = false;
+            setHTML('cptScreen', '<span style="color:var(--success);font-weight:600;font-size:18px;">✓ CPT complete!</span><br><span style="font-size:14px;color:var(--text-secondary);">Scroll down for Task 3.</span>');
+            checkAllComplete();
+            return;
+        }
+        const trial = state.cpt.trials[state.cpt.index];
+        state.cpt.responseLocked = false;
+        state.cpt.stimulusAt = performance.now();
+        setHTML('cptScreen', '<div class="letters">' + trial.stimulus + '</div>');
+        setText('cptStatus', 'Trial ' + trial.index + ' of ' + state.cpt.trials.length);
+        setTimeout(function() {
+            setHTML('cptScreen', '');
+            state.cpt.responseLocked = true; // lock out late taps during ISI
+            state.cpt.index++;
+            setTimeout(runNextCptTrial, jitteredISI());
+        }, 900);
+    }
+
+    function recordCptResponse() {
+        if (!state.cpt.active || state.cpt.responseLocked) return;
+        const trial = state.cpt.trials[state.cpt.index];
+        if (!trial) return;
+        trial.responded = true;
+        trial.rt = Math.round(performance.now() - state.cpt.stimulusAt);
+        state.cpt.responseLocked = true;
+    }
+
+    // ── TASK 3 — Corsi (with response timing) ────────────────────────────────
+    function renderCorsiBlocks() {
+        const root = document.getElementById('corsiBlocks');
+        root.innerHTML = '';
+        for (let i = 0; i < 9; i++) {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'block';
+            btn.setAttribute('aria-label', 'Block ' + (i + 1));
+            btn.onclick = (function(idx) { return function() { selectCorsiBlock(idx); }; })(i);
+            root.appendChild(btn);
+        }
+    }
+
+    function startCorsi() {
+        corsiPlan = buildSpanPlan(['forward', 'backward'], 3, 7, 2);
+        state.corsi.trials = [];
+        state.corsi.index = 0;
+        state.corsi.startedAt = new Date().toISOString();
+        document.getElementById('corsiStart').disabled = true;
+        runNextCorsiTrial();
+    }
+
+    function runNextCorsiTrial() {
+        // Stopping rule: discontinue a mode after failing both trials at the same span
+        if (state.corsi.index < corsiPlan.length &&
+            spanShouldStop(state.corsi.trials, corsiPlan, state.corsi.index)) {
+            const stoppedMode = corsiPlan[state.corsi.index].mode;
+            state.corsi.earlyStop = true;
+            while (state.corsi.index < corsiPlan.length &&
+                   corsiPlan[state.corsi.index].mode === stoppedMode) {
+                state.corsi.index++;
+            }
+        }
+
+        const plan = corsiPlan[state.corsi.index];
+        if (!plan) {
+            state.corsi.endedAt = new Date().toISOString();
+            state.corsi.current = null;
+            document.getElementById('corsiStart').disabled = false;
+            document.getElementById('corsiClear').disabled = true;
+            document.getElementById('corsiSubmit').disabled = true;
+            setText('corsiStatus', '✓ Corsi complete! Scroll down for Task 4.');
+            checkAllComplete();
+            return;
+        }
+        const prevPlan = state.corsi.index > 0 ? corsiPlan[state.corsi.index - 1] : null;
+        if (!prevPlan || prevPlan.mode !== plan.mode) {
+            const label = plan.mode === 'backward' ? 'BACKWARD' : 'FORWARD';
+            const sub = plan.mode === 'backward' ? 'Tap blocks in reverse order' : 'Tap blocks in the same order';
+            const banner = document.getElementById('corsiDirectionBanner');
+            document.getElementById('corsiDirectionLabel').textContent = label;
+            document.getElementById('corsiDirectionSub').textContent = sub;
+            if (banner) banner.classList.remove('hidden');
+            setText('corsiStatus', label + ' trials starting...');
+            setTimeout(function() {
+                if (banner) banner.classList.add('hidden');
+                _runCorsiTrial();
+            }, 1800);
+            return;
+        }
+        _runCorsiTrial();
+    }
+
+    function _runCorsiTrial() {
+        const plan = corsiPlan[state.corsi.index];
+        if (!plan) { runNextCorsiTrial(); return; }
+        const seq = randomCorsiSequence(plan.length);
+        state.corsi.current = { mode: plan.mode, length: plan.length, sequence: seq, startedAt: new Date().toISOString() };
+        state.corsi.response = [];
+        state.corsi.sequenceEndedAt = null;
+        const dir = plan.mode === 'backward' ? 'BACKWARD' : 'FORWARD';
+        setText('corsiStatus', dir + ' · trial ' + (state.corsi.index + 1) + ' of ' + SPAN_PLAN_LENGTH + ' · span ' + plan.length);
+        playCorsiSequence(seq, function() {
+            state.corsi.sequenceEndedAt = performance.now();
+            const prompt = plan.mode === 'backward' ? 'Tap blocks in REVERSE order, then submit.' : 'Tap blocks in the SAME order, then submit.';
+            setText('corsiStatus', prompt);
+            document.getElementById('corsiClear').disabled = false;
+            document.getElementById('corsiSubmit').disabled = false;
+        });
+    }
+
+    function playCorsiSequence(seq, done) {
+        const blocks = Array.from(document.querySelectorAll('.block'));
+        let idx = 0;
+        blocks.forEach(function(b) { b.classList.remove('active', 'selected'); });
+        function step() {
+            if (idx >= seq.length) { setTimeout(done, 500); return; }
+            blocks[seq[idx]].classList.add('active');
+            setTimeout(function() {
+                blocks[seq[idx]].classList.remove('active');
+                idx++;
+                setTimeout(step, 250);
+            }, 650);
+        }
+        step();
+    }
+
+    function selectCorsiBlock(i) {
+        if (!state.corsi.current || document.getElementById('corsiSubmit').disabled) return;
+        if (state.corsi.response.indexOf(i) !== -1) return; // prevent duplicate taps on same block
+        state.corsi.response.push(i);
+        const block = document.querySelectorAll('.block')[i];
+        block.classList.add('selected');
+        block.classList.remove('pulse');
+        void block.offsetWidth;
+        block.classList.add('pulse');
+        const n = state.corsi.response.length;
+        setText('corsiStatus', 'Tapped ' + n + ' block' + (n !== 1 ? 's' : '') + ' — press Submit when done');
+    }
+
+    function clearCorsiResponse() {
+        state.corsi.response = [];
+        document.querySelectorAll('.block').forEach(function(b) { b.classList.remove('selected', 'pulse'); });
+        const cur = state.corsi.current;
+        if (cur) {
+            const prompt = cur.mode === 'backward' ? 'Tap blocks in REVERSE order, then submit.' : 'Tap blocks in the SAME order, then submit.';
+            setText('corsiStatus', prompt);
+        }
+    }
+
+    function submitCorsiResponse() {
+        const cur = state.corsi.current;
+        if (!cur) return;
+        const rt = state.corsi.sequenceEndedAt !== null ? Math.round(performance.now() - state.corsi.sequenceEndedAt) : null;
+        const expected = cur.mode === 'backward' ? cur.sequence.slice().reverse() : cur.sequence.slice();
+        const correct = expected.length === state.corsi.response.length &&
+            expected.every(function(v, i) { return v === state.corsi.response[i]; });
+        state.corsi.trials.push(Object.assign({}, cur, {
+            response: state.corsi.response.slice(), correct: correct,
+            responseTimeMs: rt, scoredAt: new Date().toISOString()
+        }));
+        state.corsi.index++;
+        document.getElementById('corsiClear').disabled = true;
+        document.getElementById('corsiSubmit').disabled = true;
+        clearCorsiResponse();
+        runNextCorsiTrial();
+    }
+
+    // ── TASK 4 — Go/No-Go (ISI jitter) ──────────────────────────────────────
+    function buildGoNoGoTrials() {
+        // Guaranteed 70:30 split — 42 go, 18 nogo — then shuffled
+        const types = [];
+        for (let i = 0; i < 42; i++) types.push('go');
+        for (let i = 0; i < 18; i++) types.push('nogo');
+        for (let i = types.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            const tmp = types[i]; types[i] = types[j]; types[j] = tmp;
+        }
+        return types.map(function(type, i) {
+            return { index: i + 1, type: type, responded: false, rt: null };
+        });
+    }
+
+    function startGoNoGo() {
+        state.goNoGo.trials = buildGoNoGoTrials();
+        state.goNoGo.index = 0;
+        state.goNoGo.active = true;
+        state.goNoGo.startedAt = new Date().toISOString();
+        document.getElementById('goNoGoStart').disabled = true;
+        runNextGoNoGoTrial();
+    }
+
+    function runNextGoNoGoTrial() {
+        if (!state.goNoGo.active || state.goNoGo.index >= state.goNoGo.trials.length) {
+            state.goNoGo.active = false;
+            state.goNoGo.endedAt = new Date().toISOString();
+            document.getElementById('goNoGoStart').disabled = false;
+            setHTML('goNoGoScreen', '<span style="color:var(--success);font-weight:600;font-size:18px;">✓ Go / No-Go complete!</span><br><span style="font-size:14px;color:var(--text-secondary);">Scroll down for Task 5.</span>');
+            checkAllComplete();
+            return;
+        }
+        const trial = state.goNoGo.trials[state.goNoGo.index];
+        state.goNoGo.responseLocked = false;
+        state.goNoGo.stimulusAt = performance.now();
+        setHTML('goNoGoScreen', '<div class="target ' + (trial.type === 'nogo' ? 'nogo' : '') + '">' + (trial.type === 'go' ? 'GO' : 'STOP') + '</div>');
+        setText('goNoGoStatus', 'Trial ' + trial.index + ' of ' + state.goNoGo.trials.length);
+        setTimeout(function() {
+            setHTML('goNoGoScreen', '');
+            state.goNoGo.responseLocked = true; // lock out late taps during ISI
+            state.goNoGo.index++;
+            setTimeout(runNextGoNoGoTrial, jitteredISI());
+        }, 1000);
+    }
+
+    function recordGoNoGoResponse() {
+        if (!state.goNoGo.active || state.goNoGo.responseLocked) return;
+        const trial = state.goNoGo.trials[state.goNoGo.index];
+        if (!trial) return;
+        trial.responded = true;
+        trial.rt = Math.round(performance.now() - state.goNoGo.stimulusAt);
+        state.goNoGo.responseLocked = true;
+    }
+
+    // ── TASK 5 — Processing Speed ────────────────────────────────────────────
+    function renderPsKey() {
+        const container = document.getElementById('psKeyDisplay');
+        PS_SYMBOLS.forEach(function(sym, i) {
+            const div = document.createElement('div');
+            div.className = 'ps-key-item';
+            div.textContent = sym + ' = ' + PS_DIGITS[i];
+            container.appendChild(div);
+        });
+    }
+
+    let _psTimerInterval = null;
+    let _resumedFromAutosave = false;
+    let _batteryResumedAt = null;
+
+    // ── Prior completion detection (localStorage) ─────────────────────────────
+    const COMPLETION_KEY = 'adhd_cognitive_completions';
+    let _priorCompletionCount = 0;
+    let _lastCompletionAt = null;
+    try {
+        const prior = JSON.parse(localStorage.getItem(COMPLETION_KEY) || 'null');
+        if (prior && prior.count) {
+            _priorCompletionCount = prior.count;
+            _lastCompletionAt = prior.lastCompletionAt || null;
+        }
+    } catch(e) {}
+
+    function startProcessingSpeed() {
+        state.processingSpeed.trials = [];
+        state.processingSpeed.active = true;
+        state.processingSpeed.completed = false;
+        state.processingSpeed.startedAt = new Date().toISOString();
+        document.getElementById('psStart').disabled = true;
+        document.getElementById('psTimer').classList.remove('hidden');
+        const endTime = performance.now() + PS_DURATION_MS;
+        state.processingSpeed.timerEnd = endTime;
+        _psTimerInterval = setInterval(function() {
+            const rem = Math.ceil((endTime - performance.now()) / 1000);
+            if (rem <= 0) { clearInterval(_psTimerInterval); endProcessingSpeed(); return; }
+            setText('psTimer', rem + 's remaining');
+        }, 200);
+        runNextPsTrial();
+    }
+
+    function runNextPsTrial() {
+        if (!state.processingSpeed.active) return;
+        if (performance.now() >= state.processingSpeed.timerEnd) { endProcessingSpeed(); return; }
+        const symIdx = Math.floor(Math.random() * PS_SYMBOLS.length);
+        const correctDigit = PS_DIGITS[symIdx];
+        const distractors = PS_DIGITS.filter(function(d) { return d !== correctDigit; })
+            .sort(function() { return Math.random() - 0.5; }).slice(0, 3);
+        const options = [correctDigit].concat(distractors).sort(function() { return Math.random() - 0.5; });
+        const trial = { symbol: PS_SYMBOLS[symIdx], correctDigit: correctDigit, options: options, rt: null, correct: null, userDigit: null };
+        state.processingSpeed.trials.push(trial);
+        state.processingSpeed.stimulusAt = performance.now();
+        setHTML('psSymbolArea', '<div class="big-symbol">' + PS_SYMBOLS[symIdx] + '</div>');
+        const optBox = document.getElementById('psOptions');
+        optBox.innerHTML = '';
+        optBox.classList.remove('hidden');
+        options.forEach(function(digit) {
+            const btn = document.createElement('button');
+            btn.className = 'ps-option';
+            btn.textContent = digit;
+            btn.onclick = (function(d) { return function() { recordPsResponse(trial, d); }; })(digit);
+            optBox.appendChild(btn);
+        });
+        setText('psStatus', 'Trial ' + state.processingSpeed.trials.length);
+    }
+
+    function recordPsResponse(trial, selectedDigit) {
+        if (!state.processingSpeed.active) return;
+        trial.rt = Math.round(performance.now() - state.processingSpeed.stimulusAt);
+        trial.correct = (selectedDigit === trial.correctDigit);
+        trial.userDigit = selectedDigit;
+        document.getElementById('psOptions').classList.add('hidden');
+        setHTML('psSymbolArea', '');
+        setTimeout(runNextPsTrial, 150);
+    }
+
+    function endProcessingSpeed() {
+        if (!state.processingSpeed.active) return;
+        state.processingSpeed.active = false;
+        state.processingSpeed.completed = true;
+        state.processingSpeed.endedAt = new Date().toISOString();
+        clearInterval(_psTimerInterval);
+        document.getElementById('psTimer').classList.add('hidden');
+        document.getElementById('psOptions').classList.add('hidden');
+        document.getElementById('psStart').disabled = false;
+        setHTML('psSymbolArea', '<span style="color:var(--success);font-weight:600;font-size:18px;">✓ Processing Speed complete!</span>');
+        setText('psStatus', state.processingSpeed.trials.length + ' trials completed. Scroll down to download your results.');
+        checkAllComplete();
+    }
+
+    // ── Completeness gate ─────────────────────────────────────────────────────
+    function isReadyToDownload() {
+        if (!state.digitSpan.endedAt) return false;      // span tasks may stop early — use endedAt
+        if (state.cpt.trials.length < 80) return false;
+        if (!state.corsi.endedAt) return false;
+        if (state.goNoGo.trials.length < 60) return false;
+        if (!state.processingSpeed.completed) return false;
+        return true;
+    }
+
+    function checkAllComplete() {
+        autosaveCognitive();
+        if (isReadyToDownload()) {
+            document.getElementById('downloadSection').classList.remove('hidden');
+            setTimeout(function() {
+                document.getElementById('downloadSection').scrollIntoView({ behavior: 'smooth' });
+            }, 300);
+        }
+    }
+
+    // ── Validity flags (silent — payload only) ───────────────────────────────
+    function computeValidityFlags() {
+        // CPT: anticipatory responses (RT < 100ms on any response)
+        const cptAnticipatoryResponses = state.cpt.trials.filter(function(t) {
+            return t.responded && t.rt !== null && t.rt < 100;
+        }).length;
+
+        // CPT: disengagement flag — mean RT of target hits in second half > 900ms, or zero hits despite targets present
+        const cptMid = Math.ceil(state.cpt.trials.length / 2);
+        const cptSecondHalfTargets = state.cpt.trials.slice(cptMid).filter(function(t) { return t.target; });
+        const cptSecondHalfHitRts  = cptSecondHalfTargets.filter(function(t) {
+            return t.responded && t.rt !== null;
+        }).map(function(t) { return t.rt; });
+        const cptDisengagementFlag = (function() {
+            const m = mean(cptSecondHalfHitRts);
+            if (m !== null && m > 900) return true;
+            if (cptSecondHalfTargets.length > 0 && cptSecondHalfHitRts.length === 0) return true;
+            return false;
+        })();
+
+        // Go/No-Go: summary metrics
+        const gngGoTrials   = state.goNoGo.trials.filter(function(t) { return t.type === 'go'; });
+        const gngNogoTrials = state.goNoGo.trials.filter(function(t) { return t.type === 'nogo'; });
+        const gngGoHits        = gngGoTrials.filter(function(t) { return t.responded; }).length;
+        const gngGoOmissions   = gngGoTrials.length - gngGoHits;
+        const gngFalseAlarms   = gngNogoTrials.filter(function(t) { return t.responded; }).length;
+        const gngCorrectRejects = gngNogoTrials.length - gngFalseAlarms;
+        const gngGoHitRate      = pct(gngGoHits, gngGoTrials.length);
+        const gngFalseAlarmRate = pct(gngFalseAlarms, gngNogoTrials.length);
+        const gngGoHitRts = gngGoTrials.filter(function(t) { return t.responded && t.rt !== null; }).map(function(t) { return t.rt; });
+        const gngMeanGoHitRt = mean(gngGoHitRts);
+
+        // Go/No-Go: disengagement flag — mean RT of go hits in second half > 900ms, or zero hits despite go trials present
+        const gngMid = Math.ceil(state.goNoGo.trials.length / 2);
+        const gngSecondHalfGoTrials = state.goNoGo.trials.slice(gngMid).filter(function(t) { return t.type === 'go'; });
+        const gngSecondHalfGoHitRts = gngSecondHalfGoTrials.filter(function(t) {
+            return t.responded && t.rt !== null;
+        }).map(function(t) { return t.rt; });
+        const gngDisengagementFlag = (function() {
+            const m = mean(gngSecondHalfGoHitRts);
+            if (m !== null && m > 900) return true;
+            if (gngSecondHalfGoTrials.length > 0 && gngSecondHalfGoHitRts.length === 0) return true;
+            return false;
+        })();
+
+        // Digit Span: perfect high span — first span-7 forward trial answered correctly
+        const firstDigit7Fwd = state.digitSpan.trials.find(function(t) {
+            return t.mode === 'forward' && t.length === 7;
+        });
+        const digitPerfectHighSpanFlag = !!(firstDigit7Fwd && firstDigit7Fwd.correct);
+
+        // Corsi: perfect high span — first span-7 forward trial answered correctly
+        const firstCorsi7Fwd = state.corsi.trials.find(function(t) {
+            return t.mode === 'forward' && t.length === 7;
+        });
+        const corsiPerfectHighSpanFlag = !!(firstCorsi7Fwd && firstCorsi7Fwd.correct);
+
+        // Completion time validity flags
+        // CPT: 80 trials × min ~1.25s each (900ms stimulus + 350ms min ISI) ≈ 100s minimum
+        const cptSecs = computeSeconds(state.cpt.startedAt, state.cpt.endedAt);
+        const cptSuspiciouslyFast = cptSecs !== null && cptSecs < 90;
+
+        // Go/No-Go: 60 trials × min ~1.35s each (1000ms stimulus + 350ms min ISI) ≈ 81s minimum
+        const gngSecs = computeSeconds(state.goNoGo.startedAt, state.goNoGo.endedAt);
+        const gngSuspiciouslyFast = gngSecs !== null && gngSecs < 75;
+
+        // Processing Speed: flag very low attempt count or very low accuracy
+        const psSumm = summariseProcessingSpeed(state.processingSpeed.trials);
+        const psLowAttempts  = psSumm.totalAttempted < 20;
+        const psLowAccuracy  = psSumm.accuracy !== null && psSumm.accuracy < 40;
+        const psValidityFlag = psLowAttempts || psLowAccuracy;
+
+        return {
+            cptAnticipatoryResponses: cptAnticipatoryResponses,
+            cptDisengagementFlag: cptDisengagementFlag,
+            gngTotalGoTrials:    gngGoTrials.length,
+            gngTotalNogoTrials:  gngNogoTrials.length,
+            gngGoHits:           gngGoHits,
+            gngGoOmissions:      gngGoOmissions,
+            gngFalseAlarms:      gngFalseAlarms,
+            gngCorrectRejects:   gngCorrectRejects,
+            gngGoHitRate:        gngGoHitRate,
+            gngFalseAlarmRate:   gngFalseAlarmRate,
+            gngMeanGoHitRt:      gngMeanGoHitRt !== null ? roundTo(gngMeanGoHitRt, 0) : null,
+            gngDisengagementFlag: gngDisengagementFlag,
+            cptSuspiciouslyFast: cptSuspiciouslyFast,
+            gngSuspiciouslyFast: gngSuspiciouslyFast,
+            psLowAttempts: psLowAttempts,
+            psLowAccuracy: psLowAccuracy,
+            psValidityFlag: psValidityFlag,
+            digitPerfectHighSpanFlag: digitPerfectHighSpanFlag,
+            corsiPerfectHighSpanFlag: corsiPerfectHighSpanFlag
+        };
+    }
+
+    // ── Processing Speed summary ──────────────────────────────────────────────
+    function summariseProcessingSpeed(trials) {
+        const total = trials.length;
+        const correct = trials.filter(function(t) { return t.correct; }).length;
+        const rts = trials.filter(function(t) { return typeof t.rt === 'number' && t.rt > 0; }).map(function(t) { return t.rt; });
+        const m = mean(rts);
+        const s = sdCalc(rts);
+        return {
+            totalAttempted: total,
+            totalCorrect: correct,
+            accuracy: pct(correct, total),
+            rt: {
+                mean: m !== null ? roundTo(m, 0) : null,
+                sd: s !== null ? roundTo(s, 0) : null,
+                cv: (m && s !== null) ? roundTo(s / m, 2) : null
+            }
+        };
+    }
+
+    // ── Payload ───────────────────────────────────────────────────────────────
+    function collectPayload() {
+        const flags = computeValidityFlags();
+        const ps = state.processingSpeed;
+        const psSumm = summariseProcessingSpeed(ps.trials);
+        return {
+            dataType: 'COGNITIVE_MVP',
+            toolVersion: '2.0',
+            patientName: document.getElementById('patientName').value.trim(),
+            dob: document.getElementById('dob').value,
+            completionDate: document.getElementById('completionDate').value,
+            completedAt: new Date().toISOString(),
+            deviceType: /Mobi|Android/i.test(navigator.userAgent) ? 'mobile' : 'desktop',
+            resumedFromAutosave: _resumedFromAutosave,
+            batteryResumedAt: _batteryResumedAt,
+            priorCompletionCount: _priorCompletionCount,
+            lastCompletionAt: _lastCompletionAt,
+            environmentCheck: state.environmentCheck,
+            tasks: {
+                digitSpan: {
+                    trials: state.digitSpan.trials,
+                    completionTimeSeconds: computeSeconds(state.digitSpan.startedAt, state.digitSpan.endedAt),
+                    earlyStoppingApplied: state.digitSpan.earlyStop,
+                    perfectHighSpanFlag: flags.digitPerfectHighSpanFlag
+                },
+                cpt: {
+                    trials: state.cpt.trials,
+                    completionTimeSeconds: computeSeconds(state.cpt.startedAt, state.cpt.endedAt),
+                    anticipatoryResponses: flags.cptAnticipatoryResponses,
+                    disengagementFlag: flags.cptDisengagementFlag,
+                    suspiciouslyFastFlag: flags.cptSuspiciouslyFast
+                },
+                corsi: {
+                    trials: state.corsi.trials,
+                    completionTimeSeconds: computeSeconds(state.corsi.startedAt, state.corsi.endedAt),
+                    earlyStoppingApplied: state.corsi.earlyStop,
+                    perfectHighSpanFlag: flags.corsiPerfectHighSpanFlag
+                },
+                goNoGo: {
+                    trials: state.goNoGo.trials,
+                    completionTimeSeconds: computeSeconds(state.goNoGo.startedAt, state.goNoGo.endedAt),
+                    totalGoTrials:    flags.gngTotalGoTrials,
+                    totalNogoTrials:  flags.gngTotalNogoTrials,
+                    goHits:           flags.gngGoHits,
+                    goOmissions:      flags.gngGoOmissions,
+                    falseAlarms:      flags.gngFalseAlarms,
+                    correctRejects:   flags.gngCorrectRejects,
+                    goHitRate:        flags.gngGoHitRate,
+                    falseAlarmRate:   flags.gngFalseAlarmRate,
+                    meanGoHitRt:        flags.gngMeanGoHitRt,
+                    disengagementFlag:  flags.gngDisengagementFlag,
+                    suspiciouslyFastFlag: flags.gngSuspiciouslyFast
+                },
+                processingSpeed: {
+                    trials: ps.trials,
+                    totalAttempted: psSumm.totalAttempted,
+                    totalCorrect: psSumm.totalCorrect,
+                    accuracy: psSumm.accuracy,
+                    meanRt: psSumm.rt.mean,
+                    sdRt: psSumm.rt.sd,
+                    cvRt: psSumm.rt.cv,
+                    completionTimeSeconds: computeSeconds(ps.startedAt, ps.endedAt),
+                    lowAttemptsFlag: flags.psLowAttempts,
+                    lowAccuracyFlag: flags.psLowAccuracy,
+                    validityFlag: flags.psValidityFlag
+                }
+            }
+        };
+    }
+
+    // ── Download ──────────────────────────────────────────────────────────────
+    const CLINIC_MASTER_KEY = 'Key123';
+
+    function downloadResults() {
+        const errEl = document.getElementById('downloadError');
+        const name = document.getElementById('patientName').value.trim();
+        const dob = document.getElementById('dob').value;
+        if (!name || !dob) {
+            errEl.textContent = 'Please scroll to the top and fill in your name and date of birth before downloading.';
+            errEl.classList.remove('hidden');
+            document.getElementById('patientName').scrollIntoView({ behavior: 'smooth' });
+            return;
+        }
+        errEl.classList.add('hidden');
+        const payload = collectPayload();
+        const plaintext = JSON.stringify(payload);
+        const hash = CryptoJS.SHA256(plaintext).toString();
+        const ciphertext = CryptoJS.AES.encrypt(plaintext, CLINIC_MASTER_KEY).toString();
+        const envelope = JSON.stringify({ v: 2, ciphertext: ciphertext, hash: hash });
+        const blob = new Blob([envelope], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'Cognitive_Tasks_' + payload.patientName.replace(/\s+/g, '_') + '_' + payload.completionDate + '.enc';
+        link.click();
+        URL.revokeObjectURL(url);
+        try { localStorage.removeItem('adhd_cognitive_autosave'); } catch(e) {}
+        try {
+            const newCount = _priorCompletionCount + 1;
+            localStorage.setItem(COMPLETION_KEY, JSON.stringify({
+                count: newCount,
+                lastCompletionAt: new Date().toISOString()
+            }));
+        } catch(e) {}
+    }
+
+    // ── Autosave between tasks ────────────────────────────────────────────────
+    function autosaveCognitive() {
+        try {
+            const snap = {
+                savedAt: new Date().toISOString(),
+                patientName: document.getElementById('patientName').value,
+                dob: document.getElementById('dob').value,
+                environmentCheck: state.environmentCheck,
+                digitSpan: state.digitSpan.endedAt ? { trials: state.digitSpan.trials, startedAt: state.digitSpan.startedAt, endedAt: state.digitSpan.endedAt } : null,
+                cpt: state.cpt.endedAt ? { trials: state.cpt.trials, startedAt: state.cpt.startedAt, endedAt: state.cpt.endedAt } : null,
+                corsi: state.corsi.endedAt ? { trials: state.corsi.trials, startedAt: state.corsi.startedAt, endedAt: state.corsi.endedAt } : null,
+                goNoGo: state.goNoGo.endedAt ? { trials: state.goNoGo.trials, startedAt: state.goNoGo.startedAt, endedAt: state.goNoGo.endedAt } : null,
+                processingSpeed: state.processingSpeed.completed ? { trials: state.processingSpeed.trials, completed: true, startedAt: state.processingSpeed.startedAt, endedAt: state.processingSpeed.endedAt } : null
+            };
+            localStorage.setItem('adhd_cognitive_autosave', JSON.stringify(snap));
+        } catch(e) {}
+    }
+
+    function loadAutosaveCognitive() {
+        try {
+            const raw = localStorage.getItem('adhd_cognitive_autosave');
+            if (!raw) return;
+            const snap = JSON.parse(raw);
+            const anyDone = snap.digitSpan || snap.cpt || snap.corsi || snap.goNoGo || snap.processingSpeed;
+            if (!anyDone) return;
+            if (!confirm('Found saved progress from a previous session. Continue where you left off?')) return;
+            _resumedFromAutosave = true;
+            _batteryResumedAt = new Date().toISOString();
+
+            // Skip intro screen on resume — patient has already read it
+            document.getElementById('introScreen').classList.add('hidden');
+            document.getElementById('mainContent').classList.remove('hidden');
+
+            if (snap.patientName) document.getElementById('patientName').value = snap.patientName;
+            if (snap.dob) document.getElementById('dob').value = snap.dob;
+            if (snap.environmentCheck) state.environmentCheck = snap.environmentCheck;
+
+            document.getElementById('envCheck').classList.add('hidden');
+            document.getElementById('taskArea').classList.remove('hidden');
+
+            if (snap.digitSpan) {
+                Object.assign(state.digitSpan, snap.digitSpan);
+                state.digitSpan.current = null;
+                document.getElementById('digitStart').disabled = true;
+                document.getElementById('digitBtns').classList.add('hidden');
+                setHTML('digitScreen', '<span style="color:var(--success);font-weight:600;font-size:18px;">✓ Digit Span complete!</span>');
+                setText('digitStatus', 'Restored from saved session. Scroll down for Task 2.');
+            }
+            if (snap.cpt) {
+                Object.assign(state.cpt, snap.cpt);
+                state.cpt.active = false;
+                document.getElementById('cptStart').disabled = true;
+                setHTML('cptScreen', '<span style="color:var(--success);font-weight:600;font-size:18px;">✓ CPT complete!</span><br><span style="font-size:14px;color:var(--text-secondary);">Restored from saved session. Scroll down for Task 3.</span>');
+            }
+            if (snap.corsi) {
+                Object.assign(state.corsi, snap.corsi);
+                state.corsi.current = null;
+                state.corsi.response = [];
+                document.getElementById('corsiStart').disabled = true;
+                document.getElementById('corsiClear').disabled = true;
+                document.getElementById('corsiSubmit').disabled = true;
+                setText('corsiStatus', '✓ Corsi complete! Restored from saved session. Scroll down for Task 4.');
+            }
+            if (snap.goNoGo) {
+                Object.assign(state.goNoGo, snap.goNoGo);
+                state.goNoGo.active = false;
+                document.getElementById('goNoGoStart').disabled = true;
+                setHTML('goNoGoScreen', '<span style="color:var(--success);font-weight:600;font-size:18px;">✓ Go / No-Go complete!</span><br><span style="font-size:14px;color:var(--text-secondary);">Restored from saved session. Scroll down for Task 5.</span>');
+            }
+            if (snap.processingSpeed) {
+                Object.assign(state.processingSpeed, snap.processingSpeed);
+                state.processingSpeed.active = false;
+                document.getElementById('psStart').disabled = true;
+                setHTML('psSymbolArea', '<span style="color:var(--success);font-weight:600;font-size:18px;">✓ Processing Speed complete!</span>');
+                setText('psStatus', 'Restored from saved session.');
+            }
+
+            checkAllComplete();
+        } catch(e) {}
+    }
+
+    // ── Intro screen ──────────────────────────────────────────────────────────
+    function beginIntro() {
+        document.getElementById('introScreen').classList.add('hidden');
+        document.getElementById('mainContent').classList.remove('hidden');
+    }
+
+    loadAutosaveCognitive();
+</script>
+</body>
+</html>
