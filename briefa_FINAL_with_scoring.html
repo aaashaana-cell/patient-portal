@@ -766,6 +766,7 @@
                 link.href = url;
                 link.download = 'BRIEF_A_' + window.exportData.patientName.replace(/\s+/g, '_') + '_' + window.exportData.completionDate + '.enc';
                 link.click();
+            localStorage.setItem('briefa_downloaded', new Date().toISOString());
                 URL.revokeObjectURL(url);
                 alert('Secure file downloaded. Please email this .enc file to your clinician.');
             } catch (e) {

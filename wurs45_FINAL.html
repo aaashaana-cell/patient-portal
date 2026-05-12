@@ -536,6 +536,7 @@
             '.enc';
 
         link.click();
+            localStorage.setItem('wurs_downloaded', new Date().toISOString());
         URL.revokeObjectURL(url);
     } catch (err) {
         console.error(err);

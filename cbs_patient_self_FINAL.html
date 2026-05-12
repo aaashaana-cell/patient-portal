@@ -650,6 +650,7 @@
         
         link.download = fileName;
         link.click();
+            localStorage.setItem('cbs_self_downloaded', new Date().toISOString());
         URL.revokeObjectURL(url);
         
         alert('Secure file downloaded. Please email this .enc file to your clinician.');

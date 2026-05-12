@@ -1095,6 +1095,7 @@
         link.href = url;
         link.download = 'Cognitive_Tasks_' + payload.patientName.replace(/\s+/g, '_') + '_' + payload.completionDate + '.enc';
         link.click();
+            localStorage.setItem('cognitive_downloaded', new Date().toISOString());
         URL.revokeObjectURL(url);
         try { localStorage.removeItem('adhd_cognitive_autosave'); } catch(e) {}
         try {

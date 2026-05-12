@@ -507,6 +507,7 @@
         const fileName = 'ASRS_' + window.exportData.patientName.replace(/\s+/g, '_') + '.enc';
         link.download = fileName;
         link.click();
+            localStorage.setItem('asrs_downloaded', new Date().toISOString());
         URL.revokeObjectURL(url);
 
         alert('Secure file downloaded. Please email this .enc file to your clinician.');
