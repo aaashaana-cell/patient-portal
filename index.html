@@ -286,6 +286,66 @@
     background: #fef9c3;
     color: #854d0e;
   }
+
+  #disclaimerGate {
+    max-width: 720px;
+    margin: 0 auto 40px;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 32px 36px;
+  }
+  #disclaimerGate h2 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 21px;
+    color: var(--ink);
+    margin-bottom: 14px;
+  }
+  #disclaimerGate p {
+    font-size: 14px;
+    color: #3a3a4a;
+    line-height: 1.75;
+    margin-bottom: 18px;
+  }
+  #disclaimerGate ul {
+    margin: 0 0 24px 0;
+    padding-left: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  #disclaimerGate ul li {
+    font-size: 14px;
+    color: #3a3a4a;
+    line-height: 1.6;
+  }
+  #disclaimerCheckLabel {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    font-size: 14px;
+    color: var(--ink);
+    cursor: pointer;
+    margin-bottom: 20px;
+  }
+  #disclaimerCheckLabel input { margin-top: 3px; flex-shrink: 0; }
+  #disclaimerProceed {
+    display: block;
+    width: 100%;
+    padding: 14px;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: opacity 0.2s;
+  }
+  #disclaimerProceed:disabled { opacity: 0.35; cursor: not-allowed; }
+  #disclaimerProceed:not(:disabled):hover { opacity: 0.88; }
+  #mainForms { display: none; }
 </style>
 </head>
 <body>
@@ -296,6 +356,22 @@
   <p class="subtitle">Please complete the form(s) requested by your doctor. Each questionnaire takes 5 to 15 minutes.</p>
 </header>
 
+<div id="disclaimerGate">
+  <h2>Before you begin</h2>
+  <p>Your clinician has sent you these questionnaires as part of an initial information-gathering stage. Please read the following before proceeding.</p>
+  <ul>
+    <li>These questionnaires are <strong>screening tools, not a diagnosis</strong>.</li>
+    <li>A <strong>structured clinical interview</strong> conducted by your clinician is required before any diagnostic conclusion can be reached.</li>
+    <li>Completing these forms <strong>does not constitute an assessment</strong> or entitle a diagnostic opinion.</li>
+  </ul>
+  <label id="disclaimerCheckLabel">
+    <input type="checkbox" id="disclaimerCheck" onchange="document.getElementById('disclaimerProceed').disabled = !this.checked;">
+    I have read and understood the above.
+  </label>
+  <button id="disclaimerProceed" disabled onclick="acknowledgeDisclaimer()">Continue to questionnaires →</button>
+</div>
+
+<div id="mainForms">
 <div class="encouragement">
   <strong>A note before you begin.</strong> Some of these questionnaires are long, and you may notice questions that feel similar to ones you've already answered. This is deliberate. The overlap helps your clinician build a more complete and reliable picture of your experiences.<br><br>
   Please answer as honestly and as fully as you can, but <strong>don't let any single difficult question stop you from submitting</strong>. If you find a question unclear, upsetting, or simply don't know the answer, it's fine to leave it blank or move on. A partially completed questionnaire is still genuinely useful. Please submit whatever you're able to.
@@ -401,6 +477,8 @@
   <span>After completing a form, download the results file and send it to your doctor via WhatsApp or email. This page does not store any of your data.</span>
 </div>
 
+</div><!-- /mainForms -->
+
 <footer>
   <p>Confidential clinical questionnaires &nbsp;·&nbsp; Please complete only forms requested by your doctor</p>
   <p style="margin-top: 8px;"><a onclick="document.getElementById('privacyModal').classList.add('open')">Privacy &amp; transparency notice</a></p>
@@ -428,6 +506,23 @@
   </div>
 </div>
 
+
+<script>
+function acknowledgeDisclaimer() {
+  try { localStorage.setItem('adhd_disclaimer_ack', '1'); } catch(e) {}
+  document.getElementById('disclaimerGate').style.display = 'none';
+  document.getElementById('mainForms').style.display = 'block';
+}
+(function() {
+  try {
+    if (localStorage.getItem('adhd_disclaimer_ack')) {
+      document.getElementById('disclaimerGate').style.display = 'none';
+      document.getElementById('mainForms').style.display = 'block';
+      return;
+    }
+  } catch(e) {}
+})();
+</script>
 
 <script>
 (function() {
