@@ -174,7 +174,7 @@
                 <p style="margin-top: 10px; color: var(--text-secondary); font-size: 14px;">
                     Your responses have been saved. Please send your results to Dr. Shah using one of the options below.
                 </p>
-                <p style="margin-top: 12px; font-size: 13px; color: #92400e; background: #fffbeb; border: 1px solid #fde68a; border-radius: 6px; padding: 10px 14px;">Your clinician will review these results and schedule the next step — a structured clinical interview — before any diagnostic conclusions can be reached.</p>
+                <p style="margin-top: 12px; font-size: 13px; color: #92400e; background: #fffbeb; border: 1px solid #fde68a; border-radius: 6px; padding: 10px 14px;">Your clinician will review these results and schedule the next step (a structured clinical interview) before any diagnostic conclusions can be reached.</p>
             </div>
 
             <div style="margin: 20px 0;">
@@ -551,11 +551,15 @@
             const subject = encodeURIComponent('Wender Scale - ' + data.patientName + ' - ' + data.completionDate);
             const body = encodeURIComponent('Dear Dr. Shah,\n\nPlease find attached my completed Wender Scale questionnaire.\n\nPatient Name: ' + data.patientName + '\nDate of Birth: ' + data.dob + '\nCompletion Date: ' + data.completionDate + '\n\nInstructions:\n1. Download the results file using the "Download Results File" button\n2. Attach the downloaded enc file to this email\n3. Send\n\nThank you.\n\nBest regards,\n' + data.patientName);
             
+            downloadJSON();
+            document.getElementById('emailAttachReminder').style.display = 'block';
+            setTimeout(function() {
             var a = document.createElement('a');
             a.href = 'mailto:draanashah@protonmail.com?subject=' + subject + '&body=' + body;
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
+            }, 800);
         }
     </script>
 </body>

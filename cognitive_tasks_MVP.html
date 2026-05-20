@@ -104,7 +104,7 @@
         <ul class="intro-checklist">
             <li>
                 <span class="icon">🕐</span>
-                <div><strong>Do this in one sitting</strong><span>Set aside around 20 minutes and complete all five tasks without stopping. Closing the tab and resuming later is possible but not ideal — it reduces the usefulness of some results.</span></div>
+                <div><strong>Do this in one sitting</strong><span>Set aside around 20 minutes and complete all five tasks without stopping. Closing the tab and resuming later is possible but not ideal, as it reduces the usefulness of some results.</span></div>
             </li>
             <li>
                 <span class="icon">🔇</span>
@@ -112,7 +112,7 @@
             </li>
             <li>
                 <span class="icon">📱</span>
-                <div><strong>Use whichever device you're most comfortable with</strong><span>Phone, tablet, or computer all work. If using a computer, use the spacebar for the tapping tasks — it's faster and more accurate than clicking.</span></div>
+                <div><strong>Use whichever device you're most comfortable with</strong><span>Phone, tablet, or computer all work. If using a computer, use the spacebar for the tapping tasks; it is faster and more accurate than clicking.</span></div>
             </li>
             <li>
                 <span class="icon">🪟</span>
@@ -126,7 +126,7 @@
             <strong>Privacy:</strong> All responses are processed locally in your browser. Nothing leaves your device until you choose to download and share the encrypted results file.
         </p>
 
-        <button class="intro-begin-btn" onclick="beginIntro()">I'm ready — Begin →</button>
+        <button class="intro-begin-btn" onclick="beginIntro()">I'm ready - Begin →</button>
     </div>
 
     <!-- ── Main content (revealed after intro) ──────────────────────────── -->
@@ -269,7 +269,7 @@
     <div class="complete-section hidden" id="downloadSection">
         <h2>All Tasks Complete</h2>
         <p>Thank you. Please download your encrypted results file and send it to your clinician.</p>
-        <p style="margin-top: 12px; font-size: 13px; color: #92400e; background: #fffbeb; border: 1px solid #fde68a; border-radius: 6px; padding: 10px 14px; text-align: left;">Your clinician will review these results and schedule the next step — a structured clinical interview — before any diagnostic conclusions can be reached.</p>
+        <p style="margin-top: 12px; font-size: 13px; color: #92400e; background: #fffbeb; border: 1px solid #fde68a; border-radius: 6px; padding: 10px 14px; text-align: left;">Your clinician will review these results and schedule the next step (a structured clinical interview) before any diagnostic conclusions can be reached.</p>
         <button class="success" style="font-size: 17px; padding: 14px 32px;" onclick="downloadResults()">Download Results File</button>
         <p id="downloadError" class="hidden" style="color:#dc2626;margin-top:14px;font-size:14px;font-weight:500;"></p>
     </div>
@@ -688,7 +688,7 @@
         void block.offsetWidth;
         block.classList.add('pulse');
         const n = state.corsi.response.length;
-        setText('corsiStatus', 'Tapped ' + n + ' block' + (n !== 1 ? 's' : '') + ' — press Submit when done');
+        setText('corsiStatus', 'Tapped ' + n + ' block' + (n !== 1 ? 's' : '') + '. Press Submit when done.');
     }
 
     function clearCorsiResponse() {

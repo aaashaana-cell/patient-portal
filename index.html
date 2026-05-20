@@ -534,7 +534,7 @@ function acknowledgeDisclaimer() {
     if (!hasDl && !hasSave) return;
     var badge = document.createElement('div');
     badge.className = 'status-badge ' + (hasDl ? 'done' : 'progress');
-    badge.textContent = hasDl ? '✓ Downloaded' : '● In progress — saved';
+    badge.textContent = hasDl ? '✓ Downloaded' : '● In progress, saved';
     var meta = card.querySelector('.card-meta');
     if (meta) meta.parentNode.insertBefore(badge, meta.nextSibling);
   });
