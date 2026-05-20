@@ -359,6 +359,7 @@
             return {
                 patientName: document.getElementById('patientName').value,
                 relationship: document.getElementById('relationship').value,
+                informantName: document.getElementById('informantName').value,
                 completionDate: document.getElementById('completionDate').value,
                 symptoms: getScores(),
                 impairment: getImpairment()
@@ -397,6 +398,7 @@
         function loadData(data) {
             if (data.patientName) document.getElementById('patientName').value = data.patientName;
             if (data.relationship) document.getElementById('relationship').value = data.relationship;
+            if (data.informantName) document.getElementById('informantName').value = data.informantName;
             
             data.symptoms.forEach(function(val, idx) {
                 if (val !== null) {
@@ -497,9 +499,12 @@ function downloadJSON() {
         function emailToPatient() {
             const data = window.exportData;
             const subject = encodeURIComponent('Behaviour Questionnaire - Parent Report for ' + data.patientName);
-            const body = encodeURIComponent('Hello,\n\nI have completed the childhood behaviour questionnaire you sent me.\n\nPatient: ' + data.patientName + '\nMy relationship: ' + data.relationship + '\nCompletion date: ' + data.completionDate + '\n\nInstructions:\n1. Download the results file using the "Download Results File" button\n2. Attach the downloaded .enc file to this email\n3. Send\n\nThank you.\n\nBest regards,\n' + data.parentName);
-            
-            window.location.href = 'mailto:draanashah@protonmail.com?subject=' + subject + '&body=' + body;
+            const body = encodeURIComponent('Hello,\n\nI have completed the childhood behaviour questionnaire you sent me.\n\nPatient: ' + data.patientName + '\nMy relationship: ' + data.relationship + '\nCompletion date: ' + data.completionDate + '\n\nInstructions:\n1. Download the results file using the "Download Results File" button\n2. Attach the downloaded .enc file to this email\n3. Send\n\nThank you.\n\nBest regards,\n' + data.informantName);
+            downloadJSON();
+            document.getElementById('emailAttachReminder').style.display = 'block';
+            setTimeout(function() {
+                window.location.href = 'mailto:draanashah@protonmail.com?subject=' + subject + '&body=' + body;
+            }, 800);
         }
     </script>
 </body>
