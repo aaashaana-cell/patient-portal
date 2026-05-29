@@ -219,102 +219,89 @@
         } catch(e) {}
     }
 
-    // RAADS-R items: [text, subscale, reverse_scored]
-    // Subscales: SL=Social Relatedness, CI=Circumscribed Interests, LA=Language, SM=Sensorimotor
-    // Reverse scored items use standard scoring logic but the question is phrased positively (neurotypical direction)
-    // For reverse scored: score = 3 - raw_value (so "Never true"=3, "True now and young"=0)
-    // Canonical RAADS-R items — Ritvo et al. (2011), verified against published PDF and embrace-autism.com.
-    // Reverse-scored items (17): 1,6,11,18,23,26,33,37,43,47,48,53,58,62,68,72,77
-    // Subscale note: SR item count differs between embrace-autism (39) and Ritvo paper (29); total score unaffected.
+    // RAADS-R items — canonical wording (Ritvo et al., 2011).
     const QUESTIONS = [
-        { text: "I am a sympathetic person.", sub: "SL", rev: true },
-        { text: "I often use words and phrases from movies and television in conversations.", sub: "LA", rev: false },
-        { text: "I am often surprised when others tell me I have been rude.", sub: "SL", rev: false },
-        { text: "Sometimes I talk too loudly or too softly, and I am not aware of it.", sub: "SM", rev: false },
-        { text: "I often don't know how to act in social situations.", sub: "SL", rev: false },
-        { text: "I can 'put myself in other people\'s shoes.'", sub: "SL", rev: true },
-        { text: "I have a hard time figuring out what some phrases mean, like 'you are the apple of my eye.'", sub: "LA", rev: false },
-        { text: "I only like to talk to people who share my special interests.", sub: "SL", rev: false },
-        { text: "I focus on details rather than the overall idea.", sub: "CI", rev: false },
-        { text: "I always notice how food feels in my mouth. This is more important to me than how it tastes.", sub: "SM", rev: false },
-        { text: "I miss my best friends or family when we are apart for a long time.", sub: "SL", rev: true },
-        { text: "Sometimes I offend others by saying what I am thinking, even if I don't mean to.", sub: "SL", rev: false },
-        { text: "I only like to think and talk about a few things that interest me.", sub: "CI", rev: false },
-        { text: "I'd rather go out to eat in a restaurant by myself than with someone I know.", sub: "SL", rev: false },
-        { text: "I cannot imagine what it would be like to be someone else.", sub: "LA", rev: false },
-        { text: "I have been told that I am clumsy or uncoordinated.", sub: "SM", rev: false },
-        { text: "Others consider me odd or different.", sub: "SL", rev: false },
-        { text: "I understand when friends need to be comforted.", sub: "SL", rev: true },
-        { text: "I am very sensitive to the way my clothes feel when I touch them. How they feel is more important to me than how they look.", sub: "SM", rev: false },
-        { text: "I like to copy the way certain people speak and act. It helps me appear more normal.", sub: "SL", rev: false },
-        { text: "It can be very intimidating for me to talk to more than one person at the same time.", sub: "SL", rev: false },
-        { text: "I have to 'act normal' to please other people and make them like me.", sub: "SL", rev: false },
-        { text: "Meeting new people is usually easy for me.", sub: "SL", rev: true },
-        { text: "I get highly confused when someone interrupts me when I am talking about something I am very interested in.", sub: "CI", rev: false },
-        { text: "It is difficult for me to understand how other people are feeling when we are talking.", sub: "SL", rev: false },
-        { text: "I like having a conversation with several people, for instance around a dinner table, at school or at work.", sub: "SL", rev: true },
-        { text: "I take things too literally, so I often miss what people are trying to say.", sub: "LA", rev: false },
-        { text: "It is very difficult for me to understand when someone is embarrassed or jealous.", sub: "SL", rev: false },
-        { text: "Some ordinary textures that do not bother others feel very offensive when they touch my skin.", sub: "SM", rev: false },
-        { text: "I get extremely upset when the way I like to do things is suddenly changed.", sub: "CI", rev: false },
-        { text: "I have never wanted or needed to have what other people call an 'intimate relationship.'", sub: "SL", rev: false },
-        { text: "It is difficult for me to start and stop a conversation. I need to keep going until I am finished.", sub: "CI", rev: false },
-        { text: "I speak with a normal rhythm.", sub: "SM", rev: true },
-        { text: "The same sound, color or texture can suddenly change from very sensitive to very dull.", sub: "SM", rev: false },
-        { text: "The phrase 'I\'ve got you under my skin' makes me uncomfortable.", sub: "LA", rev: false },
-        { text: "Sometimes the sound of a word or a high-pitched noise can be painful to my ears.", sub: "SM", rev: false },
-        { text: "I am an understanding type of person.", sub: "SL", rev: true },
-        { text: "I do not connect with characters in movies and cannot feel what they feel.", sub: "SL", rev: false },
-        { text: "I cannot tell when someone is flirting with me.", sub: "SL", rev: false },
-        { text: "I can see in my mind in exact detail things that I am interested in.", sub: "CI", rev: false },
-        { text: "I keep lists of things that interest me, even when they have no practical use (for example sports statistics, train schedules, calendar dates, historical facts and dates).", sub: "CI", rev: false },
-        { text: "When I feel overwhelmed by my senses, I have to isolate myself to shut them down.", sub: "SM", rev: false },
-        { text: "I like to talk things over with my friends.", sub: "SL", rev: true },
-        { text: "I cannot tell if someone is interested or bored with what I am saying.", sub: "SL", rev: false },
-        { text: "It can be very hard to read someone's face, hand and body movements when they are talking.", sub: "SL", rev: false },
-        { text: "The same thing (like clothes or temperatures) can feel very different to me at different times.", sub: "SM", rev: false },
-        { text: "I feel very comfortable with dating or being in social situations with others.", sub: "SL", rev: true },
-        { text: "I try to be as helpful as I can when other people tell me their personal problems.", sub: "SL", rev: true },
-        { text: "I have been told that I have an unusual voice (for example flat, monotone, childish, or high-pitched).", sub: "SM", rev: false },
-        { text: "Sometimes a thought or a subject gets stuck in my mind and I have to talk about it even if no one is interested.", sub: "CI", rev: false },
-        { text: "I do certain things with my hands over and over again (like flapping, twirling sticks or strings, waving things by my eyes).", sub: "SM", rev: false },
-        { text: "I have never been interested in what most of the people I know consider interesting.", sub: "CI", rev: false },
-        { text: "I am considered a compassionate type of person.", sub: "SL", rev: true },
-        { text: "I get along with other people by following a set of specific rules that help me look normal.", sub: "SL", rev: false },
-        { text: "It is very difficult for me to work and function in groups.", sub: "SL", rev: false },
-        { text: "When I am talking to someone, it is hard to change the subject. If the other person does so, I can get very upset and confused.", sub: "CI", rev: false },
-        { text: "Sometimes I have to cover my ears to block out painful noises (like vacuum cleaners or people talking too much or too loudly).", sub: "SM", rev: false },
-        { text: "I can chat and make small talk with people.", sub: "LA", rev: true },
-        { text: "Sometimes things that should feel painful are not (for instance when I hurt myself or burn my hand on the stove).", sub: "SM", rev: false },
-        { text: "When talking to someone, I have a hard time telling when it is my turn to talk or to listen.", sub: "SL", rev: false },
-        { text: "I am considered a loner by those who know me best.", sub: "SL", rev: false },
-        { text: "I usually speak in a normal tone.", sub: "SM", rev: true },
-        { text: "I like things to be exactly the same day after day and even small changes in my routines upset me.", sub: "CI", rev: false },
-        { text: "How to make friends and socialize is a mystery to me.", sub: "SL", rev: false },
-        { text: "It calms me to spin around or to rock in a chair when I am feeling stressed.", sub: "SM", rev: false },
-        { text: "The phrase, 'He wears his heart on his sleeve,' does not make sense to me.", sub: "LA", rev: false },
-        { text: "If I am in a place where there are many smells, textures to feel, noises or bright lights, I feel anxious or frightened.", sub: "SM", rev: false },
-        { text: "I can tell when someone says one thing but means something else.", sub: "SL", rev: true },
-        { text: "I like to be by myself as much as I can.", sub: "SL", rev: false },
-        { text: "I keep my thoughts stacked in my memory like they are on filing cards, and I pick out the ones I need by looking through the stack and finding the right one (or another unique way).", sub: "CI", rev: false },
-        { text: "The same sound sometimes seems very loud or very soft, even though I know it has not changed.", sub: "SM", rev: false },
-        { text: "I enjoy spending time eating and talking with my family and friends.", sub: "SL", rev: true },
-        { text: "I can't tolerate things I dislike (like smells, textures, sounds or colors).", sub: "SM", rev: false },
-        { text: "I don't like to be hugged or held.", sub: "SM", rev: false },
-        { text: "When I go somewhere, I have to follow a familiar route or I can get very confused and upset.", sub: "CI", rev: false },
-        { text: "It is difficult to figure out what other people expect of me.", sub: "SL", rev: false },
-        { text: "I like to have close friends.", sub: "SL", rev: true },
-        { text: "People tell me that I give too much detail.", sub: "CI", rev: false },
-        { text: "I am often told that I ask embarrassing questions.", sub: "SL", rev: false },
-        { text: "I tend to point out other people's mistakes.", sub: "SL", rev: false }
+        { text: "I am a sympathetic person." },
+        { text: "I often use words and phrases from movies and television in conversations." },
+        { text: "I am often surprised when others tell me I have been rude." },
+        { text: "Sometimes I talk too loudly or too softly, and I am not aware of it." },
+        { text: "I often don't know how to act in social situations." },
+        { text: "I can 'put myself in other people\'s shoes.'" },
+        { text: "I have a hard time figuring out what some phrases mean, like 'you are the apple of my eye.'" },
+        { text: "I only like to talk to people who share my special interests." },
+        { text: "I focus on details rather than the overall idea." },
+        { text: "I always notice how food feels in my mouth. This is more important to me than how it tastes." },
+        { text: "I miss my best friends or family when we are apart for a long time." },
+        { text: "Sometimes I offend others by saying what I am thinking, even if I don't mean to." },
+        { text: "I only like to think and talk about a few things that interest me." },
+        { text: "I'd rather go out to eat in a restaurant by myself than with someone I know." },
+        { text: "I cannot imagine what it would be like to be someone else." },
+        { text: "I have been told that I am clumsy or uncoordinated." },
+        { text: "Others consider me odd or different." },
+        { text: "I understand when friends need to be comforted." },
+        { text: "I am very sensitive to the way my clothes feel when I touch them. How they feel is more important to me than how they look." },
+        { text: "I like to copy the way certain people speak and act. It helps me appear more normal." },
+        { text: "It can be very intimidating for me to talk to more than one person at the same time." },
+        { text: "I have to 'act normal' to please other people and make them like me." },
+        { text: "Meeting new people is usually easy for me." },
+        { text: "I get highly confused when someone interrupts me when I am talking about something I am very interested in." },
+        { text: "It is difficult for me to understand how other people are feeling when we are talking." },
+        { text: "I like having a conversation with several people, for instance around a dinner table, at school or at work." },
+        { text: "I take things too literally, so I often miss what people are trying to say." },
+        { text: "It is very difficult for me to understand when someone is embarrassed or jealous." },
+        { text: "Some ordinary textures that do not bother others feel very offensive when they touch my skin." },
+        { text: "I get extremely upset when the way I like to do things is suddenly changed." },
+        { text: "I have never wanted or needed to have what other people call an 'intimate relationship.'" },
+        { text: "It is difficult for me to start and stop a conversation. I need to keep going until I am finished." },
+        { text: "I speak with a normal rhythm." },
+        { text: "The same sound, color or texture can suddenly change from very sensitive to very dull." },
+        { text: "The phrase 'I\'ve got you under my skin' makes me uncomfortable." },
+        { text: "Sometimes the sound of a word or a high-pitched noise can be painful to my ears." },
+        { text: "I am an understanding type of person." },
+        { text: "I do not connect with characters in movies and cannot feel what they feel." },
+        { text: "I cannot tell when someone is flirting with me." },
+        { text: "I can see in my mind in exact detail things that I am interested in." },
+        { text: "I keep lists of things that interest me, even when they have no practical use (for example sports statistics, train schedules, calendar dates, historical facts and dates)." },
+        { text: "When I feel overwhelmed by my senses, I have to isolate myself to shut them down." },
+        { text: "I like to talk things over with my friends." },
+        { text: "I cannot tell if someone is interested or bored with what I am saying." },
+        { text: "It can be very hard to read someone's face, hand and body movements when they are talking." },
+        { text: "The same thing (like clothes or temperatures) can feel very different to me at different times." },
+        { text: "I feel very comfortable with dating or being in social situations with others." },
+        { text: "I try to be as helpful as I can when other people tell me their personal problems." },
+        { text: "I have been told that I have an unusual voice (for example flat, monotone, childish, or high-pitched)." },
+        { text: "Sometimes a thought or a subject gets stuck in my mind and I have to talk about it even if no one is interested." },
+        { text: "I do certain things with my hands over and over again (like flapping, twirling sticks or strings, waving things by my eyes)." },
+        { text: "I have never been interested in what most of the people I know consider interesting." },
+        { text: "I am considered a compassionate type of person." },
+        { text: "I get along with other people by following a set of specific rules that help me look normal." },
+        { text: "It is very difficult for me to work and function in groups." },
+        { text: "When I am talking to someone, it is hard to change the subject. If the other person does so, I can get very upset and confused." },
+        { text: "Sometimes I have to cover my ears to block out painful noises (like vacuum cleaners or people talking too much or too loudly)." },
+        { text: "I can chat and make small talk with people." },
+        { text: "Sometimes things that should feel painful are not (for instance when I hurt myself or burn my hand on the stove)." },
+        { text: "When talking to someone, I have a hard time telling when it is my turn to talk or to listen." },
+        { text: "I am considered a loner by those who know me best." },
+        { text: "I usually speak in a normal tone." },
+        { text: "I like things to be exactly the same day after day and even small changes in my routines upset me." },
+        { text: "How to make friends and socialize is a mystery to me." },
+        { text: "It calms me to spin around or to rock in a chair when I am feeling stressed." },
+        { text: "The phrase, 'He wears his heart on his sleeve,' does not make sense to me." },
+        { text: "If I am in a place where there are many smells, textures to feel, noises or bright lights, I feel anxious or frightened." },
+        { text: "I can tell when someone says one thing but means something else." },
+        { text: "I like to be by myself as much as I can." },
+        { text: "I keep my thoughts stacked in my memory like they are on filing cards, and I pick out the ones I need by looking through the stack and finding the right one (or another unique way)." },
+        { text: "The same sound sometimes seems very loud or very soft, even though I know it has not changed." },
+        { text: "I enjoy spending time eating and talking with my family and friends." },
+        { text: "I can't tolerate things I dislike (like smells, textures, sounds or colors)." },
+        { text: "I don't like to be hugged or held." },
+        { text: "When I go somewhere, I have to follow a familiar route or I can get very confused and upset." },
+        { text: "It is difficult to figure out what other people expect of me." },
+        { text: "I like to have close friends." },
+        { text: "People tell me that I give too much detail." },
+        { text: "I am often told that I ask embarrassing questions." },
+        { text: "I tend to point out other people's mistakes." }
     ];
-
-    const SUBSCALE_NAMES = {
-        SL: "Social Relatedness",
-        CI: "Circumscribed Interests",
-        LA: "Language",
-        SM: "Sensorimotor"
-    };
 
     function buildQuestions() {
         const container = document.getElementById('questionsContainer');
@@ -475,23 +462,7 @@
         _hasValidated = true;
         highlightSkipped();
 
-        // Score calculation
-        const scored = data.responses.map(function(raw, i) {
-            if (raw === null) return null;
-            return QUESTIONS[i].rev ? (3 - raw) : raw;
-        });
-
-        const totalScore = scored.reduce(function(sum, s) { return sum + (s !== null ? s : 0); }, 0);
-        const answeredCount = scored.filter(function(s) { return s !== null; }).length;
-
-        const subscoreRaw = { SL: 0, CI: 0, LA: 0, SM: 0 };
-        const subscoreN = { SL: 0, CI: 0, LA: 0, SM: 0 };
-        QUESTIONS.forEach(function(q, i) {
-            if (scored[i] !== null) {
-                subscoreRaw[q.sub] += scored[i];
-                subscoreN[q.sub]++;
-            }
-        });
+        const answeredCount = data.responses.filter(function(x) { return x !== null; }).length;
 
         const exportData = {
             toolVersion: "1.0",
@@ -504,15 +475,6 @@
                 answered: answeredCount,
                 skipped: skipped,
                 completionPercent: 100 - skippedPercent
-            },
-            scoring: {
-                totalScore: totalScore,
-                subscores: {
-                    socialRelatedness: subscoreRaw.SL,
-                    circumscribedInterests: subscoreRaw.CI,
-                    language: subscoreRaw.LA,
-                    sensorimotor: subscoreRaw.SM
-                }
             },
             responses: data.responses
         };
@@ -574,6 +536,53 @@
         document.getElementById('patientName').addEventListener('input', saveIdentity);
         document.getElementById('dob').addEventListener('change', saveIdentity);
     });
+</script>
+<script>
+/* PsychChart direct-submit */
+(function () {
+  var SCALE_ID = "raadsr";
+  var PORTAL   = "https://app.draanashah.com/public/assessment/submit";
+  var token    = new URLSearchParams(window.location.search).get("psychchart_token");
+  if (!token) return;
+  var injected = false;
+  function tryInject() {
+    if (injected) return;
+    var section = document.getElementById("exportSection");
+    if (!section || section.classList.contains("hidden")) return;
+    injected = true;
+    var btn = document.createElement("button");
+    btn.className = "btn-success";
+    btn.style.cssText = "margin-top:10px;font-size:15px;padding:13px 26px;background:#0ea5e9;";
+    btn.textContent = "\u{1F4E4} Send to Dr Shah";
+    var msg = document.createElement("p");
+    msg.style.cssText = "margin-top:8px;font-size:13px;min-height:1.2em;";
+    var grp = section.querySelector(".button-group");
+    if (grp) { grp.appendChild(btn); grp.parentNode.insertBefore(msg, grp.nextSibling); }
+    btn.addEventListener("click", async function () {
+      if (!window.exportData) { msg.textContent = "Complete the questionnaire first."; msg.style.color="#dc2626"; return; }
+      btn.disabled = true; msg.textContent = "Submitting…"; msg.style.color="";
+      try {
+        var r = await fetch(PORTAL, {
+          method:"POST", headers:{"Content-Type":"application/json"},
+          body: JSON.stringify({token:token, scale:SCALE_ID, responses:window.exportData})
+        });
+        var j = await r.json().catch(function(){return{};});
+        if (r.ok && j.ok) {
+          btn.textContent = "\u2713 Sent to Dr Shah";
+          btn.style.background = "#059669";
+          msg.textContent = "Sent. Download below as a backup if needed.";
+          msg.style.color = "#059669";
+        } else { throw new Error(j.error || "Error " + r.status); }
+      } catch(e) {
+        msg.textContent = "Could not submit: " + e.message + ". Use the download option instead.";
+        msg.style.color = "#dc2626"; btn.disabled = false;
+      }
+    });
+  }
+  var obs = new MutationObserver(tryInject);
+  obs.observe(document.body, {childList:true,subtree:true,attributes:true,attributeFilter:["class"]});
+  tryInject();
+})();
 </script>
 </body>
 </html>

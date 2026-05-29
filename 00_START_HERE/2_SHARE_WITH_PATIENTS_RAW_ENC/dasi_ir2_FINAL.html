@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Developmental &amp; Behaviour Questionnaire (Informant Report)</title>
+  <style>
+    :root {
+      --primary:#7c3aed; --primary-dark:#5b21b6; --primary-bg:#faf5ff;
+      --child-bg:#fffbeb; --child-border:#f59e0b;
+      --present-bg:#faf5ff; --present-border:#7c3aed;
+      --success:#16a34a; --bg:#f8fafc; --card-bg:#fff;
+      --border:#e2e8f0; --text:#1e293b; --text-secondary:#64748b;
+    }
+    *{margin:0;padding:0;box-sizing:border-box;}
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);line-height:1.6;padding:20px;}
+    .container{max-width:920px;margin:0 auto;}
+    .header{background:linear-gradient(135deg,var(--primary) 0%,var(--primary-dark) 100%);color:white;padding:28px 30px;border-radius:12px;margin-bottom:20px;box-shadow:0 2px 8px rgba(0,0,0,0.12);}
+    .header h1{margin-bottom:5px;font-size:23px;font-weight:700;}
+    .header p{font-size:14px;opacity:0.92;margin:2px 0;}
+    .submission-box{background:#f3e8ff;border:2px solid #a855f7;padding:16px 20px;margin-bottom:18px;border-radius:8px;}
+    .submission-box h3{color:#6b21a8;margin-bottom:7px;font-size:14.5px;}
+    .submission-box ul{margin-left:18px;}
+    .submission-box li{margin:3px 0;color:#6b21a8;font-size:13px;}
+    .disclaimer-box{background:#fef3c7;border-left:4px solid #f59e0b;padding:14px 16px;margin-bottom:18px;border-radius:4px;font-size:13px;}
+    .disclaimer-box strong{color:#92400e;}
+    .progress-text{text-align:center;margin-bottom:7px;color:var(--text-secondary);font-size:13.5px;font-weight:500;}
+    .progress-bar{background:var(--border);height:8px;border-radius:4px;overflow:hidden;margin-bottom:26px;}
+    .progress-fill{background:var(--success);height:100%;transition:width 0.3s ease;}
+    .card{background:var(--card-bg);padding:20px 22px;border-radius:12px;margin-bottom:18px;border:1px solid var(--border);box-shadow:0 1px 3px rgba(0,0,0,0.07);}
+    .info-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:13px;}
+    label{display:block;margin-bottom:4px;font-weight:500;font-size:13.5px;}
+    input[type="text"],input[type="date"],input[type="number"]{width:100%;padding:9px 10px;border:1px solid var(--border);border-radius:6px;font-size:14px;background:white;font-family:inherit;}
+    input[type="text"]:focus,input[type="date"]:focus,input[type="number"]:focus{outline:none;border-color:var(--primary);}
+    select{width:100%;padding:9px 10px;border:1px solid var(--border);border-radius:6px;font-size:14px;background:white;font-family:inherit;}
+
+    /* Domain cards */
+    .domain-card{background:var(--card-bg);border-radius:12px;margin-bottom:22px;border:1px solid var(--border);overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.07);}
+    .domain-header{background:linear-gradient(to right,#faf5ff,#f8fafc);border-bottom:2px solid var(--primary);padding:13px 22px;}
+    .domain-header h2{font-size:15px;font-weight:700;color:var(--primary-dark);}
+    .domain-body{padding:0 18px 18px;}
+
+    /* Question pairs */
+    .question-pair{margin-top:18px;border-radius:8px;overflow:hidden;border:1px solid var(--border);}
+    .pair-code{background:#f1f5f9;padding:6px 14px;font-size:11.5px;font-weight:700;color:var(--text-secondary);letter-spacing:0.05em;border-bottom:1px solid var(--border);}
+
+    /* Item blocks */
+    .item-block{padding:14px 16px;}
+    .item-block+.item-block{border-top:2px dashed var(--border);}
+    .child-block{background:var(--child-bg);border-left:4px solid var(--child-border);}
+    .present-block{background:var(--present-bg);border-left:4px solid var(--present-border);}
+    .timepoint-badge{display:inline-block;font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:3px;margin-bottom:7px;letter-spacing:0.04em;text-transform:uppercase;}
+    .child-badge{background:#fef3c7;color:#92400e;border:1px solid #fcd34d;}
+    .present-badge{background:#ede9fe;color:#4c1d95;border:1px solid #c4b5fd;}
+    .item-question{font-size:13.5px;font-weight:500;line-height:1.5;color:var(--text);margin-bottom:10px;}
+
+    /* Rating buttons */
+    .rating-row{display:flex;gap:5px;margin-bottom:9px;flex-wrap:wrap;}
+    .rating-opt{flex:1;min-width:70px;}
+    .rating-opt input{display:none;}
+    .rating-opt span{display:block;text-align:center;padding:7px 3px;border:2px solid var(--border);border-radius:6px;cursor:pointer;font-size:11.5px;font-weight:600;color:var(--text-secondary);background:white;transition:all 0.15s;user-select:none;line-height:1.3;}
+    .rating-opt span:hover{border-color:var(--primary);background:var(--primary-bg);color:var(--primary);}
+    .rating-opt input:checked+span{background:var(--primary);color:white;border-color:var(--primary);}
+    .rating-opt.dk span:hover{border-color:#9ca3af;background:#f3f4f6;color:#4b5563;}
+    .rating-opt.dk input:checked+span{background:#6b7280;border-color:#6b7280;color:white;}
+
+    /* Textarea */
+    .textarea-prompt{font-size:11px;color:var(--text-secondary);margin-bottom:4px;font-style:italic;}
+    .item-textarea{width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;min-height:75px;resize:vertical;font-family:inherit;color:var(--text);background:white;}
+    .item-textarea:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 2px rgba(124,58,237,0.12);}
+
+    /* Additional questions (Q8/Q9/Q10) */
+    .additional-card{background:var(--card-bg);border-radius:12px;margin-bottom:22px;border:1px solid var(--border);overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.07);}
+    .additional-header{background:linear-gradient(to right,#faf5ff,#f8fafc);border-bottom:2px solid var(--primary);padding:13px 22px;}
+    .additional-header h2{font-size:15px;font-weight:700;color:var(--primary-dark);}
+    .additional-body{padding:18px 22px;}
+    .additional-item{margin-bottom:20px;padding-bottom:20px;border-bottom:1px solid var(--border);}
+    .additional-item:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0;}
+    .additional-qlabel{font-size:14px;font-weight:600;margin-bottom:6px;}
+    .additional-sub{font-size:12.5px;color:var(--text-secondary);margin-bottom:8px;}
+    .yn-row{display:flex;gap:10px;margin-bottom:10px;}
+    .yn-opt{display:flex;align-items:center;gap:6px;}
+    .yn-opt input{width:17px;height:17px;cursor:pointer;}
+    .yn-opt label{margin:0;font-weight:500;font-size:13.5px;cursor:pointer;}
+
+    /* Buttons */
+    .button-group{display:flex;gap:11px;flex-wrap:wrap;margin-top:22px;}
+    button{padding:10px 20px;border:none;border-radius:6px;font-size:14px;font-weight:500;cursor:pointer;transition:all 0.2s;font-family:inherit;}
+    .btn-primary{background:var(--primary);color:white;}
+    .btn-primary:hover{background:var(--primary-dark);}
+    .btn-success{background:var(--success);color:white;}
+    .btn-success:hover{opacity:0.9;}
+    .btn-secondary{background:var(--border);color:var(--text);}
+    .btn-secondary:hover{background:#cbd5e1;}
+    .hidden{display:none;}
+    #exportSection{background:#f0fdf4;border:2px solid var(--success);padding:22px;border-radius:12px;margin-top:26px;}
+    .validation-error{background:#fee2e2;border:1px solid #dc2626;color:#991b1b;padding:13px;border-radius:6px;font-size:13px;margin-top:15px;}
+    .completion-message{text-align:center;padding:14px 0 18px;}
+    .completion-message h3{color:var(--success);font-size:20px;margin-bottom:6px;}
+
+    @media(max-width:600px){
+      body{padding:10px;}
+      .header{padding:18px;}
+      .domain-body,.additional-body{padding:0 12px 14px;}
+      .domain-header,.additional-header{padding:11px 14px;}
+      .item-block{padding:11px 12px;}
+      .rating-opt{min-width:58px;}
+      .rating-opt span{font-size:10.5px;padding:6px 2px;}
+      .button-group{flex-direction:column;}
+      .button-group button{width:100%;}
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <div class="header">
+    <h1>Developmental &amp; Behaviour Questionnaire</h1>
+    <p>Informant Report — For a Partner, Family Member, or Close Friend</p>
+    <p style="margin-top:5px;font-size:12.5px;opacity:0.85;">20 topics &middot; Childhood and Recent &middot; approx. 30–45 minutes</p>
+  </div>
+
+  <div class="submission-box">
+    <h3>📧 How to Submit Your Results</h3>
+    <ul>
+      <li><strong>Email directly to Dr. Shah</strong> — click the email button to open your email app and attach the downloaded file</li>
+      <li><strong>Download and send manually</strong> — download the results file and email to: <strong>draanashah@protonmail.com</strong></li>
+    </ul>
+  </div>
+
+  <div class="disclaimer-box">
+    <strong>Important:</strong> This questionnaire asks about the client's behaviour during childhood and over the past few months/years. To help recall their childhood, it may be useful to look through photographs or documents (e.g. school reports) from that time. If you did not know the client as a child, please only complete the "Past Few Months/Years" questions and leave the childhood sections blank. Please provide as much detail as possible.
+  </div>
+
+  <div class="progress-text" id="progressText">0 of 40 ratings given (0%)</div>
+  <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+
+  <!-- Client Info -->
+  <div class="card">
+    <h3 style="margin-bottom:14px;font-size:15px;font-weight:700;">Client Details</h3>
+    <div class="info-grid">
+      <div><label for="patientName">Client's Full Name</label><input type="text" id="patientName" placeholder="Client's full name" oninput="autoSave();saveIdentity();"></div>
+      <div><label for="dob">Client's Date of Birth</label><input type="date" id="dob" onchange="autoSave();saveIdentity();"></div>
+      <div><label for="completionDate">Date of Completion</label><input type="date" id="completionDate" onchange="autoSave();"></div>
+    </div>
+  </div>
+
+  <!-- Informant Info -->
+  <div class="card" style="border-color:#c4b5fd;">
+    <h3 style="margin-bottom:14px;font-size:15px;font-weight:700;color:var(--primary-dark);">Your Details (Person Completing This Form)</h3>
+    <div class="info-grid">
+      <div><label for="informantName">Your Full Name</label><input type="text" id="informantName" placeholder="Your full name" oninput="autoSave();"></div>
+      <div><label for="informantRelationship">Your Relationship to the Client</label><input type="text" id="informantRelationship" placeholder="e.g. Mother, Partner, Sibling" oninput="autoSave();"></div>
+      <div><label for="informantDuration">How Long Have You Known the Client?</label><input type="text" id="informantDuration" placeholder="e.g. 25 years (since birth)" oninput="autoSave();"></div>
+    </div>
+  </div>
+
+  <!-- Instructions -->
+  <div class="card" style="background:#faf5ff;border-color:#c4b5fd;">
+    <h3 style="color:var(--primary-dark);margin-bottom:9px;font-size:14.5px;">How to Complete This Questionnaire</h3>
+    <p style="font-size:13px;margin-bottom:7px;">For each topic you will find <strong>two questions</strong>: one about the client's <strong>childhood</strong> (toddlerhood to primary school age) and one about the <strong>past few months/years</strong>.</p>
+    <p style="font-size:13px;margin-bottom:7px;"><strong>Step 1 —</strong> Select one rating: <em>Never, Rarely, Sometimes, Often,</em> or <em>Don't Know</em>.</p>
+    <p style="font-size:13px;margin-bottom:7px;"><strong>Step 2 —</strong> In the text box, give specific examples and describe whether any adjustments were made to manage or prevent problems.</p>
+    <p style="font-size:13px;"><strong>Please provide as much detail as possible</strong> — your written answers are just as important as the rating.</p>
+  </div>
+
+  <div id="questionsContainer"></div>
+
+  <!-- Additional questions Q8 / Q9 / Q10 -->
+  <div class="additional-card">
+    <div class="additional-header"><h2>Additional Questions</h2></div>
+    <div class="additional-body">
+
+      <div class="additional-item">
+        <div class="additional-qlabel">Q8 — At what age did you first notice these symptoms or difficulties (i.e. those rated Sometimes or Often)?</div>
+        <div class="additional-sub">Please provide an age and any relevant details.</div>
+        <div style="display:flex;gap:12px;align-items:center;margin-bottom:8px;">
+          <label style="margin:0;white-space:nowrap;">Age:</label>
+          <input type="number" id="q8_age" min="0" max="100" placeholder="e.g. 3" style="width:90px;" oninput="autoSave();">
+        </div>
+        <textarea class="item-textarea" id="q8_text" placeholder="Please provide details..." rows="3" oninput="autoSave()"></textarea>
+      </div>
+
+      <div class="additional-item">
+        <div class="additional-qlabel">Q9 — Have these symptoms or difficulties been present and caused the client difficulties over the past six months?</div>
+        <div class="additional-sub">Please select Yes or No and provide any relevant details.</div>
+        <div class="yn-row">
+          <div class="yn-opt"><input type="radio" name="q9_yn" id="q9_yes" value="yes" onchange="autoSave();"><label for="q9_yes">Yes</label></div>
+          <div class="yn-opt"><input type="radio" name="q9_yn" id="q9_no"  value="no"  onchange="autoSave();"><label for="q9_no">No</label></div>
+        </div>
+        <textarea class="item-textarea" id="q9_text" placeholder="If No, please explain why not..." rows="3" oninput="autoSave()"></textarea>
+      </div>
+
+      <div class="additional-item">
+        <div class="additional-qlabel">Q10 — Please describe how these symptoms or difficulties have impacted the client's academic, occupational and/or social functioning.</div>
+        <textarea class="item-textarea" id="q10_text" placeholder="Please provide details..." rows="4" oninput="autoSave()"></textarea>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Submit -->
+  <div class="card" style="margin-top:8px;">
+    <div class="button-group">
+      <button class="btn-primary" onclick="validateAndExport()">✓ Review &amp; Submit</button>
+      <button class="btn-secondary" onclick="saveProgress()">💾 Save Progress</button>
+      <button class="btn-secondary" onclick="loadProgress()">📂 Load Saved Progress</button>
+    </div>
+    <div id="validationErrors" class="validation-error hidden"></div>
+  </div>
+
+  <!-- Export -->
+  <div id="exportSection" class="hidden">
+    <div class="completion-message">
+      <h3>✓ Questionnaire Complete</h3>
+      <p style="color:var(--text-secondary);font-size:13.5px;">Thank you for completing this questionnaire. Please download the results file and send it to the clinician.</p>
+    </div>
+    <div class="button-group" style="justify-content:center;">
+      <button class="btn-success" onclick="downloadFile()">⬇ Download Results File (.enc)</button>
+      <button class="btn-primary" onclick="emailToClinician()">📧 Email to Clinician</button>
+    </div>
+    <div id="emailAttachReminder" style="display:none;margin-top:14px;padding:11px;background:#fef9c3;border:1px solid #fcd34d;border-radius:6px;font-size:13px;">
+      <strong>Remember:</strong> Please attach the downloaded <code>.enc</code> file to the email before sending.
+    </div>
+    <p style="margin-top:14px;font-size:12.5px;color:var(--text-secondary);text-align:center;" id="progressTextBottom"></p>
+  </div>
+
+</div>
+<script>
+var CLINIC_MASTER_KEY = "wMKphgUVu08LEWA8MEIxcmhUnuzTItvB";
+var IDENTITY_KEY      = 'adhd_patient_identity';
+var AUTOSAVE_KEY      = 'dasiir2_autosave';
+var MANUAL_SAVE_KEY   = 'dasiir2_manual';
+var TOTAL_RATINGS     = 40;
+
+// ================================================================
+// QUESTION DATA  (IR2 — informant, third-person, "Past Few Months/Years")
+// ================================================================
+var DOMAINS = [
+  { id:1, label:"Domain 1: Social Communication & Interaction", questions:[
+    { code:'1a',
+      cText:"As a CHILD, were their interactions focused on their needs (rather than socially motivated) and/or were they inappropriate in their approach to other children or adults (e.g. no respect of boundaries or interest in 'chit chat')?",
+      pText:"Over the PAST FEW MONTHS/YEARS, have their interactions been focused on their needs (rather than socially motivated) and/or have they been inappropriate in their approach to other adults or children (e.g. no respect of boundaries or interest in 'chit chat')?" },
+    { code:'1b',
+      cText:"As a CHILD, did they initiate social interactions (not just verbal) in an inappropriate way and/or respond inappropriately to those from others (e.g. in an unfriendly, negative, abrupt, or rude manner)?",
+      pText:"Over the PAST FEW MONTHS/YEARS, have they initiated social interactions (not just verbal) in an inappropriate way and/or responded inappropriately to those from others (e.g. in an unfriendly, negative, abrupt, or rude manner)?" },
+    { code:'1c',
+      cText:"As a CHILD, did they avoid or fail to engage appropriately in two-way conversations for social purposes that did not relate to any special interest (e.g. they had no interest in 'chatting', building on and/or changing topics)?",
+      pText:"Over the PAST FEW MONTHS/YEARS, have they avoided or failed to engage appropriately in two-way conversations for social purposes that did not relate to any special interest (e.g. they had no interest in 'chatting', building on and/or changing topics)?" },
+    { code:'1d',
+      cText:"As a CHILD, did they struggle to, or fail to, spontaneously share their feelings and interests with others and/or respond to the feelings and interests of others (not relating to special interests)?",
+      pText:"Over the PAST FEW MONTHS/YEARS, have they struggled to, or failed to, spontaneously share their feelings and interests with others and/or respond to the feelings and interests of others (not relating to special interests)?" }
+  ]},
+  { id:2, label:"Domain 2: Non-verbal Communication", questions:[
+    { code:'2a',
+      cText:"As a CHILD, did they fail to use and integrate both verbal (sounds, language) and non-verbal (hand movements, gestures, facial expressions) methods to gain attention and communicate needs?",
+      pText:"Over the PAST FEW MONTHS/YEARS, have they failed to use and integrate both verbal (sounds, language) and non-verbal (hand movements, gestures, facial expressions) methods to gain attention and communicate needs?" },
+    { code:'2b',
+      cText:"As a CHILD, did they show a limited range of feelings (or none at all) through facial expressions and body language and/or limited spontaneous gestures when communicating (e.g. pointing, waving, nodding)?",
+      pText:"Over the PAST FEW MONTHS/YEARS, have they shown a limited range of feelings (or none at all) through facial expressions and body language and/or limited spontaneous gestures when communicating (e.g. pointing, waving, nodding)?" }
+  ]},
+  { id:3, label:"Domain 3: Social Relationships", questions:[
+    { code:'3a',
+      cText:"As a CHILD, did they struggle, or show no interest, in making and maintaining friendships without the help or direction of others (e.g. they lacked effort, friendships were one-sided, they did not meet friends outside of school without encouragement or support)?",
+      pText:"Over the PAST FEW MONTHS/YEARS, have they struggled, or shown no interest, in making and maintaining friendships without the help or direction of others (e.g. they lacked effort, friendships were one-sided, they did not meet friends outside of school/work without encouragement or under duress)?" },
+    { code:'3b',
+      cText:"As a CHILD, did they avoid, or struggle to engage co-operatively in imaginative play with other children without the help or direction of others (e.g. dressing up, pretend play with toys)?",
+      pText:"Over the PAST FEW MONTHS/YEARS, have they avoided, or struggled to engage co-operatively in games or social activities requiring imagination and/or creativity (e.g. story-telling, charades, drama)?" },
+    { code:'3c',
+      cText:"As a CHILD, were they unable to moderate their behaviour, leading them to behave inappropriately when in different contexts and environments (e.g. places of worship, school, restaurants, shops)?",
+      pText:"Over the PAST FEW MONTHS/YEARS, have they been unable to moderate their behaviour, leading them to behave inappropriately when in different contexts and environments (e.g. places of worship, work, restaurants, shops)?" }
+  ]},
+  { id:4, label:"Domain 4: Repetitive Behaviours & Mannerisms", questions:[
+    { code:'4a',
+      cText:"As a CHILD, did they engage repeatedly in any odd body movements, behaviours or mannerisms (e.g. flapping, flicking, spinning, bouncing, rocking, swaying, twisting)?",
+      pText:"Over the PAST FEW MONTHS/YEARS, have they engaged repeatedly in any odd body movements, behaviours or mannerisms (e.g. flapping, flicking, spinning, bouncing, rocking, swaying, twisting)?" },
+    { code:'4b',
+      cText:"As a CHILD, did they interact repeatedly with objects in a manner that was excessive or unnecessary (e.g. flipping objects, lining up or dropping things, switching things on/off)?",
+      pText:"Over the PAST FEW MONTHS/YEARS, have they interacted repeatedly with objects in a manner that is excessive or unnecessary (e.g. flipping objects, lining up or dropping things, switching things on/off)?" },
+    { code:'4c',
+      cText:"As a CHILD, did they engage in a repetitive speech pattern (e.g. repeating words, sentences, odd phrases out of context, talking to him/herself)?",
+      pText:"Over the PAST FEW MONTHS/YEARS, have they engaged in a repetitive speech pattern (e.g. repeating words, sentences, odd phrases out of context, talking to him/herself)?" }
+  ]},
+  { id:5, label:"Domain 5: Routines & Rituals", questions:[
+    { code:'5a',
+      cText:"As a CHILD, did they insist that routines were rigidly followed and/or had a marked negative reaction if minor changes were made (e.g. routes for familiar journeys, time or order of activities)?",
+      pText:"Over the PAST FEW MONTHS/YEARS, have they insisted that routines are rigidly followed and/or shown a marked negative reaction to minor changes (e.g. routes for familiar journeys, time or order of activities)?" },
+    { code:'5b',
+      cText:"As a CHILD, did they repeatedly perform patterns of behaviours (e.g. verbal or non-verbal compulsive behaviours, doing things in fixed sequence or specific order, engaging in rituals)?",
+      pText:"Over the PAST FEW MONTHS/YEARS, have they repeatedly performed patterns of behaviours (e.g. verbal or non-verbal compulsive behaviours, doing things in fixed sequence or specific order, engaging in rituals)?" }
+  ]},
+  { id:6, label:"Domain 6: Circumscribed Interests", questions:[
+    { code:'6a',
+      cText:"As a CHILD, were they fixated on or preoccupied with unusual objects that seemed odd to others (e.g. colours, numbers, barcodes, vegetables, batteries, piece of string)?",
+      pText:"Over the PAST FEW MONTHS/YEARS, have they been fixated or preoccupied with unusual objects that seem odd to others (e.g. colours, numbers, barcodes, vegetables, batteries, piece of string)?" },
+    { code:'6b', special:'interests',
+      cText:"As a CHILD, did they go through phases of 3 months or more where they had a special interest or hobby that was unusual in intensity (e.g. researching, collecting items, logging information)?",
+      pText:"Over the PAST FEW MONTHS/YEARS, have they gone through phases of 3 months or more where they have a special interest or hobby that is unusual in intensity (e.g. researching, collecting items, logging information)?" }
+  ]},
+  { id:7, label:"Domain 7: Sensory Sensitivities", questions:[
+    { code:'7a',
+      cText:"As a CHILD, did they show an unusual response to pain or changes in temperature (e.g. scratching, biting, unaware when injured from falling over, high/low tolerance to heat/cold)?",
+      pText:"Over the PAST FEW MONTHS/YEARS, have they shown an unusual response to pain or changes in temperature (e.g. scratching, biting, unaware when injured from falling over, high/low tolerance to heat/cold)?" },
+    { code:'7b',
+      cText:"As a CHILD, did they show an intense fascination or aversion (not related to a startle or fear reaction) for certain ordinary sounds (e.g. ringtones, household appliances, traffic noise)?",
+      pText:"Over the PAST FEW MONTHS/YEARS, have they shown an intense fascination or aversion (not related to a startle or fear reaction) for certain ordinary sounds (e.g. ringtones, household appliances, traffic noise)?" },
+    { code:'7c',
+      cText:"As a CHILD, did they show an intense fascination or aversion for the texture, taste and/or smell of some items (e.g. wood, silk, earth, chalk bristles, rubber)?",
+      pText:"Over the PAST FEW MONTHS/YEARS, have they shown an intense fascination or aversion for the texture, taste and/or smell of some items (e.g. wood, silk, earth, chalk bristles, rubber)?" },
+    { code:'7d',
+      cText:"As a CHILD, did they show an intense fascination or aversion to lights or movement (e.g. staring at streetlights, car headlights, home lights, dust particles, spinning fans or wheels on toys)?",
+      pText:"Over the PAST FEW MONTHS/YEARS, have they shown an intense fascination or aversion to lights or movement (e.g. staring at streetlights, car headlights, home lights, dust particles, spinning fans, wheels on toys)?" }
+  ]}
+];
+
+var RATINGS    = ['Never','Rarely','Sometimes','Often',"Don't Know"];
+var RATING_VALS = ['never','rarely','sometimes','often','dk'];
+
+function cPrompt(q) {
+  return q.special === 'interests'
+    ? 'Please LIST all childhood special interest topics/hobbies and their duration. For each: (a) describe associated behaviour, and (b) whether adjustments were needed.'
+    : '(a) Specific examples  ·  (b) Whether adjustments were needed to manage or prevent problems';
+}
+function pPrompt(q) {
+  return q.special === 'interests'
+    ? 'Please LIST all current special interest topics/hobbies and their duration. For each: (a) describe associated behaviour, and (b) whether adjustments are needed.'
+    : '(a) Specific examples  ·  (b) Whether adjustments are needed';
+}
+
+// ================================================================
+// BUILD UI
+// ================================================================
+function buildQuestions() {
+  var container = document.getElementById('questionsContainer');
+  DOMAINS.forEach(function(domain) {
+    var dc = document.createElement('div');
+    dc.className = 'domain-card';
+    var html = '<div class="domain-header"><h2>'+domain.label+'</h2></div><div class="domain-body">';
+    domain.questions.forEach(function(q) {
+      var cBtns = RATINGS.map(function(lbl,i){
+        var v=RATING_VALS[i], dk=v==='dk'?' dk':'';
+        return '<label class="rating-opt'+dk+'"><input type="radio" name="c'+q.code+'" value="'+v+'" onchange="onRating()"><span>'+lbl+'</span></label>';
+      }).join('');
+      var pBtns = RATINGS.map(function(lbl,i){
+        var v=RATING_VALS[i], dk=v==='dk'?' dk':'';
+        return '<label class="rating-opt'+dk+'"><input type="radio" name="p'+q.code+'" value="'+v+'" onchange="onRating()"><span>'+lbl+'</span></label>';
+      }).join('');
+      html +=
+        '<div class="question-pair">'+
+          '<div class="pair-code">C'+q.code.toUpperCase()+' / P'+q.code.toUpperCase()+'</div>'+
+          '<div class="item-block child-block">'+
+            '<div class="timepoint-badge child-badge">C'+q.code.toUpperCase()+' — Childhood</div>'+
+            '<div class="item-question">'+q.cText+'</div>'+
+            '<div class="rating-row">'+cBtns+'</div>'+
+            '<div class="textarea-prompt">'+cPrompt(q)+'</div>'+
+            '<textarea class="item-textarea" id="c'+q.code+'_t" placeholder="Please provide as much detail as possible..." rows="3" oninput="autoSave()"></textarea>'+
+          '</div>'+
+          '<div class="item-block present-block">'+
+            '<div class="timepoint-badge present-badge">P'+q.code.toUpperCase()+' — Past Few Months/Years</div>'+
+            '<div class="item-question">'+q.pText+'</div>'+
+            '<div class="rating-row">'+pBtns+'</div>'+
+            '<div class="textarea-prompt">'+pPrompt(q)+'</div>'+
+            '<textarea class="item-textarea" id="p'+q.code+'_t" placeholder="Please provide as much detail as possible..." rows="3" oninput="autoSave()"></textarea>'+
+          '</div>'+
+        '</div>';
+    });
+    html += '</div>';
+    dc.innerHTML = html;
+    container.appendChild(dc);
+  });
+}
+
+// ================================================================
+// PROGRESS
+// ================================================================
+function countAnswered() {
+  var n=0;
+  DOMAINS.forEach(function(d){ d.questions.forEach(function(q){
+    if(document.querySelector('input[name="c'+q.code+'"]:checked')) n++;
+    if(document.querySelector('input[name="p'+q.code+'"]:checked')) n++;
+  });});
+  return n;
+}
+function updateProgress() {
+  var n=countAnswered();
+  var pct=Math.round(n/TOTAL_RATINGS*100);
+  var txt=n+' of '+TOTAL_RATINGS+' ratings given ('+pct+'%)';
+  document.getElementById('progressText').textContent=txt;
+  var pb=document.getElementById('progressTextBottom'); if(pb) pb.textContent=txt;
+  document.getElementById('progressFill').style.width=pct+'%';
+}
+function onRating(){ updateProgress(); autoSave(); }
+
+// ================================================================
+// COLLECT
+// ================================================================
+function collectResponses() {
+  var r={};
+  DOMAINS.forEach(function(d){ d.questions.forEach(function(q){
+    var ce=document.querySelector('input[name="c'+q.code+'"]:checked');
+    var pe=document.querySelector('input[name="p'+q.code+'"]:checked');
+    var ct=document.getElementById('c'+q.code+'_t');
+    var pt=document.getElementById('p'+q.code+'_t');
+    r['c'+q.code+'_r']=ce?ce.value:null;
+    r['c'+q.code+'_t']=ct?ct.value.trim():'';
+    r['p'+q.code+'_r']=pe?pe.value:null;
+    r['p'+q.code+'_t']=pt?pt.value.trim():'';
+  });});
+  // Q8/Q9/Q10
+  var q8a=document.getElementById('q8_age'), q8t=document.getElementById('q8_text');
+  var q9yn=document.querySelector('input[name="q9_yn"]:checked'), q9t=document.getElementById('q9_text');
+  var q10t=document.getElementById('q10_text');
+  r['q8_age']  = q8a ? q8a.value.trim() : '';
+  r['q8_text'] = q8t ? q8t.value.trim() : '';
+  r['q9_yn']   = q9yn ? q9yn.value : null;
+  r['q9_text'] = q9t ? q9t.value.trim() : '';
+  r['q10_text']= q10t ? q10t.value.trim() : '';
+  return r;
+}
+function collectData() {
+  return {
+    patientName:             document.getElementById('patientName').value.trim(),
+    dob:                     document.getElementById('dob').value,
+    completionDate:          document.getElementById('completionDate').value,
+    informantName:           document.getElementById('informantName').value.trim(),
+    informantRelationship:   document.getElementById('informantRelationship').value.trim(),
+    informantDuration:       document.getElementById('informantDuration').value.trim(),
+    responses:               collectResponses()
+  };
+}
+
+// ================================================================
+// IDENTITY (stores client name/dob for cross-tool autofill)
+// ================================================================
+function saveIdentity() {
+  var name=document.getElementById('patientName').value.trim();
+  var dob=document.getElementById('dob').value;
+  if(name||dob) localStorage.setItem(IDENTITY_KEY, JSON.stringify({patientName:name,dob:dob}));
+}
+function loadIdentity() {
+  try {
+    var s=JSON.parse(localStorage.getItem(IDENTITY_KEY)||'null'); if(!s) return;
+    var n=document.getElementById('patientName'), d=document.getElementById('dob');
+    if(s.patientName && n && !n.value) n.value=s.patientName;
+    if(s.dob && d && !d.value) d.value=s.dob;
+  } catch(e){}
+}
+
+// ================================================================
+// AUTOSAVE / RESTORE
+// ================================================================
+function autoSave() {
+  try { localStorage.setItem(AUTOSAVE_KEY, JSON.stringify(collectData())); } catch(e){}
+}
+function saveProgress() {
+  autoSave();
+  localStorage.setItem(MANUAL_SAVE_KEY, JSON.stringify(collectData()));
+  alert('Progress saved. You can close this page and return later — click "Load Saved Progress" to continue.');
+}
+function loadProgress() {
+  var saved=localStorage.getItem(MANUAL_SAVE_KEY)||localStorage.getItem(AUTOSAVE_KEY);
+  if(!saved){ alert('No saved progress found.'); return; }
+  restoreData(JSON.parse(saved)); alert('Progress loaded.');
+}
+function loadAutoSave() {
+  var saved=localStorage.getItem(AUTOSAVE_KEY); if(saved) restoreData(JSON.parse(saved));
+}
+function restoreData(data) {
+  if(!data) return;
+  if(data.patientName)           document.getElementById('patientName').value           = data.patientName;
+  if(data.dob)                   document.getElementById('dob').value                   = data.dob;
+  if(data.completionDate)        document.getElementById('completionDate').value        = data.completionDate;
+  if(data.informantName)         document.getElementById('informantName').value         = data.informantName;
+  if(data.informantRelationship) document.getElementById('informantRelationship').value = data.informantRelationship;
+  if(data.informantDuration)     document.getElementById('informantDuration').value     = data.informantDuration;
+  if(data.responses) {
+    DOMAINS.forEach(function(d){ d.questions.forEach(function(q){
+      var cr=data.responses['c'+q.code+'_r'], ct=data.responses['c'+q.code+'_t'];
+      var pr=data.responses['p'+q.code+'_r'], pt=data.responses['p'+q.code+'_t'];
+      if(cr){ var el=document.querySelector('input[name="c'+q.code+'"][value="'+cr+'"]'); if(el) el.checked=true; }
+      if(pr){ var el=document.querySelector('input[name="p'+q.code+'"][value="'+pr+'"]'); if(el) el.checked=true; }
+      if(ct){ var el=document.getElementById('c'+q.code+'_t'); if(el) el.value=ct; }
+      if(pt){ var el=document.getElementById('p'+q.code+'_t'); if(el) el.value=pt; }
+    });});
+    // Q8/Q9/Q10
+    if(data.responses.q8_age)  { var el=document.getElementById('q8_age');   if(el) el.value=data.responses.q8_age; }
+    if(data.responses.q8_text) { var el=document.getElementById('q8_text');  if(el) el.value=data.responses.q8_text; }
+    if(data.responses.q9_yn)   { var el=document.querySelector('input[name="q9_yn"][value="'+data.responses.q9_yn+'"]'); if(el) el.checked=true; }
+    if(data.responses.q9_text) { var el=document.getElementById('q9_text');  if(el) el.value=data.responses.q9_text; }
+    if(data.responses.q10_text){ var el=document.getElementById('q10_text'); if(el) el.value=data.responses.q10_text; }
+  }
+  updateProgress();
+}
+
+// ================================================================
+// VALIDATE + EXPORT
+// ================================================================
+function validateAndExport() {
+  var data=collectData();
+  var errEl=document.getElementById('validationErrors');
+  var errors=[];
+  if(!data.patientName)   errors.push("Please enter the client's full name.");
+  if(!data.dob)           errors.push("Please enter the client's date of birth.");
+  if(!data.informantName) errors.push('Please enter your full name.');
+  if(countAnswered()===0) errors.push('Please answer at least some questions before submitting.');
+  if(errors.length){
+    errEl.innerHTML='<strong>Please correct the following:</strong><ul style="margin-top:8px;margin-left:20px;">'+
+      errors.map(function(e){return '<li>'+e+'</li>';}).join('')+'</ul>';
+    errEl.classList.remove('hidden'); errEl.scrollIntoView({behavior:'smooth'}); return;
+  }
+  errEl.classList.add('hidden');
+  var answered=countAnswered();
+  var exportData = {
+    toolVersion:"1.0", dataType:"DASI-IR2",
+    patientName:data.patientName, dob:data.dob, completionDate:data.completionDate,
+    informantName:data.informantName, informantRelationship:data.informantRelationship, informantDuration:data.informantDuration,
+    completionStats:{ totalRatings:TOTAL_RATINGS, answered:answered, completionPercent:Math.round(answered/TOTAL_RATINGS*100) },
+    responses:data.responses
+  };
+  window.exportData=exportData;
+  document.getElementById('exportSection').classList.remove('hidden');
+  document.getElementById('exportSection').scrollIntoView({behavior:'smooth'});
+  updateProgress();
+}
+
+// ================================================================
+// DOWNLOAD
+// ================================================================
+function downloadFile() {
+  if(!window.exportData){ alert('Please complete the form first.'); return; }
+  try {
+    var dataStr  = JSON.stringify(window.exportData);
+    var hash     = CryptoJS.SHA256(dataStr).toString();
+    var cipher   = CryptoJS.AES.encrypt(dataStr, CLINIC_MASTER_KEY).toString();
+    var envelope = JSON.stringify({v:2, ciphertext:cipher, hash:hash});
+    var blob     = new Blob([envelope],{type:'text/plain'});
+    var url      = URL.createObjectURL(blob);
+    var a        = document.createElement('a'); a.href=url;
+    a.download   = 'DASI-IR2_'+window.exportData.patientName.replace(/\s+/g,'_')+'.enc';
+    a.click(); URL.revokeObjectURL(url);
+    localStorage.setItem('dasiir2_downloaded', new Date().toISOString());
+    setTimeout(function(){ var r=document.getElementById('emailAttachReminder'); if(r) r.style.display='block'; }, 800);
+  } catch(e){ alert('Encryption error. Please try again.'); }
+}
+
+// ================================================================
+// EMAIL
+// ================================================================
+function emailToClinician() {
+  if(!window.exportData){ alert('Please complete the form first.'); return; }
+  downloadFile();
+  var d=window.exportData;
+  var subject=encodeURIComponent('DASI-IR2 — '+d.patientName+' — '+d.completionDate+' [Informant: '+d.informantName+']');
+  var body=encodeURIComponent(
+    'Dear Dr. Shah,\n\nPlease find attached the completed Developmental & Behaviour Questionnaire (Informant Report).\n\n'+
+    'Client Name: '+d.patientName+'\nClient Date of Birth: '+d.dob+'\nCompletion Date: '+d.completionDate+'\n'+
+    'Informant: '+d.informantName+' ('+d.informantRelationship+')\n\n'+
+    'Please attach the downloaded .enc file to this email before sending.\n\nThank you.\n\nBest regards,\n'+d.informantName
+  );
+  var a=document.createElement('a');
+  a.href='mailto:draanashah@protonmail.com?subject='+subject+'&body='+body;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+}
+
+// ================================================================
+// INIT
+// ================================================================
+document.addEventListener('DOMContentLoaded', function() {
+  buildQuestions();
+  document.getElementById('completionDate').value = new Date().toISOString().split('T')[0];
+  loadAutoSave(); loadIdentity(); updateProgress();
+  setInterval(autoSave, 60000);
+  document.getElementById('patientName').addEventListener('input', function(){ autoSave(); saveIdentity(); });
+  document.getElementById('dob').addEventListener('change', function(){ autoSave(); saveIdentity(); });
+});
+</script>
+</body>
+</html>

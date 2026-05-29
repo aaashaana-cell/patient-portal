@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Patient Questionnaires</title>
+<title>Patient Questionnaires — Autism Assessment</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -11,9 +11,8 @@
     --card: #ffffff;
     --ink: #1a1a2e;
     --muted: #6b6b7b;
-    --accent: #2d6a4f;
-    --accent-light: #e8f4ef;
-    --accent2: #c77dff;
+    --accent: #4c1d95;
+    --accent-light: #ede9fe;
     --border: #e0dbd3;
     --radius: 14px;
   }
@@ -190,11 +189,11 @@
     max-width: 720px;
     margin: 0 auto 36px;
     background: var(--accent-light);
-    border: 1px solid #b7dac9;
+    border: 1px solid #c4b5fd;
     border-radius: var(--radius);
     padding: 18px 22px;
     font-size: 14px;
-    color: #1f4d38;
+    color: #3b1f6e;
     line-height: 1.7;
   }
   .encouragement strong { font-weight: 500; }
@@ -353,16 +352,17 @@
 <header>
   <div class="logo-mark"></div>
   <h1>Patient Questionnaires</h1>
-  <p class="subtitle">Please complete the form(s) requested by your doctor. Each questionnaire takes 5 to 15 minutes.</p>
+  <p class="subtitle">Please complete the form(s) requested by your doctor. Each questionnaire takes 10 to 20 minutes.</p>
 </header>
 
 <div id="disclaimerGate">
   <h2>Before you begin</h2>
-  <p>Your clinician has sent you these questionnaires as part of an initial information-gathering stage. Please read the following before proceeding.</p>
+  <p>Your clinician has sent you these questionnaires as part of an autism assessment. Please read the following before proceeding.</p>
   <ul>
-    <li>These questionnaires are <strong>screening tools, not a diagnosis</strong>.</li>
-    <li>A <strong>structured clinical interview</strong> conducted by your clinician is required before any diagnostic conclusion can be reached.</li>
-    <li>Completing these forms <strong>does not constitute an assessment</strong> or entitle a diagnostic opinion.</li>
+    <li>These questionnaires are <strong>screening and information-gathering tools</strong>, not a diagnostic assessment in themselves. They help your clinician understand your experiences before and during the clinical interview.</li>
+    <li>A <strong>structured clinical interview</strong>, conducted separately, is the stage at which a diagnostic conclusion can be reached. The questionnaires you are completing today inform — and form part of — that conversation.</li>
+    <li>A diagnostic conclusion requires <strong>both stages</strong> — the information you provide here, and the clinical interview with your clinician. Neither alone is sufficient for a diagnosis.</li>
+    <li>Some questions ask about <strong>childhood experiences</strong> as well as your current life. Answer as best you can — it is normal not to remember everything clearly, and approximate or uncertain answers are genuinely useful.</li>
   </ul>
   <label id="disclaimerCheckLabel">
     <input type="checkbox" id="disclaimerCheck" onchange="document.getElementById('disclaimerProceed').disabled = !this.checked;">
@@ -372,19 +372,33 @@
 </div>
 
 <div id="mainForms">
+
 <div class="encouragement">
-  <strong>A note before you begin.</strong> Some of these questionnaires are long, and you may notice questions that feel similar to ones you've already answered. This is deliberate. The overlap helps your clinician build a more complete and reliable picture of your experiences.<br><br>
-  Please answer as honestly and as fully as you can, but <strong>don't let any single difficult question stop you from submitting</strong>. If you find a question unclear, upsetting, or simply don't know the answer, it's fine to leave it blank or move on. A partially completed questionnaire is still genuinely useful. Please submit whatever you're able to.
+  <strong>A note before you begin.</strong> Some of these questionnaires are long, and a few questions may feel repetitive or difficult to answer. This is normal — the overlap is deliberate, and helps your clinician build a more complete picture of your experiences across different areas of life.<br><br>
+  Please answer as honestly and as fully as you can. <strong>If a question is unclear, doesn't apply, or you simply don't know the answer, it is fine to leave it blank or move past it.</strong> A partially completed questionnaire is still genuinely useful. Please submit whatever you are able to complete.
 </div>
 
 <p class="section-label">Self-report forms: complete these yourself</p>
 <div class="grid">
 
-  <a class="card" href="asrs_FINAL.html" data-save="asrs_autosave" data-dl="asrs_downloaded">
-    <div class="card-icon">🧠</div>
+  <a class="card wide" href="RAADS-R Assessment Tool.html" data-save="raadsr_autosave" data-dl="raadsr_downloaded">
+    <div class="card-icon">🧩</div>
     <div class="card-body">
-      <div class="card-title">Attention & Focus</div>
-      <div class="card-desc">Screens for ADHD symptoms in adults, covering attention, impulsivity, and hyperactivity.</div>
+      <div class="card-title">Social & Behavioural Experiences</div>
+      <div class="card-desc">A detailed questionnaire covering how you relate to others, process language, perceive your senses, and experience daily life — across both childhood and the present.</div>
+      <div class="card-meta">
+        <span class="badge who">Patient</span>
+        <span class="badge">Longest form — allow 20 mins</span>
+      </div>
+    </div>
+    <span class="arrow">›</span>
+  </a>
+
+  <a class="card" href="catq_FINAL.html" data-save="catq_autosave" data-dl="catq_downloaded">
+    <div class="card-icon">🎭</div>
+    <div class="card-body">
+      <div class="card-title">Social Interactions Questionnaire</div>
+      <div class="card-desc">Explores how you adapt and adjust your behaviour in social situations, and the effort this involves.</div>
       <div class="card-meta">
         <span class="badge who">Patient</span>
       </div>
@@ -392,50 +406,25 @@
     <span class="arrow">›</span>
   </a>
 
-  <a class="card" href="briefa_FINAL_with_scoring.html" data-save="briefa_autosave" data-dl="briefa_downloaded">
+  <a class="card" href="dasi_sr2_FINAL.html" data-save="dasisr2_autosave" data-dl="dasisr2_downloaded">
+    <div class="card-icon">📋</div>
+    <div class="card-body">
+      <div class="card-title">Developmental & Behaviour Questionnaire</div>
+      <div class="card-desc">Covers your childhood and current experiences across communication, social relationships, repetitive behaviours, and sensory sensitivities.</div>
+      <div class="card-meta">
+        <span class="badge who">Patient</span>
+      </div>
+    </div>
+    <span class="arrow">›</span>
+  </a>
+
+  <a class="card" href="briefa_FINAL.html" data-save="briefa_autosave" data-dl="briefa_downloaded">
     <div class="card-icon">📋</div>
     <div class="card-body">
       <div class="card-title">Behaviour & Daily Functioning</div>
-      <div class="card-desc">Assesses executive functioning: planning, organisation, emotional regulation, and working memory.</div>
+      <div class="card-desc">Assesses day-to-day executive functioning: planning, organisation, emotional regulation, and working memory.</div>
       <div class="card-meta">
         <span class="badge who">Patient</span>
-      </div>
-    </div>
-    <span class="arrow">›</span>
-  </a>
-
-  <a class="card" href="cbs_patient_self_FINAL.html" data-save="behaviour_patient_autosave" data-dl="cbs_self_downloaded">
-    <div class="card-icon">📝</div>
-    <div class="card-body">
-      <div class="card-title">Behaviour Questionnaire</div>
-      <div class="card-desc">Rates your own day-to-day behaviour patterns across several functional domains.</div>
-      <div class="card-meta">
-        <span class="badge who">Patient</span>
-      </div>
-    </div>
-    <span class="arrow">›</span>
-  </a>
-
-  <a class="card" href="wurs45_FINAL.html" data-save="childhood_behaviour_autosave" data-dl="wurs_downloaded">
-    <div class="card-icon">🕰️</div>
-    <div class="card-body">
-      <div class="card-title">Wender Scale</div>
-      <div class="card-desc">Retrospective rating of childhood behaviour, helping assess early-onset ADHD symptoms.</div>
-      <div class="card-meta">
-        <span class="badge who">Patient</span>
-      </div>
-    </div>
-    <span class="arrow">›</span>
-  </a>
-
-  <a class="card wide" href="cognitive_tasks_MVP.html" data-save="adhd_cognitive_autosave" data-dl="cognitive_downloaded">
-    <div class="card-icon">⌁</div>
-    <div class="card-body">
-      <div class="card-title">Cognitive Tasks</div>
-      <div class="card-desc">A short set of computerised tasks completed locally in your browser. No data leaves your device.</div>
-      <div class="card-meta">
-        <span class="badge who">Patient</span>
-        <span class="badge">Optional</span>
       </div>
     </div>
     <span class="arrow">›</span>
@@ -443,28 +432,16 @@
 
 </div>
 
-<p class="section-label">Informant forms: to be completed by a family member or close contact</p>
+<p class="section-label">Informant form: to be completed by a family member or close contact</p>
 <div class="grid">
 
-  <a class="card" href="cbs_parent_FINAL.html" data-save="behaviour_parent_autosave" data-dl="cbs_parent_downloaded">
-    <div class="card-icon">👨‍👩‍👧</div>
+  <a class="card wide" href="dasi_ir2_FINAL.html" data-save="dasiir2_autosave" data-dl="dasiir2_downloaded">
+    <div class="card-icon">👥</div>
     <div class="card-body">
-      <div class="card-title">Behaviour Questionnaire: Parent</div>
-      <div class="card-desc">A parent or guardian rates the patient's behaviour based on their own observations.</div>
+      <div class="card-title">Developmental & Behaviour Questionnaire (Informant)</div>
+      <div class="card-desc">Completed by someone who knew you in childhood — ideally a parent, sibling, or other close family member. They are asked to rate your behaviour and development based on their own observations, both during your early years and more recently.</div>
       <div class="card-meta">
-        <span class="badge who">Parent / Guardian</span>
-      </div>
-    </div>
-    <span class="arrow">›</span>
-  </a>
-
-  <a class="card" href="cbs_informant_FINAL.html" data-save="behaviour_informant_autosave" data-dl="cbs_informant_downloaded">
-    <div class="card-icon">🤝</div>
-    <div class="card-body">
-      <div class="card-title">Behaviour Questionnaire: Informant</div>
-      <div class="card-desc">A partner, close friend, or colleague rates the patient's behaviour from their perspective.</div>
-      <div class="card-meta">
-        <span class="badge who">Partner / Friend</span>
+        <span class="badge who">Family member / Close contact</span>
       </div>
     </div>
     <span class="arrow">›</span>
@@ -474,7 +451,7 @@
 
 <div class="notice">
   <span class="notice-icon">ℹ️</span>
-  <span>After completing a form, download the results file and send it to your doctor via WhatsApp or email. This page does not store any of your data.</span>
+  <span>After completing each form, download the results file and send it to your doctor via WhatsApp or email. This page does not store any of your data — everything is processed within your browser.</span>
 </div>
 
 </div><!-- /mainForms -->
@@ -493,7 +470,7 @@
     <p>All responses you enter are processed entirely within your browser. Nothing is transmitted to any server while you are completing a questionnaire. Your answers are only sent to your clinician when you actively choose to download the results file and share it yourself.</p>
 
     <h3>Encrypted results file</h3>
-    <p>When you download your results, they are encrypted before leaving your device. The results file contains your responses and basic session information.</p>
+    <p>When you download your results, they are encrypted before leaving your device. The results file contains your responses and basic session information. Only your clinician can open it.</p>
 
     <h3>No AI analysis of your data</h3>
     <p>Your responses are not analysed, processed, or seen by any artificial intelligence system. The questionnaires themselves are established clinical instruments. AI tools were used to code and format them into this digital interface, but the content of what you submit is handled exclusively by your clinician.</p>
@@ -506,19 +483,17 @@
   </div>
 </div>
 
-
 <script>
 function acknowledgeDisclaimer() {
-  try { localStorage.setItem('adhd_disclaimer_ack', '1'); } catch(e) {}
+  try { localStorage.setItem('asd_disclaimer_ack', '1'); } catch(e) {}
   document.getElementById('disclaimerGate').style.display = 'none';
   document.getElementById('mainForms').style.display = 'block';
 }
 (function() {
   try {
-    if (localStorage.getItem('adhd_disclaimer_ack')) {
+    if (localStorage.getItem('asd_disclaimer_ack')) {
       document.getElementById('disclaimerGate').style.display = 'none';
       document.getElementById('mainForms').style.display = 'block';
-      return;
     }
   } catch(e) {}
 })();
@@ -540,5 +515,6 @@ function acknowledgeDisclaimer() {
   });
 })();
 </script>
+
 </body>
 </html>
