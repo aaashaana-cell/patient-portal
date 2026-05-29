@@ -16,3 +16,7 @@ tmp/
 *.env
 *.enc
 *.json
+*.pem
+
+# Clinician-only material — never publish (scoring logic, keys, decryption)
+00_START_HERE/1_CLINICIAN_ONLY/
