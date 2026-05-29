@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow">
@@ -198,7 +197,21 @@
 </div>
 
 <script>
-    const CLINIC_MASTER_KEY = "wMKphgUVu08LEWA8MEIxcmhUnuzTItvB";
+    // ---- Public-key encryption (envelope: AES-256-GCM data + RSA-OAEP-wrapped key) ----
+    // Only the clinician's PRIVATE key (never shipped in this file) can decrypt the export.
+    const CLINIC_PUBLIC_KEY = "MIICIjANBgkqhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEAsPFiNGJeHftu2ODxG5uzupG6ZqdaxyKiOst5TOVOw53ZO4FjW1+8Voe2RHbP4wVfZGK50p20ubIE2DOaFc6piPCGZYti7nKAvYY/MwFocMv/6q1g3Bgqdg+xLWUmhN6AgxmayrQcfUlrY7sbqBXMg6xsFwe0hYvAT6kqoHspw/dTqQz/sRATGIVLxBJ5W12ASjNhUSXBapEp2lSHxK0Jr6Q1/1pn0bL5rsCxb2ulCSO9q8suuMfZV2sxmyisqfMJ5wAXLqzueyqjZ9+kLd54qiSZ6W8DAkfXDGlbzA1WeWmQXhCEeMqSNPfiqx1ILCGFZQN4jBzNkg09HeCxVcgr5AghyNQ9oA04KOLMRzon6Vdx9aTxJghGKdG6CE5Z7nb6tWwMZLiROJl3DI10Eg5eDoBRUEoFuYCXPbp0Yywfd0tkhSrLTQvSQszJMcYNHBKjwPfmQo/1RGcPRrios191ejLF9aqasJussQz7s3YlVs+Z/fijjlJK2U673Q0liH4369zqMpplFnfbY/e1cqANpMgBm0hlMGm3ABQxEAjN7b6dXR5RHK8ahPgWyu0qUyiiScpQO8Q6En5P8Xsd59pUCq46Iz9qx1VnxfwWUXcW/IIJs/xf0jiFD7J1gb1wcjFafJcXV5Y1zWQGy8cOOf7P+BM8i3NXR65zI7HemheMaX0CAwEAAQ==";
+    function _b64ToBuf(b64){var bin=atob(b64);var u=new Uint8Array(bin.length);for(var i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);return u.buffer;}
+    function _bufToB64(buf){var u=new Uint8Array(buf);var s="";for(var i=0;i<u.length;i++)s+=String.fromCharCode(u[i]);return btoa(s);}
+    async function encryptForClinician(plaintext){
+        var data=new TextEncoder().encode(plaintext);
+        var pubKey=await crypto.subtle.importKey("spki",_b64ToBuf(CLINIC_PUBLIC_KEY),{name:"RSA-OAEP",hash:"SHA-256"},false,["wrapKey"]);
+        var aesKey=await crypto.subtle.generateKey({name:"AES-GCM",length:256},true,["encrypt"]);
+        var iv=crypto.getRandomValues(new Uint8Array(12));
+        var ct=await crypto.subtle.encrypt({name:"AES-GCM",iv:iv},aesKey,data);
+        var wrapped=await crypto.subtle.wrapKey("raw",aesKey,pubKey,{name:"RSA-OAEP"});
+        var digest=await crypto.subtle.digest("SHA-256",data);
+        return JSON.stringify({v:3,alg:"RSA-OAEP-256+AES-256-GCM",iv:_bufToB64(iv),key:_bufToB64(wrapped),data:_bufToB64(ct),hash:_bufToB64(digest)});
+    }
     const IDENTITY_KEY = 'adhd_patient_identity';
 
     function saveIdentity() {
@@ -485,16 +498,14 @@
         window.exportData = exportData;
     }
 
-    function downloadJSON() {
+    async function downloadJSON() {
         if (!window.exportData) {
             alert('Please complete the form first.');
             return;
         }
         try {
             const dataStr = JSON.stringify(window.exportData);
-            const hash = CryptoJS.SHA256(dataStr).toString();
-            const ciphertext = CryptoJS.AES.encrypt(dataStr, CLINIC_MASTER_KEY).toString();
-            const envelope = JSON.stringify({ v: 2, ciphertext: ciphertext, hash: hash });
+            const envelope = await encryptForClinician(dataStr);
             const blob = new Blob([envelope], { type: 'text/plain' });
             const url = URL.createObjectURL(blob);
             const link = document.createElement('a');
