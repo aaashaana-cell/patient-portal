@@ -18,5 +18,7 @@ tmp/
 *.json
 *.pem
 
-# Clinician-only material — never publish (scoring logic, keys, decryption)
-00_START_HERE/1_CLINICIAN_ONLY/
+# Local organizer folder — never publish (clinician tools, keys, workflow notes,
+# printable copies, and an offline duplicate of the patient forms).
+# The live patient forms are the copies at the repo root.
+00_START_HERE/
