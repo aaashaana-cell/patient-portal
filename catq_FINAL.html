@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Social Interactions Questionnaire</title>
+    <style>
+        :root {
+            --primary: #0d9488;
+            --primary-dark: #0f766e;
+            --primary-bg: #f0fdfa;
+            --success: #16a34a;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --border: #e2e8f0;
+            --text: #1e293b;
+            --text-secondary: #64748b;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; padding: 20px; }
+        .container { max-width: 900px; margin: 0 auto; }
+        .header { background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%); color: white; padding: 30px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.12); }
+        .header h1 { margin-bottom: 5px; font-size: 26px; font-weight: 600; }
+        .header p { font-size: 14px; opacity: 0.92; margin: 3px 0; }
+        .submission-box { background: #ccfbf1; border: 2px solid #5eead4; padding: 20px; margin-bottom: 20px; border-radius: 8px; }
+        .submission-box h3 { color: var(--primary-dark); margin-bottom: 10px; font-size: 16px; display: flex; align-items: center; gap: 8px; }
+        .submission-box ul { margin-left: 20px; margin-top: 8px; }
+        .submission-box li { margin: 5px 0; color: var(--primary-dark); font-size: 14px; }
+        .disclaimer-box { background: #fef3c7; border-left: 4px solid #f59e0b; padding: 18px; margin-bottom: 20px; border-radius: 4px; font-size: 14px; }
+        .disclaimer-box strong { color: #92400e; font-size: 15px; }
+        .info-box { background: var(--primary-bg); border-left: 4px solid var(--primary); padding: 16px; margin-bottom: 16px; border-radius: 4px; font-size: 14px; }
+        .warning-box { background: var(--primary-bg); border-left: 4px solid var(--primary); padding: 15px; margin-bottom: 20px; border-radius: 4px; }
+        .progress-bar { background: var(--border); height: 8px; border-radius: 4px; overflow: hidden; margin-bottom: 30px; }
+        .progress-fill { background: var(--success); height: 100%; transition: width 0.3s ease; }
+        .progress-text { text-align: center; margin-bottom: 10px; color: var(--text-secondary); font-size: 14px; font-weight: 500; }
+        .card { background: var(--card-bg); padding: 24px; border-radius: 12px; margin-bottom: 24px; border: 1px solid var(--border); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .patient-info { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        .form-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 5px; font-weight: 500; color: var(--text); font-size: 14px; }
+        input[type="text"], input[type="date"] { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 15px; }
+        .question-item { margin-bottom: 28px; padding-bottom: 22px; border-bottom: 1px solid var(--border); }
+        .question-item:last-child { border-bottom: none; }
+        .question-text { font-weight: 500; margin-bottom: 14px; color: var(--text); font-size: 15px; line-height: 1.55; }
+        .question-number { display: inline-block; background: var(--primary); color: white; min-width: 28px; height: 28px; border-radius: 50%; text-align: center; line-height: 28px; margin-right: 10px; font-size: 14px; font-weight: 600; padding: 0 6px; }
+
+        /* 7-point Likert scale */
+        .likert-wrapper { margin-top: 4px; }
+        .likert-header { display: flex; justify-content: space-between; font-size: 11px; color: var(--text-secondary); margin-bottom: 7px; padding: 0 2px; font-weight: 500; }
+        .likert-buttons { display: flex; gap: 5px; }
+        .likert-btn { flex: 1; }
+        .likert-btn input[type="radio"] { display: none; }
+        .likert-btn span {
+            display: flex; align-items: center; justify-content: center;
+            width: 100%; height: 42px;
+            border: 2px solid var(--border); border-radius: 7px;
+            cursor: pointer; font-size: 14px; font-weight: 600;
+            color: var(--text-secondary); transition: all 0.15s; background: white;
+            user-select: none;
+        }
+        .likert-btn span:hover { border-color: var(--primary); background: var(--primary-bg); color: var(--primary); }
+        .likert-btn input:checked + span { background: var(--primary); color: white; border-color: var(--primary); }
+        .likert-sublabels { display: flex; justify-content: space-between; font-size: 10.5px; color: var(--text-secondary); margin-top: 5px; padding: 0 2px; }
+
+        .button-group { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 24px; }
+        button { padding: 12px 24px; border: none; border-radius: 6px; font-size: 15px; font-weight: 500; cursor: pointer; transition: all 0.2s; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { background: var(--primary-dark); }
+        .btn-success { background: var(--success); color: white; }
+        .btn-success:hover { opacity: 0.9; }
+        .btn-secondary { background: var(--border); color: var(--text); }
+        .btn-secondary:hover { background: #cbd5e1; }
+        .hidden { display: none; }
+        #exportSection { background: #f0fdf4; border: 2px solid var(--success); padding: 25px; border-radius: 12px; margin-top: 30px; }
+        .validation-error { background: #fee2e2; border: 1px solid #dc2626; color: #991b1b; padding: 15px; border-radius: 6px; font-size: 14px; margin-top: 20px; }
+        .completion-message { background: white; padding: 20px; border-radius: 6px; margin: 20px 0; text-align: center; }
+        .completion-message h3 { color: var(--success); margin-bottom: 10px; font-size: 20px; }
+        .bottom-progress { text-align: center; margin-top: 16px; padding: 10px; background: #f1f5f9; border-radius: 6px; font-size: 14px; color: var(--text-secondary); font-weight: 500; }
+        .recorded-badge { display: inline-flex; align-items: center; gap: 6px; background: #f0fdf4; border: 1px solid #86efac; color: #166534; font-size: 13px; padding: 6px 14px; border-radius: 20px; margin-top: 12px; font-weight: 500; opacity: 0; pointer-events: none; }
+        .question-item.skipped { background: #fff5f5; border-left: 3px solid #dc2626; padding-left: 12px; border-radius: 4px; }
+        @keyframes answeredFlash { 0% { background: #ccfbf1; } 100% { background: transparent; } }
+        .question-item.just-answered { animation: answeredFlash 0.8s ease-out; }
+        @keyframes badgePop { 0% { opacity: 0; transform: translateY(4px); } 15% { opacity: 1; transform: translateY(0); } 80% { opacity: 1; } 100% { opacity: 0; } }
+        .recorded-badge.flashing { animation: badgePop 2.5s ease-out forwards; }
+        .form-nav { display: flex; gap: 12px; flex-wrap: wrap; justify-content: space-between; align-items: center; margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--border); }
+        .nav-btn { display: inline-block; padding: 11px 20px; border-radius: 6px; font-size: 14px; font-weight: 500; text-decoration: none; transition: all 0.2s; }
+        .nav-btn-back { background: var(--border); color: var(--text); }
+        .nav-btn-back:hover { background: #cbd5e1; }
+
+        @media (max-width: 600px) {
+            body { padding: 10px; }
+            .header { padding: 20px; }
+            .card { padding: 16px; }
+            .likert-btn span { height: 36px; font-size: 13px; }
+            .button-group { flex-direction: column; }
+            .button-group button { width: 100%; }
+            .likert-header { font-size: 10px; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+
+    <div class="header">
+        <h1>Social Interactions Questionnaire</h1>
+        <p>Experiences during social interactions</p>
+        <p style="margin-top: 5px; font-size: 13px; opacity: 0.8;">Patient Self-Report · 25 items · approx. 5–10 minutes</p>
+    </div>
+
+    <div class="submission-box">
+        <h3>📧 How to Submit Your Results</h3>
+        <p style="margin-bottom: 8px; font-size: 14px;">After completing this questionnaire, you'll be able to:</p>
+        <ul>
+            <li><strong>Email directly to Dr. Shah</strong>: click a button to open your email app with pre-filled details</li>
+            <li><strong>Download and send yourself</strong>: download the results file and email it to: <strong>draanashah@protonmail.com</strong></li>
+        </ul>
+    </div>
+
+    <div class="disclaimer-box">
+        <strong>Important Notice:</strong><br>
+        This questionnaire is for <strong>information gathering purposes only</strong> and is not diagnostic. The responses you provide will be reviewed by your clinician as part of a comprehensive clinical assessment. Only a qualified healthcare professional can make diagnostic or treatment decisions. Please answer honestly based on your actual experiences.
+    </div>
+
+    <div class="info-box">
+        <strong>Privacy:</strong> All data is processed locally on your device. Nothing is sent anywhere until you choose to download and share your results file with your clinician.
+    </div>
+
+    <div class="info-box">
+        <strong>📝 Answering Questions:</strong> Try to answer every item. There are no right or wrong answers. If a statement doesn't quite fit, choose the option that comes closest to your experience. You may leave items blank if you genuinely cannot answer.
+    </div>
+
+    <div class="progress-text" id="progressText">0 of 25 items answered (0%)</div>
+    <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width: 0%"></div></div>
+
+    <!-- Patient info -->
+    <div class="card">
+        <h2 style="margin-bottom: 20px; font-size: 20px;">Your Information</h2>
+        <div class="patient-info">
+            <div class="form-group">
+                <label>Full Name *</label>
+                <input type="text" id="patientName" placeholder="Your name" required>
+            </div>
+            <div class="form-group">
+                <label>Date of Birth *</label>
+                <input type="date" id="dob" required>
+            </div>
+            <div class="form-group">
+                <label>Completion Date</label>
+                <input type="date" id="completionDate" readonly>
+            </div>
+        </div>
+    </div>
+
+    <!-- Questions -->
+    <div class="card">
+        <h2 style="margin-bottom: 15px; color: var(--primary); font-size: 20px;">Social Interactions</h2>
+
+        <div class="warning-box">
+            <strong>Instructions:</strong> Please read each statement below and choose the answer that best fits your experiences <strong>during social interactions</strong>. Use the 1–7 scale where 1 = Strongly Disagree and 7 = Strongly Agree.
+        </div>
+
+        <div style="background: #f1f5f9; border-radius: 8px; padding: 12px 16px; margin-bottom: 24px; font-size: 13px;">
+            <strong>Scale reminder:</strong>
+            <span style="display: inline-flex; gap: 10px; margin-top: 6px; flex-wrap: wrap;">
+                <span><strong>1</strong> = Strongly Disagree</span>
+                <span><strong>2</strong> = Somewhat Disagree</span>
+                <span><strong>3</strong> = Disagree</span>
+                <span><strong>4</strong> = Neither Agree nor Disagree</span>
+                <span><strong>5</strong> = Somewhat Agree</span>
+                <span><strong>6</strong> = Agree</span>
+                <span><strong>7</strong> = Strongly Agree</span>
+            </span>
+        </div>
+
+        <div id="questionsContainer"></div>
+    </div>
+
+    <div class="button-group">
+        <button class="btn-secondary" onclick="saveProgress()">💾 Save Progress</button>
+        <button class="btn-primary" onclick="loadProgress()">📂 Load Saved Progress</button>
+        <button class="btn-success" onclick="validateAndExport()">✓ Complete Questionnaire</button>
+    </div>
+    <div class="bottom-progress" id="progressTextBottom">0 of 25 items answered (0%)</div>
+    <div id="recordedBadge" class="recorded-badge">✓ Latest response recorded</div>
+
+    <div id="validationErrors" class="validation-error hidden"></div>
+
+    <div id="exportSection" class="hidden">
+        <h2 style="color: var(--success); margin-bottom: 20px; font-size: 22px;">✓ Questionnaire Complete</h2>
+        <div class="completion-message">
+            <h3>Thank you for completing this questionnaire</h3>
+            <p style="margin-top: 10px; color: var(--text-secondary); font-size: 14px;">
+                Your responses have been saved. Please send your results to Dr. Shah using one of the options below.
+            </p>
+            <p style="margin-top: 12px; font-size: 13px; color: #92400e; background: #fffbeb; border: 1px solid #fde68a; border-radius: 6px; padding: 10px 14px;">
+                Your clinician will review these results and discuss them with you during your assessment appointment.
+            </p>
+        </div>
+        <div style="margin: 20px 0;">
+            <h3 style="font-size: 18px; margin-bottom: 15px;">Send Results to Dr. Shah:</h3>
+            <div class="button-group">
+                <button class="btn-primary" onclick="emailToClinician()" style="font-size: 16px; padding: 14px 28px;">✉️ Email Results</button>
+                <button class="btn-secondary" onclick="downloadFile()" style="font-size: 16px; padding: 14px 28px;">⬇️ Download Results File</button>
+            </div>
+            <div id="emailAttachReminder" style="display:none;margin-top:10px;font-size:13px;color:#92400e;background:#fffbeb;border:1px solid #fde68a;border-radius:6px;padding:10px 14px;">
+                Your results file is downloading now. Once it appears in your Downloads folder, attach it to the email that just opened and send.
+            </div>
+            <p style="margin-top: 15px; font-size: 13px; color: var(--text-secondary); padding: 12px; background: #f8fafc; border-radius: 6px;">
+                <strong>Option 1:</strong> Click "Email Results" to open your email app with everything pre-filled. Attach the downloaded file and send.<br>
+                <strong>Option 2:</strong> Download the file and email it to <strong>draanashah@protonmail.com</strong> yourself.
+            </p>
+        </div>
+    </div>
+
+    <div class="form-nav">
+        <a href="index.html" class="nav-btn nav-btn-back">← All questionnaires</a>
+    </div>
+
+</div><!-- /container -->
+
+<script>
+    // ============================================================
+    // CONFIG
+    // ============================================================
+    // Asymmetric encryption: only the clinic private key can decrypt the export.
+    const CLINIC_PUBLIC_KEY = "MIICIjANBgkqhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEAsPFiNGJeHftu2ODxG5uzupG6ZqdaxyKiOst5TOVOw53ZO4FjW1+8Voe2RHbP4wVfZGK50p20ubIE2DOaFc6piPCGZYti7nKAvYY/MwFocMv/6q1g3Bgqdg+xLWUmhN6AgxmayrQcfUlrY7sbqBXMg6xsFwe0hYvAT6kqoHspw/dTqQz/sRATGIVLxBJ5W12ASjNhUSXBapEp2lSHxK0Jr6Q1/1pn0bL5rsCxb2ulCSO9q8suuMfZV2sxmyisqfMJ5wAXLqzueyqjZ9+kLd54qiSZ6W8DAkfXDGlbzA1WeWmQXhCEeMqSNPfiqx1ILCGFZQN4jBzNkg09HeCxVcgr5AghyNQ9oA04KOLMRzon6Vdx9aTxJghGKdG6CE5Z7nb6tWwMZLiROJl3DI10Eg5eDoBRUEoFuYCXPbp0Yywfd0tkhSrLTQvSQszJMcYNHBKjwPfmQo/1RGcPRrios191ejLF9aqasJussQz7s3YlVs+Z/fijjlJK2U673Q0liH4369zqMpplFnfbY/e1cqANpMgBm0hlMGm3ABQxEAjN7b6dXR5RHK8ahPgWyu0qUyiiScpQO8Q6En5P8Xsd59pUCq46Iz9qx1VnxfwWUXcW/IIJs/xf0jiFD7J1gb1wcjFafJcXV5Y1zWQGy8cOOf7P+BM8i3NXR65zI7HemheMaX0CAwEAAQ==";
+    function _b64ToBuf(b64){var bin=atob(b64);var u=new Uint8Array(bin.length);for(var i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);return u.buffer;}
+    function _bufToB64(buf){var u=new Uint8Array(buf);var s="";for(var i=0;i<u.length;i++)s+=String.fromCharCode(u[i]);return btoa(s);}
+    async function encryptForClinician(plaintext){
+        var data=new TextEncoder().encode(plaintext);
+        var pubKey=await crypto.subtle.importKey("spki",_b64ToBuf(CLINIC_PUBLIC_KEY),{name:"RSA-OAEP",hash:"SHA-256"},false,["wrapKey"]);
+        var aesKey=await crypto.subtle.generateKey({name:"AES-GCM",length:256},true,["encrypt"]);
+        var iv=crypto.getRandomValues(new Uint8Array(12));
+        var ct=await crypto.subtle.encrypt({name:"AES-GCM",iv:iv},aesKey,data);
+        var wrapped=await crypto.subtle.wrapKey("raw",aesKey,pubKey,{name:"RSA-OAEP"});
+        var digest=await crypto.subtle.digest("SHA-256",data);
+        return JSON.stringify({v:3,alg:"RSA-OAEP-256+AES-256-GCM",iv:_bufToB64(iv),key:_bufToB64(wrapped),data:_bufToB64(ct),hash:_bufToB64(digest)});
+    }
+    const IDENTITY_KEY      = 'adhd_patient_identity';
+    const AUTOSAVE_KEY      = 'catq_autosave';
+    const MANUAL_SAVE_KEY   = 'catq_manual';
+
+    // ============================================================
+    // ITEMS
+    // Source: Baker et al. (2024) / Hull et al. (2019) via NovoPsych
+    // ============================================================
+    const ITEMS = [
+        {num:1,  text:"When I am interacting with someone, I deliberately copy their body language or facial expressions."},
+        {num:2,  text:"I monitor my body language or facial expressions so that I appear relaxed."},
+        {num:3,  text:"I rarely feel the need to put on an act in order to get through a social situation."},
+        {num:4,  text:"I have developed a script to follow in social situations."},
+        {num:5,  text:"I will repeat phrases that I have heard others say in the exact same way that I first heard them."},
+        {num:6,  text:"I adjust my body language or facial expressions so that I appear interested by the person I am interacting with."},
+        {num:7,  text:"In social situations, I feel like I'm 'performing' rather than being myself."},
+        {num:8,  text:"In my own social interactions, I use behaviours that I have learned from watching other people interacting."},
+        {num:9,  text:"I always think about the impression I make on other people."},
+        {num:10, text:"I need the support of other people in order to socialise."},
+        {num:11, text:"I practice my facial expressions and body language to make sure they look natural."},
+        {num:12, text:"I don't feel the need to make eye contact with other people if I don't want to."},
+        {num:13, text:"I have to force myself to interact with people when I am in social situations."},
+        {num:14, text:"I have tried to improve my understanding of social skills by watching other people."},
+        {num:15, text:"I monitor my body language or facial expressions so that I appear interested by the person I am interacting with."},
+        {num:16, text:"When in social situations, I try to find ways to avoid interacting with others."},
+        {num:17, text:"I have researched the rules of social interactions to improve my own social skills."},
+        {num:18, text:"I am always aware of the impression I make on other people."},
+        {num:19, text:"I feel free to be myself when I am with other people."},
+        {num:20, text:"I learn how people use their bodies and faces to interact by watching television or films, or by reading fiction."},
+        {num:21, text:"I adjust my body language or facial expressions so that I appear relaxed."},
+        {num:22, text:"When talking to other people, I feel like the conversation flows naturally."},
+        {num:23, text:"I have spent time learning social skills from television shows and films, and try to use these in my interactions."},
+        {num:24, text:"In social interactions, I do not pay attention to what my face or body are doing."},
+        {num:25, text:"In social situations, I feel like I am pretending to be 'normal'."},
+    ];
+
+    // ============================================================
+    // IDENTITY (shared across patient tools)
+    // ============================================================
+    function saveIdentity() {
+        const name = document.getElementById('patientName').value;
+        const dob  = document.getElementById('dob').value;
+        if (name || dob) localStorage.setItem(IDENTITY_KEY, JSON.stringify({patientName: name, dob: dob}));
+    }
+
+    function loadIdentity() {
+        try {
+            const saved = JSON.parse(localStorage.getItem(IDENTITY_KEY) || 'null');
+            if (!saved) return;
+            const nameEl = document.getElementById('patientName');
+            const dobEl  = document.getElementById('dob');
+            if (saved.patientName && nameEl && !nameEl.value) nameEl.value = saved.patientName;
+            if (saved.dob && dobEl && !dobEl.value)           dobEl.value  = saved.dob;
+        } catch(e) {}
+    }
+
+    // ============================================================
+    // BUILD UI
+    // ============================================================
+    function buildQuestions() {
+        const container = document.getElementById('questionsContainer');
+        ITEMS.forEach(function(item) {
+            const div = document.createElement('div');
+            div.className = 'question-item';
+            div.id = 'qi_' + item.num;
+
+            div.innerHTML =
+                '<div class="question-text">' +
+                    '<span class="question-number">' + item.num + '</span>' +
+                    item.text +
+                '</div>' +
+                '<div class="likert-wrapper">' +
+                    '<div class="likert-header">' +
+                        '<span>Strongly Disagree</span>' +
+                        '<span>Neither</span>' +
+                        '<span>Strongly Agree</span>' +
+                    '</div>' +
+                    '<div class="likert-buttons" id="lb_' + item.num + '">' +
+                        [1,2,3,4,5,6,7].map(function(v) {
+                            return '<label class="likert-btn">' +
+                                '<input type="radio" name="q' + item.num + '" value="' + v + '" onchange="onAnswer(' + item.num + ')">' +
+                                '<span>' + v + '</span>' +
+                            '</label>';
+                        }).join('') +
+                    '</div>' +
+                    '<div class="likert-sublabels">' +
+                        '<span>1 — Strongly Disagree</span><span>4 — Neither</span><span>7 — Strongly Agree</span>' +
+                    '</div>' +
+                '</div>';
+
+            container.appendChild(div);
+        });
+    }
+
+    // ============================================================
+    // PROGRESS
+    // ============================================================
+    function updateProgress() {
+        var answered = 0;
+        ITEMS.forEach(function(item) {
+            if (document.querySelector('input[name="q' + item.num + '"]:checked')) answered++;
+        });
+        var pct = Math.round((answered / ITEMS.length) * 100);
+        var txt = answered + ' of ' + ITEMS.length + ' items answered (' + pct + '%)';
+        document.getElementById('progressText').textContent = txt;
+        document.getElementById('progressTextBottom').textContent = txt;
+        document.getElementById('progressFill').style.width = pct + '%';
+    }
+
+    function onAnswer(num) {
+        var qi = document.getElementById('qi_' + num);
+        qi.classList.remove('skipped');
+        qi.classList.add('just-answered');
+        setTimeout(function() { qi.classList.remove('just-answered'); }, 900);
+        flashBadge();
+        updateProgress();
+        autoSave();
+    }
+
+    function flashBadge() {
+        var badge = document.getElementById('recordedBadge');
+        badge.classList.remove('flashing');
+        void badge.offsetWidth;
+        badge.classList.add('flashing');
+    }
+
+    // ============================================================
+    // COLLECT / SCORE
+    // ============================================================
+    function collectRawResponses() {
+        var responses = {};
+        ITEMS.forEach(function(item) {
+            var checked = document.querySelector('input[name="q' + item.num + '"]:checked');
+            responses['q' + item.num] = checked ? parseInt(checked.value) : null;
+        });
+        return responses;
+    }
+
+
+    function collectData() {
+        return {
+            patientName:    document.getElementById('patientName').value.trim(),
+            dob:            document.getElementById('dob').value,
+            completionDate: document.getElementById('completionDate').value,
+            responses:      collectRawResponses()
+        };
+    }
+
+    // ============================================================
+    // AUTOSAVE / MANUAL SAVE
+    // ============================================================
+    function autoSave() {
+        localStorage.setItem(AUTOSAVE_KEY, JSON.stringify(collectData()));
+    }
+
+    function loadAutoSave() {
+        var saved = localStorage.getItem(AUTOSAVE_KEY);
+        if (saved) restoreData(JSON.parse(saved));
+    }
+
+    function saveProgress() {
+        autoSave();
+        localStorage.setItem(MANUAL_SAVE_KEY, JSON.stringify(collectData()));
+        alert('Progress saved. You can close this page and return later — click "Load Saved Progress" to continue.');
+    }
+
+    function loadProgress() {
+        var saved = localStorage.getItem(MANUAL_SAVE_KEY) || localStorage.getItem(AUTOSAVE_KEY);
+        if (!saved) { alert('No saved progress found.'); return; }
+        restoreData(JSON.parse(saved));
+        alert('Progress loaded.');
+    }
+
+    function restoreData(data) {
+        if (!data) return;
+        if (data.patientName) document.getElementById('patientName').value = data.patientName;
+        if (data.dob)         document.getElementById('dob').value         = data.dob;
+        if (data.responses) {
+            ITEMS.forEach(function(item) {
+                var val = data.responses['q' + item.num];
+                if (val !== null && val !== undefined) {
+                    var radio = document.querySelector('input[name="q' + item.num + '"][value="' + val + '"]');
+                    if (radio) radio.checked = true;
+                }
+            });
+        }
+        updateProgress();
+    }
+
+    // ============================================================
+    // VALIDATE + EXPORT
+    // ============================================================
+    function validateAndExport() {
+        var data = collectData();
+        var errEl = document.getElementById('validationErrors');
+        var errors = [];
+
+        if (!data.patientName) errors.push('Please enter your full name.');
+        if (!data.dob)         errors.push('Please enter your date of birth.');
+
+        var answered = 0;
+        ITEMS.forEach(function(item) {
+            if (data.responses['q' + item.num] !== null) answered++;
+        });
+
+        if (answered === 0) {
+            errors.push('Please answer at least some questions before submitting.');
+        }
+
+        // Highlight unanswered
+        ITEMS.forEach(function(item) {
+            var qi = document.getElementById('qi_' + item.num);
+            if (data.responses['q' + item.num] === null) {
+                qi.classList.add('skipped');
+            } else {
+                qi.classList.remove('skipped');
+            }
+        });
+
+        if (errors.length > 0) {
+            errEl.innerHTML = '<strong>Please correct the following:</strong><ul style="margin-top:8px;margin-left:20px;">' +
+                errors.map(function(e) { return '<li>' + e + '</li>'; }).join('') + '</ul>';
+            errEl.classList.remove('hidden');
+            errEl.scrollIntoView({behavior: 'smooth'});
+            return;
+        }
+
+        errEl.classList.add('hidden');
+
+        var skipped = ITEMS.length - answered;
+
+        var exportData = {
+            toolVersion:    "1.0",
+            dataType:       "CAT-Q",
+            patientName:    data.patientName,
+            dob:            data.dob,
+            completionDate: data.completionDate,
+            completionStats: {
+                totalQuestions:    ITEMS.length,
+                answered:          answered,
+                skipped:           skipped,
+                completionPercent: Math.round((answered / ITEMS.length) * 100)
+            },
+            responses: data.responses
+        };
+
+        document.getElementById('exportSection').classList.remove('hidden');
+        document.getElementById('exportSection').scrollIntoView({behavior: 'smooth'});
+        flashBadge();
+        window.exportData = exportData;
+    }
+
+    // ============================================================
+    // DOWNLOAD (encrypted .enc)
+    // ============================================================
+    async function downloadFile() {
+        if (!window.exportData) { alert('Please complete the form first.'); return; }
+        try {
+            var dataStr  = JSON.stringify(window.exportData);
+            const envelope = await encryptForClinician(dataStr);
+            var blob     = new Blob([envelope], {type: 'text/plain'});
+            var url      = URL.createObjectURL(blob);
+            var link     = document.createElement('a');
+            link.href    = url;
+            link.download = 'CATQ_' + window.exportData.patientName.replace(/\s+/g, '_') + '.enc';
+            link.click();
+            URL.revokeObjectURL(url);
+            localStorage.setItem('catq_downloaded', new Date().toISOString());
+            setTimeout(function() {
+                document.getElementById('emailAttachReminder').style.display = 'block';
+            }, 800);
+        } catch(e) {
+            alert('Encryption error. Please try again.');
+        }
+    }
+
+    // ============================================================
+    // EMAIL
+    // ============================================================
+    function emailToClinician() {
+        if (!window.exportData) { alert('Please complete the form first.'); return; }
+        var d = window.exportData;
+        downloadFile();
+        var subject = encodeURIComponent('CAT-Q Questionnaire — ' + d.patientName + ' — ' + d.completionDate);
+        var body = encodeURIComponent(
+            'Dear Dr. Shah,\n\nPlease find attached my completed Social Interactions Questionnaire (CAT-Q).\n\n' +
+            'Patient Name: ' + d.patientName + '\n' +
+            'Date of Birth: ' + d.dob + '\n' +
+            'Completion Date: ' + d.completionDate + '\n\n' +
+            'Instructions:\n' +
+            '1. Download the results file using the "Download Results File" button\n' +
+            '2. Attach the downloaded .enc file to this email\n' +
+            '3. Send\n\n' +
+            'Thank you.\n\nBest regards,\n' + d.patientName
+        );
+        var a = document.createElement('a');
+        a.href = 'mailto:draanashah@protonmail.com?subject=' + subject + '&body=' + body;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+    }
+
+    // ============================================================
+    // INIT
+    // ============================================================
+    document.addEventListener('DOMContentLoaded', function() {
+        buildQuestions();
+        document.getElementById('completionDate').value = new Date().toISOString().split('T')[0];
+        loadAutoSave();
+        loadIdentity();
+        updateProgress();
+        setInterval(autoSave, 60000);
+        document.getElementById('patientName').addEventListener('input', saveIdentity);
+        document.getElementById('dob').addEventListener('change', saveIdentity);
+    });
+</script>
+</body>
+</html>
