@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow">
@@ -71,20 +72,97 @@
             .button-group { flex-direction: column; }
             .button-group button { width: 100%; }
         }
-        .form-nav { display: flex; gap: 12px; flex-wrap: wrap; justify-content: space-between; align-items: center; margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--border); }
-        .nav-btn { display: inline-block; padding: 11px 20px; border-radius: 6px; font-size: 14px; font-weight: 500; text-decoration: none; transition: all 0.2s; }
-        .nav-btn-back { background: var(--border); color: var(--text); }
-        .nav-btn-back:hover { background: #cbd5e1; }
-        .nav-btn-next { background: var(--success); color: white; }
-        .nav-btn-next:hover { opacity: 0.9; }
-        .recorded-badge { display: inline-flex; align-items: center; gap: 6px; background: #f0fdf4; border: 1px solid #86efac; color: #166534; font-size: 13px; padding: 6px 14px; border-radius: 20px; margin-top: 12px; font-weight: 500; opacity: 0; pointer-events: none; }
-        .question-item.skipped { background: #fff5f5; border-left: 3px solid #dc2626; padding-left: 12px; border-radius: 4px; }
-        @keyframes answeredFlash { 0% { background: #dcfce7; } 100% { background: transparent; } }
-        .question-item.just-answered { animation: answeredFlash 0.8s ease-out; }
-        @keyframes badgePop { 0% { opacity: 0; transform: translateY(4px); } 15% { opacity: 1; transform: translateY(0); } 80% { opacity: 1; } 100% { opacity: 0; } }
-        .recorded-badge.flashing { animation: badgePop 2.5s ease-out forwards; }
-        .bottom-progress { text-align: center; margin-top: 16px; padding: 10px; background: #f1f5f9; border-radius: 6px; font-size: 14px; color: var(--text-secondary); font-weight: 500; }
     </style>
+
+<style id="printable-plain-overrides">
+:root {
+  --primary: #111111 !important;
+  --primary-dark: #111111 !important;
+  --success: #111111 !important;
+  --bg: #ffffff !important;
+  --card-bg: #ffffff !important;
+  --border: #000000 !important;
+  --text: #000000 !important;
+  --text-secondary: #222222 !important;
+  --warning: #222222 !important;
+}
+body {
+  background: #ffffff !important;
+  color: #000000 !important;
+  font-family: Arial, Helvetica, sans-serif !important;
+  line-height: 1.4 !important;
+  padding: 8mm !important;
+}
+.container {
+  max-width: none !important;
+  margin: 0 !important;
+}
+.header,
+.card,
+.disclaimer-box,
+.warning-box,
+.info-box,
+.scale-labels {
+  background: #ffffff !important;
+  color: #000000 !important;
+  border: 1px solid #000000 !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+}
+.question-number,
+.part-badge {
+  background: #ffffff !important;
+  color: #000000 !important;
+  border: 1px solid #000000 !important;
+}
+.radio-option {
+  background: #ffffff !important;
+  border: 1px solid #000000 !important;
+  border-radius: 0 !important;
+  padding: 4px 8px !important;
+}
+input,
+select,
+textarea {
+  background: #ffffff !important;
+  color: #000000 !important;
+  border: 1px solid #000000 !important;
+}
+a {
+  color: #000000 !important;
+  text-decoration: none !important;
+}
+.submission-box,
+.progress-text,
+.progress-bar,
+.button-group,
+#exportSection,
+.validation-error,
+#__bs_notify__ {
+  display: none !important;
+}
+@media print {
+  body {
+    padding: 0 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .container {
+    padding: 0 !important;
+  }
+  .card,
+  .header,
+  .disclaimer-box,
+  .warning-box,
+  .info-box,
+  .scale-labels,
+  .question-item {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+}
+</style>
+
 </head>
 <body>
     <div class="container">
@@ -170,8 +248,6 @@
             <button class="btn-primary" onclick="loadProgress()">📂 Load Saved Progress</button>
             <button class="btn-success" onclick="validateAndExport()">✓ Complete Questionnaire</button>
         </div>
-        <div class="bottom-progress" id="progressTextBottom">0 of 75 items answered (75 skipped) (0%)</div>
-        <div id="recordedBadge" class="recorded-badge">✓ Latest response recorded</div>
 
         <div id="validationErrors" class="validation-error hidden"></div>
 
@@ -183,7 +259,6 @@
                 <p style="margin-top: 10px; color: var(--text-secondary); font-size: 14px;">
                     Your responses have been saved. Please send your results to Dr. Shah using one of the options below.
                 </p>
-                <p style="margin-top: 12px; font-size: 13px; color: #92400e; background: #fffbeb; border: 1px solid #fde68a; border-radius: 6px; padding: 10px 14px;">Your clinician will review these results and schedule the next step (a structured clinical interview) before any diagnostic conclusions can be reached.</p>
             </div>
 
             <div style="margin: 20px 0;">
@@ -192,16 +267,11 @@
                     <button class="btn-primary" onclick="emailToClinician()" style="font-size: 16px; padding: 14px 28px;">✉️ Email Results</button>
                     <button class="btn-secondary" onclick="downloadJSON()" style="font-size: 16px; padding: 14px 28px;">⬇️ Download Results File</button>
                 </div>
-                <div id="emailAttachReminder" style="display:none;margin-top:10px;font-size:13px;color:#92400e;background:#fffbeb;border:1px solid #fde68a;border-radius:6px;padding:10px 14px;">Your results file is downloading now. Once it appears in your Downloads folder, attach it to the email that just opened and send.</div>
                 <p style="margin-top: 15px; font-size: 13px; color: var(--text-secondary); padding: 12px; background: #f8fafc; border-radius: 6px;">
                     <strong>Option 1:</strong> Click "Email Results" to open your email app with everything pre-filled. Just attach the file and send.<br>
                     <strong>Option 2:</strong> Download the file and email it to <strong><a href="mailto:draanashah@protonmail.com">draanashah@protonmail.com</a></strong> yourself.
                 </p>
             </div>
-        </div>
-        <div class="form-nav">
-            <a href="index.html" class="nav-btn nav-btn-back">← All questionnaires</a>
-            <a href="cbs_patient_self_FINAL.html" class="nav-btn nav-btn-next">Next: Behaviour Questionnaire →</a>
         </div>
     </div>
 
@@ -219,39 +289,7 @@
         // ====================
         // CONFIG
         // ====================
-        // Asymmetric encryption: only the clinic private key can decrypt the export.
-        const CLINIC_PUBLIC_KEY = "MIICIjANBgkqhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEAsPFiNGJeHftu2ODxG5uzupG6ZqdaxyKiOst5TOVOw53ZO4FjW1+8Voe2RHbP4wVfZGK50p20ubIE2DOaFc6piPCGZYti7nKAvYY/MwFocMv/6q1g3Bgqdg+xLWUmhN6AgxmayrQcfUlrY7sbqBXMg6xsFwe0hYvAT6kqoHspw/dTqQz/sRATGIVLxBJ5W12ASjNhUSXBapEp2lSHxK0Jr6Q1/1pn0bL5rsCxb2ulCSO9q8suuMfZV2sxmyisqfMJ5wAXLqzueyqjZ9+kLd54qiSZ6W8DAkfXDGlbzA1WeWmQXhCEeMqSNPfiqx1ILCGFZQN4jBzNkg09HeCxVcgr5AghyNQ9oA04KOLMRzon6Vdx9aTxJghGKdG6CE5Z7nb6tWwMZLiROJl3DI10Eg5eDoBRUEoFuYCXPbp0Yywfd0tkhSrLTQvSQszJMcYNHBKjwPfmQo/1RGcPRrios191ejLF9aqasJussQz7s3YlVs+Z/fijjlJK2U673Q0liH4369zqMpplFnfbY/e1cqANpMgBm0hlMGm3ABQxEAjN7b6dXR5RHK8ahPgWyu0qUyiiScpQO8Q6En5P8Xsd59pUCq46Iz9qx1VnxfwWUXcW/IIJs/xf0jiFD7J1gb1wcjFafJcXV5Y1zWQGy8cOOf7P+BM8i3NXR65zI7HemheMaX0CAwEAAQ==";
-        function _b64ToBuf(b64){var bin=atob(b64);var u=new Uint8Array(bin.length);for(var i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);return u.buffer;}
-        function _bufToB64(buf){var u=new Uint8Array(buf);var s="";for(var i=0;i<u.length;i++)s+=String.fromCharCode(u[i]);return btoa(s);}
-        async function encryptForClinician(plaintext){
-            var data=new TextEncoder().encode(plaintext);
-            var pubKey=await crypto.subtle.importKey("spki",_b64ToBuf(CLINIC_PUBLIC_KEY),{name:"RSA-OAEP",hash:"SHA-256"},false,["wrapKey"]);
-            var aesKey=await crypto.subtle.generateKey({name:"AES-GCM",length:256},true,["encrypt"]);
-            var iv=crypto.getRandomValues(new Uint8Array(12));
-            var ct=await crypto.subtle.encrypt({name:"AES-GCM",iv:iv},aesKey,data);
-            var wrapped=await crypto.subtle.wrapKey("raw",aesKey,pubKey,{name:"RSA-OAEP"});
-            var digest=await crypto.subtle.digest("SHA-256",data);
-            return JSON.stringify({v:3,alg:"RSA-OAEP-256+AES-256-GCM",iv:_bufToB64(iv),key:_bufToB64(wrapped),data:_bufToB64(ct),hash:_bufToB64(digest)});
-        }
-        const IDENTITY_KEY = 'adhd_patient_identity';
-
-        function saveIdentity() {
-            const name = document.getElementById('patientName').value;
-            const dob = document.getElementById('dob').value;
-            if (name || dob) localStorage.setItem(IDENTITY_KEY, JSON.stringify({patientName: name, dob: dob}));
-        }
-
-        function loadIdentity() {
-            const saved = localStorage.getItem(IDENTITY_KEY);
-            if (!saved) return;
-            try {
-                const id = JSON.parse(saved);
-                const nameEl = document.getElementById('patientName');
-                const dobEl = document.getElementById('dob');
-                if (id.patientName && nameEl && !nameEl.value) nameEl.value = id.patientName;
-                if (id.dob && dobEl && !dobEl.value) { dobEl.value = id.dob; syncDerivedDemographics(); }
-            } catch(e) {}
-        }
+        const CLINIC_MASTER_KEY = "Key123"; // must match clinician tool exactly
 
         // BRIEF-A Items (all 75 items)
         const items = [
@@ -340,23 +378,22 @@
             items.forEach(function(item) {
                 const div = document.createElement('div');
                 div.className = 'question-item';
-                div.id = 'qitem_q' + item.id;
-
+                
                 let html = '<div class="question-text">';
                 html += '<span class="question-number">' + item.id + '</span>';
                 html += item.text;
                 html += '</div>';
                 html += '<div class="radio-group">';
-
+                
                 const options = [
                     {value: 1, label: 'N - Never'},
                     {value: 2, label: 'S - Sometimes'},
                     {value: 3, label: 'O - Often'}
                 ];
-
+                
                 options.forEach(function(opt) {
                     html += '<div class="radio-option">';
-                    html += '<input type="radio" name="q' + item.id + '" value="' + opt.value + '" id="q' + item.id + '_' + opt.value + '" onchange="onQuestionChange(this)">';
+                    html += '<input type="radio" name="q' + item.id + '" value="' + opt.value + '" id="q' + item.id + '_' + opt.value + '" onchange="updateProgress()">';
                     html += '<label for="q' + item.id + '_' + opt.value + '">' + opt.label + '</label>';
                     html += '</div>';
                 });
@@ -375,11 +412,9 @@
             document.getElementById('completionDate').valueAsDate = new Date();
             const dobEl = document.getElementById('dob');
             if (dobEl) dobEl.addEventListener('change', syncDerivedDemographics);
+            
             renderQuestions();
             loadAutoSave();
-            loadIdentity();
-            document.getElementById('patientName').addEventListener('input', saveIdentity);
-            document.getElementById('dob').addEventListener('change', saveIdentity);
         });
 
         // ====================
@@ -406,46 +441,26 @@
             ageEl.value = derivedAge !== null ? String(derivedAge) : '';
         }
 
-        let _hasValidated = false;
-
-        function onQuestionChange(radioEl) {
-            if (_hasValidated) {
-                const item = radioEl.closest('.question-item');
-                if (item) {
-                    item.classList.remove('skipped');
-                    item.classList.remove('just-answered');
-                    void item.offsetWidth;
-                    item.classList.add('just-answered');
-                }
-            }
-            updateProgress();
-        }
-
-        function highlightSkipped() {
-            for (let i = 1; i <= 75; i++) {
-                const item = document.getElementById('qitem_q' + i);
-                if (!item) continue;
-                item.classList.toggle('skipped', !document.querySelector('input[name="q' + i + '"]:checked'));
-            }
-        }
-
         function updateProgress() {
             autoSave();
             let completed = 0;
             const required = 75;
+            
             for (let i = 1; i <= 75; i++) {
                 if (document.querySelector('input[name="q' + i + '"]:checked')) completed++;
             }
+            
             const skipped = required - completed;
             const percent = Math.round((completed / required) * 100);
+            
             let progressText = completed + ' of ' + required + ' items answered';
-            if (skipped > 0) progressText += ' (' + skipped + ' skipped)';
+            if (skipped > 0) {
+                progressText += ' (' + skipped + ' skipped)';
+            }
             progressText += ' (' + percent + '%)';
+            
             document.getElementById('progressText').textContent = progressText;
             document.getElementById('progressFill').style.width = percent + '%';
-            const btm = document.getElementById('progressTextBottom');
-            if (btm) btm.textContent = progressText;
-            if (_hasValidated) highlightSkipped();
         }
 
         function getResponses() {
@@ -457,9 +472,391 @@
             return responses;
         }
 
+        // Validity check
+        // ====================
+        // SCORING
+        // ====================
+        function checkValidity(responses) {
+            // NEGATIVITY SCALE
+            // Items: 1, 8, 19, 21, 22, 23, 29, 36, 39, 40
+            // Count how many are scored as 3 (Often)
+            const negativityItems = [1, 8, 19, 21, 22, 23, 29, 36, 39, 40];
+            let negativityScore = 0;
+            for (const item of negativityItems) {
+                if (responses[item] === 3) {
+                    negativityScore++;
+                }
+            }
+            const negativityStatus = negativityScore <= 5 ? 'acceptable' : 'elevated';
+
+            // INFREQUENCY SCALE
+            // Item 10 = 3, Item 27 = 1, Item 38 = 3, Item 48 = 1, Item 59 = 1
+            let infrequencyScore = 0;
+            if (responses[10] === 3) infrequencyScore++; // "I forget my name"
+            if (responses[27] === 1) infrequencyScore++; // "I get tired"
+            if (responses[38] === 3) infrequencyScore++; // "I have trouble counting to three"
+            if (responses[48] === 1) infrequencyScore++; // "I make mistakes"
+            if (responses[59] === 1) infrequencyScore++; // "I get annoyed"
+            const infrequencyStatus = infrequencyScore <= 2 ? 'acceptable' : 'infrequent';
+
+            // INCONSISTENCY SCALE
+            // 10 pairs: (2,41), (25,49), (28,42), (33,72), (34,62), (44,61), (46,56), (52,75), (60,74), (64,70)
+            // Sum of absolute differences
+            const inconsistencyPairs = [
+                [2, 41], [25, 49], [28, 42], [33, 72], [34, 62],
+                [44, 61], [46, 56], [52, 75], [60, 74], [64, 70]
+            ];
+            let inconsistencyScore = 0;
+            for (const [item1, item2] of inconsistencyPairs) {
+                const score1 = responses[item1] || 0;
+                const score2 = responses[item2] || 0;
+                inconsistencyScore += Math.abs(score1 - score2);
+            }
+            const inconsistencyStatus = inconsistencyScore <= 7 ? 'acceptable' : 'inconsistent';
+
+            // Build validity report
+            const flags = [];
+            if (negativityStatus === 'elevated') {
+                flags.push(`Negativity Scale: ${negativityScore}/10 items (≥6 is elevated) - Possible negative response bias`);
+            }
+            if (infrequencyStatus === 'infrequent') {
+                flags.push(`Infrequency Scale: ${infrequencyScore}/5 items (≥3 is infrequent) - Possible random or careless responding`);
+            }
+            if (inconsistencyStatus === 'inconsistent') {
+                flags.push(`Inconsistency Scale: ${inconsistencyScore} (≥8 is inconsistent) - Inconsistent responding across similar items`);
+            }
+
+            return {
+                isValid: flags.length === 0,
+                flags: flags,
+                negativity: {
+                    score: negativityScore,
+                    status: negativityStatus
+                },
+                infrequency: {
+                    score: infrequencyScore,
+                    status: infrequencyStatus
+                },
+                inconsistency: {
+                    score: inconsistencyScore,
+                    status: inconsistencyStatus
+                }
+            };
+        }
+
+        // PLACEHOLDER for scale scoring - will be implemented when you provide the indices
+        function calculateScales(responses) {
+            // Scale definitions (which items belong to which scale)
+            const scales = {
+                "Inhibit": [5, 16, 29, 36, 43, 55, 58, 73],
+                "Shift": [8, 22, 32, 44, 61, 67],
+                "Emotional Control": [1, 12, 19, 28, 33, 42, 51, 57, 69, 72],
+                "Self-Monitor": [13, 23, 37, 50, 64, 70],
+                "Initiate": [6, 14, 20, 25, 45, 49, 53, 62],
+                "Working Memory": [4, 11, 17, 26, 35, 46, 56, 68],
+                "Plan/Organize": [9, 15, 21, 34, 39, 47, 54, 63, 66, 71],
+                "Task Monitor": [2, 18, 24, 41, 52, 75],
+                "Organization of Materials": [3, 7, 30, 31, 40, 60, 65, 74]
+            };
+
+            // Special scales with stricter missing data rules (max 1 missing)
+            const strictScales = ["Shift", "Self-Monitor", "Task Monitor"];
+
+            // Check total missing responses
+            let totalMissing = 0;
+            for (let i = 1; i <= 75; i++) {
+                if (!responses[i] || responses[i] === null) {
+                    totalMissing++;
+                }
+            }
+
+            // If more than 14 items missing, protocol is invalid
+            const protocolValid = totalMissing <= 14;
+
+            // Calculate raw scores for each scale
+            const rawScores = {};
+            const missingCounts = {};
+            const scaleValidity = {};
+            
+            for (const [scaleName, itemNumbers] of Object.entries(scales)) {
+                let sum = 0;
+                let missing = 0;
+                
+                // Count answered items and missing items
+                for (const itemNum of itemNumbers) {
+                    if (responses[itemNum] && responses[itemNum] !== null) {
+                        sum += responses[itemNum];
+                    } else {
+                        missing++;
+                    }
+                }
+                
+                missingCounts[scaleName] = missing;
+                
+                // Determine if scale can be scored based on missing data rules
+                let canScore = false;
+                if (strictScales.includes(scaleName)) {
+                    // Shift, Self-Monitor, Task Monitor: max 1 missing
+                    canScore = missing <= 1;
+                } else {
+                    // All other scales: max 2 missing
+                    canScore = missing <= 2;
+                }
+                
+                scaleValidity[scaleName] = canScore;
+                
+                // If valid, calculate score (assign 1 to missing items)
+                if (canScore && protocolValid) {
+                    rawScores[scaleName] = sum + (missing * 1); // Add 1 for each missing item
+                } else {
+                    rawScores[scaleName] = null;
+                }
+            }
+
+            // Calculate BRI (Behavioral Regulation Index)
+            // Only if all component scales are valid
+            const briScales = ["Inhibit", "Shift", "Emotional Control", "Self-Monitor"];
+            let briValid = true;
+            let briSum = 0;
+            
+            for (const scale of briScales) {
+                if (!scaleValidity[scale] || rawScores[scale] === null) {
+                    briValid = false;
+                    break;
+                }
+                briSum += rawScores[scale];
+            }
+            rawScores.BRI = (briValid && protocolValid) ? briSum : null;
+
+            // Calculate MI (Metacognition Index)
+            // Only if all component scales are valid
+            const miScales = ["Initiate", "Working Memory", "Plan/Organize", "Task Monitor", "Organization of Materials"];
+            let miValid = true;
+            let miSum = 0;
+            
+            for (const scale of miScales) {
+                if (!scaleValidity[scale] || rawScores[scale] === null) {
+                    miValid = false;
+                    break;
+                }
+                miSum += rawScores[scale];
+            }
+            rawScores.MI = (miValid && protocolValid) ? miSum : null;
+
+            // Calculate GEC (Global Executive Composite)
+            rawScores.GEC = (rawScores.BRI !== null && rawScores.MI !== null) ? 
+                rawScores.BRI + rawScores.MI : null;
+
+            // Get patient age for T-score lookup
+            const age = parseInt(document.getElementById('age').value);
+            const ageGroup = getAgeGroup(age);
+
+            // Convert to T-scores and calculate additional metrics
+            const tScores = {};
+            const percentiles = {};
+            const confidenceRanges = {};
+            const clinicalInterpretations = {};
+            
+            if (ageGroup) {
+                const ciValues = confidenceIntervals[ageGroup];
+                
+                for (const [scaleName, rawScore] of Object.entries(rawScores)) {
+                    if (rawScore !== null) {
+                        const tScore = lookupTScore(ageGroup, scaleName, rawScore);
+                        tScores[scaleName] = tScore;
+                        
+                        // Calculate percentile
+                        percentiles[scaleName] = tScoreToPercentile(tScore);
+                        
+                        // Calculate 90% confidence interval range
+                        const ciValue = ciValues[scaleName];
+                        if (ciValue && tScore !== null) {
+                            confidenceRanges[scaleName] = {
+                                lower: Math.max(0, tScore - ciValue),
+                                upper: Math.min(100, tScore + ciValue),
+                                ci_value: ciValue
+                            };
+                        }
+                        
+                        // Get clinical interpretation
+                        clinicalInterpretations[scaleName] = getClinicalInterpretation(tScore, scaleName);
+                    }
+                }
+            }
+
+            return {
+                protocolValid: protocolValid,
+                totalMissingItems: totalMissing,
+                missingByScale: missingCounts,
+                scaleValidity: scaleValidity,
+                rawScores: rawScores,
+                tScores: tScores,
+                percentiles: percentiles,
+                confidenceIntervals: confidenceRanges,
+                clinicalInterpretations: clinicalInterpretations,
+                ageGroup: ageGroup
+            };
+        }
+
+        // Normative tables for T-score conversion (ages 18-49) - FROM BRIEF-A MANUAL
+        const normativeTables = {
+            "18-29": {
+                "Inhibit": {8:36,9:40,10:43,11:46,12:50,13:53,14:57,15:60,16:63,17:67,18:70,19:74,20:77,21:80,22:84,23:87,24:91},
+                "Shift": {6:39,7:43,8:47,9:51,10:56,11:60,12:64,13:69,14:73,15:77,16:81,17:86,18:90},
+                "Emotional Control": {10:38,11:40,12:43,13:45,14:47,15:49,16:51,17:54,18:56,19:58,20:60,21:63,22:65,23:67,24:69,25:72,26:74,27:76,28:78,29:80,30:83},
+                "Self-Monitor": {6:37,7:42,8:46,9:50,10:54,11:59,12:63,13:67,14:72,15:76,16:80,18:89},
+                "Initiate": {8:37,9:40,10:43,11:47,12:50,13:53,14:56,15:60,16:63,17:66,18:69,19:73,20:76,21:79,22:82,23:85,24:89},
+                "Working Memory": {8:39,9:43,10:46,11:49,12:53,13:56,14:59,15:63,16:66,17:69,18:73,19:76,20:79,21:83,22:86,23:89,24:93},
+                "Plan/Organize": {10:38,11:41,12:44,13:46,14:49,15:52,16:54,17:57,18:60,19:62,20:65,21:68,22:70,23:73,24:76,25:78,26:81,27:84,28:86,29:89,30:92},
+                "Task Monitor": {6:36,7:45,8:45,9:50,10:54,11:59,12:63,13:68,14:72,15:77,16:81,17:86,18:90},
+                "Organization of Materials": {8:36,9:39,10:42,11:45,12:47,13:50,14:53,15:56,16:58,17:61,18:64,19:67,20:69,21:72,22:75,23:78,24:81},
+                "BRI": {30:35,31:36,32:37,33:38,34:39,35:40,36:41,37:42,38:43,39:44,40:45,41:46,42:47,43:48,44:49,45:50,46:51,47:52,48:53,49:54,50:55,51:56,52:57,53:58,54:59,55:60,56:61,57:62,58:63,59:64,60:65,61:66,62:67,63:68,64:69,65:70,66:71,67:72,68:73,69:74,70:75,71:76,72:77,73:78,74:79,75:80,76:81,77:82,78:83,79:84,80:85,81:86,82:87,83:88,84:89,85:90,86:91,87:92,88:93,89:94,90:95},
+                "MI": {40:39,45:44,50:50,55:56,60:62,65:68,70:73,75:79,80:85,85:88,90:73,91:73,92:74,93:75,94:76,95:76,96:77,97:78,98:79,99:79,100:80,101:81,102:82,103:82,104:83,105:84,106:85,107:85,108:86,109:87,110:88,111:88,112:89,113:90,114:91,115:91,116:92,117:93,118:94,119:94,120:95},
+                "GEC": {70:39,71:35,72:35,73:35,74:36,75:36,76:37,77:37,78:38,79:38,80:39,81:39,82:40,83:40,84:41,85:41,86:41,87:42,88:42,89:43,90:43,91:44,92:44,93:45,94:45,95:46,96:46,97:47,98:47,99:47,100:48,101:48,102:49,103:49,104:50,105:50,106:51,107:51,108:52,109:52,110:53,111:53,112:53,113:54,114:54,115:55,116:55,117:56,118:56,119:57,120:57,121:58,122:58,123:59,124:59,125:59,126:60,127:60,128:61,129:61,130:62,131:62,132:63,133:63,134:64,135:64,136:65,137:65,138:65,139:66,140:66,141:67,142:67,143:68,144:68,145:68,146:69,147:70,148:70,149:71,150:71,151:71,152:72,153:72,154:73,155:73,156:74,157:74,158:75,159:75,160:76,161:76,162:77,163:77,164:77,165:78,166:78,167:79,168:79,169:80,170:80,171:81,172:81,173:82,174:82,175:83,176:83,177:83,178:84,179:84,180:85,181:85,182:86,183:86,184:87,185:87,186:88,187:88,188:89,189:89,190:89,191:90,192:90,193:91,194:91,195:92,196:92,197:93,198:93,199:94,200:94,201:95,202:95,203:95,204:96,205:96,206:97,207:97,208:98,209:98,210:99}
+            },
+            "30-39": {
+                "Inhibit": {8:37,9:41,10:44,11:48,12:51,13:55,14:58,15:61,16:65,17:68,18:71,19:75,20:78,21:82,22:85,23:88,24:92},
+                "Shift": {6:39,7:43,8:48,9:52,10:56,11:61,12:65,13:69,14:74,15:78,16:83,17:87,18:91},
+                "Emotional Control": {10:38,11:41,12:43,13:46,14:48,15:50,16:53,17:55,18:57,19:60,20:62,21:64,22:67,23:69,24:71,25:74,26:76,27:79,28:81,29:83,30:86},
+                "Self-Monitor": {6:37,7:42,8:46,9:51,10:55,11:59,12:64,13:68,14:72,15:77,16:81,17:86,18:90},
+                "Initiate": {8:37,9:41,10:44,11:47,12:51,13:54,14:57,15:61,16:64,17:68,18:71,19:74,20:78,21:81,22:84,23:88,24:91},
+                "Working Memory": {8:39,9:43,10:46,11:50,12:53,13:57,14:60,15:64,16:67,17:71,18:74,19:78,20:81,21:85,22:88,23:91,24:95},
+                "Plan/Organize": {10:39,11:42,12:44,13:47,14:50,15:53,16:55,17:58,18:61,19:64,20:66,21:69,22:72,23:75,24:77,25:80,26:83,27:86,28:88,29:91,30:94},
+                "Task Monitor": {6:37,7:42,8:46,9:51,10:56,11:60,12:65,13:69,14:74,15:79,16:83,17:88,18:93},
+                "Organization of Materials": {8:37,9:40,10:43,11:45,12:48,13:51,14:54,15:57,16:60,17:63,18:66,19:69,20:71,21:74,22:77,23:80,24:83},
+                "BRI": {30:35,31:37,32:38,33:39,34:40,35:41,36:42,37:43,38:44,39:45,40:46,41:47,42:48,43:49,44:50,45:51,46:52,47:53,48:54,49:55,50:56,51:57,52:58,53:59,54:60,55:61,56:62,57:63,58:64,59:65,60:66,61:68,62:69,63:70,64:71,65:72,66:73,67:74,68:75,69:76,70:77,71:78,72:79,73:80,74:81,75:82,76:83,77:84,78:85,79:86,80:87,81:88,82:89,83:90,84:91,85:92,86:93,87:94,88:95,89:96,90:97,91:75,92:76,93:77,94:78,95:78,96:79,97:80,98:81,99:82,100:82,101:83,102:84,103:85,104:85,105:86,106:87,107:88,108:88,109:89,110:90,111:91,112:92,113:92,114:93,115:94,116:95,117:95,118:96,119:97,120:98},
+                "MI": {30:36,31:37,32:38,33:39,34:40,35:41,36:42,37:43,38:44,39:45,40:46,41:47,42:48,43:49,44:50,45:51,46:52,47:53,48:54,49:55,50:56,51:57,52:58,53:59,54:61,55:61,56:61,57:61,58:61,59:65,60:65,61:68,62:68,63:69,64:71,65:71,66:73,67:74,68:75,69:76,70:77,71:78,72:79,73:80,74:81,75:82,76:83,77:84,78:85,79:86,80:87,81:88,82:89,83:90,84:91,85:92,86:93,87:94,88:95,89:96,90:97,91:75,92:76,93:77,94:78,95:78,96:79,97:80,98:81,99:82,100:82,101:83,102:84,103:85,104:85,105:86,106:87,107:88,108:88,109:89,110:90,111:91,112:92,113:92,114:93,115:94,116:95,117:95,118:96,119:97,120:98},
+                "GEC": {70:35,71:35,72:35,73:36,74:36,75:37,76:37,77:38,78:38,79:39,80:39,81:40,82:40,83:41,84:41,85:42,86:42,87:43,88:43,89:44,90:44,91:45,92:45,93:46,94:46,95:46,96:47,97:47,98:48,99:48,100:49,101:49,102:50,103:50,104:51,105:51,106:52,107:52,108:53,109:53,110:54,111:54,112:55,113:55,114:56,115:56,116:57,117:57,118:57,119:58,120:58,121:59,122:59,123:60,124:60,125:61,126:61,127:62,128:62,129:63,130:63,131:64,132:64,133:65,134:65,135:66,136:66,137:67,138:67,139:68,140:68,141:68,142:69,143:69,144:70,145:70,146:71,147:71,148:72,149:72,150:73,151:73,152:74,153:74,154:75,155:75,156:76,157:76,158:77,159:77,160:78,161:78,162:79,163:79,164:80,165:80,166:80,167:81,168:81,169:82,170:82,171:83,172:83,173:84,174:84,175:85,176:85,177:86,178:86,179:87,180:87,181:88,182:88,183:89,184:89,185:90,186:90,187:90,188:91,189:91,190:92,191:92,192:93,193:93,194:94,195:94,196:95,197:95,198:96,199:96,200:97,201:97,202:98,203:98,204:99,205:99,206:100,207:100,208:100,209:101,210:101}
+            },
+            "40-49": {
+                "Inhibit": {8:38,9:42,10:45,11:49,12:52,13:55,14:59,15:62,16:66,17:69,18:73,19:76,20:79,21:83,22:86,23:90,24:93},
+                "Shift": {6:39,7:44,8:48,9:53,10:57,11:61,12:66,13:70,14:76,15:79,16:84,17:88,18:93},
+                "Emotional Control": {10:39,11:41,12:44,13:46,14:49,15:51,16:54,17:56,18:59,19:61,20:64,21:66,22:69,23:71,24:74,25:76,26:79,27:81,28:84,29:86,30:89},
+                "Self-Monitor": {6:37,7:42,8:46,9:51,10:55,11:60,12:64,13:69,14:73,15:78,16:82,17:87,18:91},
+                "Initiate": {8:38,9:41,10:45,11:48,12:52,13:55,14:59,15:62,16:66,17:69,18:73,19:76,20:80,21:83,22:87,23:90,24:94},
+                "Working Memory": {8:40,9:43,10:47,11:50,12:54,13:58,14:61,15:65,16:68,17:72,18:76,19:79,20:83,21:86,22:90,23:94,24:97},
+                "Plan/Organize": {10:39,11:42,12:45,13:48,14:51,15:53,16:56,17:59,18:62,19:65,20:68,21:71,22:74,23:76,24:79,25:82,26:85,27:88,28:91,29:94,30:97},
+                "Task Monitor": {6:38,7:42,8:47,9:52,10:57,11:61,12:66,13:71,14:76,15:80,16:85,17:90,18:95},
+                "Organization of Materials": {8:37,9:40,10:43,11:46,12:49,13:52,14:55,15:59,16:62,17:65,18:68,19:71,20:74,21:77,22:80,23:83,24:86},
+                "BRI": {30:36,31:37,32:38,33:39,34:40,35:41,36:42,37:43,38:45,39:46,40:47,41:48,42:49,43:50,44:51,45:52,46:53,47:54,48:55,49:56,50:57,51:59,52:60,53:61,54:62,55:63,56:64,57:65,58:66,59:67,60:68,61:69,62:70,63:71,64:72,65:74,66:75,67:76,68:77,69:78,70:79,71:80,72:81,73:82,74:83,75:84,76:85,77:86,78:88,79:89,80:90,81:91,82:92,83:93,84:94,85:95,86:96,87:97,88:98,89:99,90:100},
+                "MI": {36:36,37:37,38:38,39:39,40:40,41:41,42:42,43:43,44:44,45:45,46:46,47:47,48:48,49:49,50:50,51:51,52:52,53:53,54:54,55:55,56:56,57:57,58:51,59:51,60:52,61:53,62:54,63:55,64:56,65:56,66:57,67:58,68:59,69:60,70:60,71:61,72:62,73:63,74:64,75:64,76:65,77:66,78:67,79:68,80:68,81:69,82:70,83:71,84:72,85:72,86:73,87:74,88:75,89:76,90:77,91:77,92:78,93:79,94:80,95:81,96:81,97:82,98:83,99:84,100:85,101:85,102:86,103:87,104:88,105:89,106:89,107:90,108:91,109:92,110:93,111:93,112:94,113:95,114:96,115:97,116:97,117:98,118:99,119:100,120:101},
+                "GEC": {70:35,71:35,72:36,73:36,74:36,75:37,76:38,77:38,78:39,79:39,80:40,81:40,82:41,83:41,84:42,85:42,86:43,87:43,88:43,89:44,90:45,91:45,92:46,93:46,94:47,95:47,96:48,97:48,98:49,99:49,100:50,101:50,102:51,103:51,104:52,105:52,106:53,107:53,108:54,109:54,110:55,111:55,112:56,113:56,114:57,115:57,116:58,117:58,118:59,119:59,120:60,121:60,122:61,123:61,124:62,125:62,126:63,127:63,128:64,129:64,130:65,131:65,132:66,133:66,134:67,135:67,136:68,137:68,138:69,139:69,140:70,141:70,142:71,143:71,144:72,145:72,146:73,147:73,148:74,149:74,150:75,151:75,152:76,153:76,154:77,155:77,156:78,157:78,158:79,159:79,160:80,161:80,162:81,163:81,164:82,165:82,166:83,167:83,168:84,169:84,170:85,171:85,172:86,173:86,174:87,175:87,176:88,177:88,178:89,179:89,180:90,181:90,182:91,183:91,184:92,185:92,186:93,187:93,188:94,189:94,190:95,191:95,192:95,193:96,194:96,195:97,196:97,197:98,198:98,199:99,200:99,201:100,202:100,203:101,204:101,205:102,206:102,207:103,208:103,209:104,210:104}
+            }
+        };
+
+        function getAgeGroup(age) {
+            if (age >= 18 && age <= 29) return '18-29';
+            if (age >= 30 && age <= 39) return '30-39';
+            if (age >= 40 && age <= 49) return '40-49';
+            return null;
+        }
+
+        function lookupTScore(ageGroup, scale, rawScore) {
+            const table = normativeTables[ageGroup]?.[scale];
+            if (!table || rawScore === null) return null;
+            
+            // Direct lookup if exact match
+            if (table[rawScore]) return table[rawScore];
+            
+            // Interpolation between values
+            const keys = Object.keys(table).map(Number).sort((a,b) => a - b);
+            
+            // Below range
+            if (rawScore <= keys[0]) return table[keys[0]];
+            
+            // Above range
+            if (rawScore >= keys[keys.length - 1]) return table[keys[keys.length - 1]];
+            
+            // Interpolate between two values
+            for (let i = 0; i < keys.length - 1; i++) {
+                if (rawScore > keys[i] && rawScore < keys[i + 1]) {
+                    const lower = table[keys[i]];
+                    const upper = table[keys[i + 1]];
+                    const ratio = (rawScore - keys[i]) / (keys[i + 1] - keys[i]);
+                    return Math.round(lower + ratio * (upper - lower));
+                }
+            }
+            
+            return null;
+        }
+
+        // Convert T-score to Percentile Rank
+        // Uses cumulative normal distribution approximation
+        function tScoreToPercentile(tScore) {
+            if (tScore === null) return null;
+            
+            // T-score has mean=50, SD=10
+            // Convert to z-score: z = (T - 50) / 10
+            const z = (tScore - 50) / 10;
+            
+            // Cumulative normal distribution approximation
+            const t = 1 / (1 + 0.2316419 * Math.abs(z));
+            const d = 0.3989423 * Math.exp(-z * z / 2);
+            const probability = d * t * (0.3193815 + t * (-0.3565638 + t * (1.781478 + t * (-1.821256 + t * 1.330274))));
+            
+            let percentile;
+            if (z >= 0) {
+                percentile = (1 - probability) * 100;
+            } else {
+                percentile = probability * 100;
+            }
+            
+            return Math.round(percentile);
+        }
+
+        // 90% Confidence Interval (CI) values from manual
+        const confidenceIntervals = {
+            "18-29": {
+                "Inhibit": 8, "Shift": 8, "Emotional Control": 5, "Self-Monitor": 8,
+                "Initiate": 8, "Working Memory": 7, "Plan/Organize": 7,
+                "Task Monitor": 9, "Organization of Materials": 6,
+                "BRI": 4, "MI": 4, "GEC": 3
+            },
+            "30-39": {
+                "Inhibit": 8, "Shift": 8, "Emotional Control": 5, "Self-Monitor": 7,
+                "Initiate": 7, "Working Memory": 7, "Plan/Organize": 6,
+                "Task Monitor": 7, "Organization of Materials": 7,
+                "BRI": 5, "MI": 4, "GEC": 3
+            },
+            "40-49": {
+                "Inhibit": 9, "Shift": 8, "Emotional Control": 5, "Self-Monitor": 8,
+                "Initiate": 8, "Working Memory": 8, "Plan/Organize": 6,
+                "Task Monitor": 9, "Organization of Materials": 7,
+                "BRI": 5, "MI": 4, "GEC": 3
+            }
+        };
+
+        function getClinicalInterpretation(tScore, scaleName) {
+            if (tScore === null) return null;
+            
+            // T-score interpretation:
+            // T < 65: Average/Normal range
+            // T >= 65: Clinically Elevated (1.5 SD above mean)
+            // T >= 70: Highly Elevated (2 SD above mean)
+            
+            if (tScore >= 70) {
+                return {
+                    level: "Highly Elevated",
+                    description: `${scaleName} score indicates significant executive dysfunction (≥2 SD above mean)`,
+                    clinical_significance: true
+                };
+            } else if (tScore >= 65) {
+                return {
+                    level: "Elevated",
+                    description: `${scaleName} score indicates executive dysfunction (≥1.5 SD above mean)`,
+                    clinical_significance: true
+                };
+            } else {
+                return {
+                    level: "Average",
+                    description: `${scaleName} score is within normal limits`,
+                    clinical_significance: false
+                };
+            }
+        }
+
         // ====================
         // IMPORT/EXPORT
-        // (Scoring is computed in the clinician tool on import — not here)
         // ====================
         function collectData() {
             syncDerivedDemographics();
@@ -490,17 +887,9 @@
             }
         }
 
-        function flashBadge() {
-            const b = document.getElementById('recordedBadge');
-            if (!b) return;
-            b.classList.remove('flashing');
-            void b.offsetWidth;
-            b.classList.add('flashing');
-        }
-
         function saveProgress() {
             localStorage.setItem('briefa_manual', JSON.stringify(collectData()));
-            flashBadge();
+            alert('Progress saved!');
         }
 
         function loadProgress() {
@@ -562,11 +951,35 @@
             }
             
             document.getElementById('validationErrors').classList.add('hidden');
-            _hasValidated = true;
-            highlightSkipped();
-
+            
+            // Check validity
+            const validity = checkValidity(data.responses);
+            
+            // Calculate scales
+            const scales = calculateScales(data.responses);
+            
+            // Check for protocol validity (missing data)
+            if (!scales.protocolValid) {
+                alert('⚠️ Protocol Invalid\n\nThis protocol has ' + scales.totalMissingItems + ' missing responses (maximum allowed: 14).\n\nThe protocol cannot be scored. Please complete more items.');
+                return;
+            }
+            
+            // Check for scales that couldn't be scored
+            const unscoredScales = [];
+            for (const [scaleName, valid] of Object.entries(scales.scaleValidity)) {
+                if (!valid) {
+                    const missing = scales.missingByScale[scaleName];
+                    unscoredScales.push(scaleName + ' (' + missing + ' missing items)');
+                }
+            }
+            
+            if (unscoredScales.length > 0) {
+                const proceed = confirm('⚠️ Missing Data Warning\n\nThe following scales could not be scored due to too many missing items:\n\n' + unscoredScales.join('\n') + '\n\nNote: Shift, Self-Monitor, and Task Monitor require ≤1 missing item. All other scales require ≤2 missing items.\n\nDo you want to continue with partial results?');
+                if (!proceed) return;
+            }
+            
             const exportData = {
-                toolVersion: "4.0",
+                toolVersion: "1.0",
                 dataType: "BRIEF_A",
                 patientName: data.patientName,
                 patientEmail: data.patientEmail,
@@ -582,30 +995,38 @@
                     skipped: skipped,
                     completionPercent: 100 - skippedPercent
                 },
-                responses: data.responses
+                validity: validity,
+                responses: data.responses,
+                scales: scales
             };
             
             document.getElementById('exportSection').classList.remove('hidden');
             document.getElementById('exportSection').scrollIntoView({behavior: 'smooth'});
-            flashBadge();
+            
             window.exportData = exportData;
+            
+            // Show validity warning if needed
+            if (!validity.isValid) {
+                alert('⚠️ Validity Warning\n\n' + validity.flags.join('\n') + '\n\nThese responses are unusual and may indicate careless responding or misunderstanding. Please review with clinician.');
+            }
         }
 
-        async function downloadJSON() {
+        function downloadJSON() {
             if (!window.exportData) {
                 alert('Please complete the form first.');
                 return;
             }
             try {
                 const dataStr = JSON.stringify(window.exportData);
-                const envelope = await encryptForClinician(dataStr);
+                const hash = CryptoJS.SHA256(dataStr).toString();
+                const ciphertext = CryptoJS.AES.encrypt(dataStr, CLINIC_MASTER_KEY).toString();
+                const envelope = JSON.stringify({v: 2, ciphertext: ciphertext, hash: hash});
                 const blob = new Blob([envelope], {type: 'text/plain'});
                 const url = URL.createObjectURL(blob);
                 const link = document.createElement('a');
                 link.href = url;
                 link.download = 'BRIEF_A_' + window.exportData.patientName.replace(/\s+/g, '_') + '_' + window.exportData.completionDate + '.enc';
                 link.click();
-            localStorage.setItem('briefa_downloaded', new Date().toISOString());
                 URL.revokeObjectURL(url);
                 alert('Secure file downloaded. Please email this .enc file to your clinician.');
             } catch (e) {
@@ -618,15 +1039,7 @@
             const subject = encodeURIComponent('BRIEF-A Questionnaire - ' + data.patientName + ' - ' + data.completionDate);
             const body = encodeURIComponent('Dear Dr. Shah,\n\nPlease find attached my completed BRIEF-A questionnaire.\n\nPatient Name: ' + data.patientName + '\nAge: ' + data.age + '\nDate of Birth: ' + data.dob + '\nCompletion Date: ' + data.completionDate + '\n\nInstructions:\n1. Download the results file using the "Download Results File" button\n2. Attach the downloaded .enc file to this email\n3. Send\n\nThank you.\n\nBest regards,\n' + data.patientName);
             
-            downloadJSON();
-            document.getElementById('emailAttachReminder').style.display = 'block';
-            setTimeout(function() {
-            var a = document.createElement('a');
-            a.href = 'mailto:draanashah@protonmail.com?subject=' + subject + '&body=' + body;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            }, 800);
+            window.location.href = 'mailto:draanashah@protonmail.com?subject=' + subject + '&body=' + body;
         }
     </script>
 </body>

@@ -1,0 +1,11 @@
+Mapping lock decisions (2026-02-16)
+
+Confirmed by user:
+1) q0010 option 6 will be treated as q0010_other (free text), not q0010_0006.
+2) q0013_0012_pre_other is the "other" checkbox option; q0013_other is the free-text detail.
+3) q0014 pre/post alignment must be by item meaning (not strict variable prefix).
+4) q0015/q0016/q0017 scale mapping locked:
+   1=Very Low, 2=Low, 3=Average, 4=High, 5=Very High.
+
+Authoritative codebook file:
+/Users/shanuakshah/Downloads/files (3)/pre-post 16_02_2026/locked_variable_codebook_2026-02-16.csv

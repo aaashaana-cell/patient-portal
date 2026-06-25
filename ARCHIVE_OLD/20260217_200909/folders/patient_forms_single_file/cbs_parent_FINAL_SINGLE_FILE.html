@@ -1,6 +1,525 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <script>
+/* Inlined from adhd_shared_scoring.js (generated file) */
+(function (global) {
+    'use strict';
+
+    function parseLikertOrNull(v) {
+        if (v === null || v === undefined || v === '') return null;
+        var n = parseInt(v, 10);
+        return isNaN(n) ? null : n;
+    }
+
+    function asrsCalculateScores(responses) {
+        var vals = Array.isArray(responses) ? responses.map(parseLikertOrNull) : [];
+        var partASum = 0;
+        var partBSum = 0;
+        var partACount = 0;
+        var partBCount = 0;
+        // ASRS v1.1 dichotomous endorsement thresholds for items 7-18.
+        var partBThresholds = [3, 3, 2, 3, 3, 2, 3, 3, 3, 2, 3, 2];
+
+        for (var i = 0; i < 18; i++) {
+            var val = vals[i];
+            if (val === null) continue;
+
+            if (i < 6) {
+                partASum += val;
+                var threshold = i < 3 ? 2 : 3;
+                if (val >= threshold) partACount++;
+            } else {
+                partBSum += val;
+                if (val >= partBThresholds[i - 6]) partBCount++;
+            }
+        }
+
+        function classifyBand(score, lowMax, mildMax, highMax) {
+            if (score <= lowMax) return 'Low';
+            if (score <= mildMax) return 'Mild';
+            if (score <= highMax) return 'High';
+            return 'Very High';
+        }
+
+        var partASeverity = classifyBand(partASum, 9, 13, 17);
+        var partBSeverity = classifyBand(partBSum, 19, 26, 32);
+        var totalSeverity = classifyBand(partASum + partBSum, 30, 39, 49);
+
+        return {
+            partASum: partASum,
+            partBSum: partBSum,
+            totalScore: partASum + partBSum,
+            partACount: partACount,
+            partBCount: partBCount,
+            // Backward-compatible field name retained for existing import payloads.
+            classification: partASeverity,
+            partASeverity: partASeverity,
+            partBSeverity: partBSeverity,
+            totalSeverity: totalSeverity,
+            // NovoPsych 2024: Part A Likert sum >=14.
+            screeningPositive: partASum >= 14
+        };
+    }
+
+    function wursCalculateScores(responses) {
+        var vals = Array.isArray(responses) ? responses.map(parseLikertOrNull) : [];
+
+        function calcFactorAverage(itemNums, negativeItems) {
+            var sum = 0;
+            var count = 0;
+
+            itemNums.forEach(function (itemNum) {
+                if (vals[itemNum - 1] !== null) {
+                    sum += vals[itemNum - 1];
+                    count++;
+                }
+            });
+
+            if (negativeItems) {
+                negativeItems.forEach(function (itemNum) {
+                    if (vals[itemNum - 1] !== null) {
+                        sum -= 2 * vals[itemNum - 1];
+                    }
+                });
+            }
+
+            return count > 0 ? sum / count : 0;
+        }
+
+        var wurs25Items = [1, 3, 4, 5, 6, 9, 10, 11, 12, 14, 15, 16, 17, 19, 20, 21, 23, 24, 25, 26, 33, 34, 37, 41, 44];
+        var wurs25Total = 0;
+        wurs25Items.forEach(function (itemNum) {
+            if (vals[itemNum - 1] !== null) {
+                wurs25Total += vals[itemNum - 1];
+            }
+        });
+
+        var disruptive = calcFactorAverage([7, 9, 11, 13, 14, 16, 19, 20, 24, 25, 29, 30, 31, 33, 34, 45], null);
+        var adhd = calcFactorAverage([3, 6, 10, 18, 21, 22, 44], [22]);
+        var academic = calcFactorAverage([37, 38, 39, 40, 41, 42, 43], null);
+        var social = calcFactorAverage([1, 8, 15, 17, 26, 27, 32], [1, 17]);
+        var anxiety = calcFactorAverage([2, 4, 5, 12, 23, 28, 35, 36], null);
+
+        var fittedNonClinical = -5.56 +
+            (disruptive * 2.12) +
+            (adhd * 2.50) +
+            (academic * 0.05) -
+            (social * 0.14) -
+            (anxiety * 0.35);
+
+        var fittedMDDGAD = -5.88 +
+            (disruptive * 1.20) +
+            (adhd * 2.78) +
+            (academic * 1.08) -
+            (social * 1.24) -
+            (anxiety * 0.99);
+
+        return {
+            wurs25Total: wurs25Total,
+            factors: {
+                disruptive: disruptive.toFixed(2),
+                adhd: adhd.toFixed(2),
+                academic: academic.toFixed(2),
+                social: social.toFixed(2),
+                anxiety: anxiety.toFixed(2)
+            },
+            fittedValues: {
+                vsNonClinical: fittedNonClinical.toFixed(2),
+                vsMDDGAD: fittedMDDGAD.toFixed(2),
+                adhdVsNonClinical: fittedNonClinical >= 0,
+                adhdVsMDDGAD: fittedMDDGAD >= 0
+            }
+        };
+    }
+
+    function cbsCalculateCounts(scores) {
+        var vals = Array.isArray(scores) ? scores.map(parseLikertOrNull) : [];
+        var inattCount = 0;
+        var hyperCount = 0;
+
+        vals.forEach(function (score, idx) {
+            if (score !== null && score >= 2) {
+                if (idx % 2 === 0) inattCount++;
+                else hyperCount++;
+            }
+        });
+
+        return { inattCount: inattCount, hyperCount: hyperCount };
+    }
+
+    function briefCheckValidity(responses) {
+        var vals = Array.isArray(responses) ? responses : [];
+
+        var negativityItems = [1, 8, 19, 21, 22, 23, 29, 36, 39, 40];
+        var negativityScore = 0;
+        for (var n = 0; n < negativityItems.length; n++) {
+            var item = negativityItems[n];
+            if (vals[item] === 3) negativityScore++;
+        }
+        var negativityStatus = negativityScore <= 5 ? 'acceptable' : 'elevated';
+
+        var infrequencyScore = 0;
+        if (vals[10] === 3) infrequencyScore++;
+        if (vals[27] === 1) infrequencyScore++;
+        if (vals[38] === 3) infrequencyScore++;
+        if (vals[48] === 1) infrequencyScore++;
+        if (vals[59] === 1) infrequencyScore++;
+        var infrequencyStatus = infrequencyScore <= 2 ? 'acceptable' : 'infrequent';
+
+        var inconsistencyPairs = [
+            [2, 41], [25, 49], [28, 42], [33, 72], [34, 62],
+            [44, 61], [46, 56], [52, 75], [60, 74], [64, 70]
+        ];
+        var inconsistencyScore = 0;
+        for (var p = 0; p < inconsistencyPairs.length; p++) {
+            var pair = inconsistencyPairs[p];
+            var score1 = vals[pair[0]] || 0;
+            var score2 = vals[pair[1]] || 0;
+            inconsistencyScore += Math.abs(score1 - score2);
+        }
+        var inconsistencyStatus = inconsistencyScore <= 7 ? 'acceptable' : 'inconsistent';
+
+        var flags = [];
+        if (negativityStatus === 'elevated') {
+            flags.push('Negativity Scale: ' + negativityScore + '/10 items (≥6 is elevated) - Possible negative response bias');
+        }
+        if (infrequencyStatus === 'infrequent') {
+            flags.push('Infrequency Scale: ' + infrequencyScore + '/5 items (≥3 is infrequent) - Possible random or careless responding');
+        }
+        if (inconsistencyStatus === 'inconsistent') {
+            flags.push('Inconsistency Scale: ' + inconsistencyScore + ' (≥8 is inconsistent) - Inconsistent responding across similar items');
+        }
+
+        return {
+            isValid: flags.length === 0,
+            flags: flags,
+            negativity: { score: negativityScore, status: negativityStatus },
+            infrequency: { score: infrequencyScore, status: infrequencyStatus },
+            inconsistency: { score: inconsistencyScore, status: inconsistencyStatus }
+        };
+    }
+
+    function briefGetAgeGroup(age) {
+        if (age >= 18 && age <= 29) return '18-29';
+        if (age >= 30 && age <= 39) return '30-39';
+        if (age >= 40 && age <= 49) return '40-49';
+        return null;
+    }
+
+    function briefLookupTableValue(rawScore, table, options) {
+        if (!table || rawScore === null || rawScore === undefined) return null;
+
+        var keys = Object.keys(table).map(Number).sort(function (a, b) { return a - b; });
+        if (keys.length === 0) return null;
+
+        var opts = options || {};
+        var enforceMonotonic = opts.enforceMonotonic !== false;
+        var valueByKey = {};
+        var runningMax = null;
+
+        for (var i = 0; i < keys.length; i++) {
+            var key = keys[i];
+            var rawVal = Number(table[key]);
+            if (!isFinite(rawVal)) continue;
+            var v = rawVal;
+            if (enforceMonotonic) {
+                runningMax = runningMax === null ? v : Math.max(runningMax, v);
+                v = runningMax;
+            }
+            valueByKey[key] = v;
+        }
+
+        if (Object.prototype.hasOwnProperty.call(valueByKey, rawScore)) {
+            return valueByKey[rawScore];
+        }
+
+        if (rawScore <= keys[0]) return valueByKey[keys[0]];
+        if (rawScore >= keys[keys.length - 1]) return valueByKey[keys[keys.length - 1]];
+
+        for (var j = 0; j < keys.length - 1; j++) {
+            if (rawScore > keys[j] && rawScore < keys[j + 1]) {
+                var lower = valueByKey[keys[j]];
+                var upper = valueByKey[keys[j + 1]];
+                var ratio = (rawScore - keys[j]) / (keys[j + 1] - keys[j]);
+                return Math.round(lower + ratio * (upper - lower));
+            }
+        }
+
+        return null;
+    }
+
+    function briefDetectNormativeDrops(normativeTables) {
+        var drops = [];
+        if (!normativeTables) return drops;
+
+        Object.keys(normativeTables).forEach(function (ageGroup) {
+            var scales = normativeTables[ageGroup] || {};
+            Object.keys(scales).forEach(function (scaleName) {
+                var table = scales[scaleName] || {};
+                var keys = Object.keys(table).map(Number).sort(function (a, b) { return a - b; });
+                var prev = null;
+                for (var i = 0; i < keys.length; i++) {
+                    var raw = keys[i];
+                    var value = Number(table[raw]);
+                    if (!isFinite(value)) continue;
+                    if (prev !== null && value < prev.value) {
+                        drops.push({
+                            ageGroup: ageGroup,
+                            scale: scaleName,
+                            rawScore: raw,
+                            value: value,
+                            previousRawScore: prev.rawScore,
+                            previousValue: prev.value
+                        });
+                    }
+                    prev = { rawScore: raw, value: value };
+                }
+            });
+        });
+
+        return drops;
+    }
+
+    function briefLookupTScore(ageGroup, scale, rawScore, normativeTables) {
+        if (!normativeTables) return null;
+        var table = normativeTables[ageGroup] && normativeTables[ageGroup][scale];
+        return briefLookupTableValue(rawScore, table, { enforceMonotonic: true });
+    }
+
+    // Deterministic T-score -> percentile lookup used by BRIEF scoring.
+    // This table can be replaced with exact manual appendix values if needed.
+    var BRIEF_PERCENTILE_BY_T = {
+        20:0,21:0,22:0,23:0,24:0,25:1,26:1,27:1,28:1,29:2,30:2,31:3,
+        32:4,33:4,34:5,35:7,36:8,37:10,38:12,39:14,40:16,41:18,42:21,43:24,
+        44:27,45:31,46:34,47:38,48:42,49:46,50:50,51:54,52:58,53:62,54:66,55:69,
+        56:73,57:76,58:79,59:82,60:84,61:86,62:88,63:90,64:92,65:93,66:95,67:96,
+        68:96,69:97,70:98,71:98,72:99,73:99,74:99,75:99,76:100,77:100,78:100,79:100,
+        80:100,81:100,82:100,83:100,84:100,85:100,86:100,87:100,88:100,89:100,90:100,91:100,
+        92:100,93:100,94:100,95:100,96:100,97:100,98:100,99:100,100:100,101:100,102:100,103:100,
+        104:100,105:100,106:100,107:100,108:100,109:100,110:100,111:100,112:100,113:100,114:100,115:100,
+        116:100,117:100,118:100,119:100,120:100
+    };
+
+    function briefTScoreToPercentile(tScore) {
+        if (tScore === null || tScore === undefined) return null;
+
+        var keys = Object.keys(BRIEF_PERCENTILE_BY_T).map(Number).sort(function (a, b) { return a - b; });
+        if (keys.length === 0) return null;
+
+        var tRounded = Math.round(Number(tScore));
+        if (!isFinite(tRounded)) return null;
+        if (tRounded <= keys[0]) return BRIEF_PERCENTILE_BY_T[keys[0]];
+        if (tRounded >= keys[keys.length - 1]) return BRIEF_PERCENTILE_BY_T[keys[keys.length - 1]];
+
+        if (Object.prototype.hasOwnProperty.call(BRIEF_PERCENTILE_BY_T, tRounded)) {
+            return BRIEF_PERCENTILE_BY_T[tRounded];
+        }
+
+        for (var i = 0; i < keys.length - 1; i++) {
+            if (tRounded > keys[i] && tRounded < keys[i + 1]) {
+                var lower = BRIEF_PERCENTILE_BY_T[keys[i]];
+                var upper = BRIEF_PERCENTILE_BY_T[keys[i + 1]];
+                var ratio = (tRounded - keys[i]) / (keys[i + 1] - keys[i]);
+                return Math.round(lower + ratio * (upper - lower));
+            }
+        }
+
+        return null;
+    }
+
+    function briefLookupPercentile(ageGroup, scale, rawScore, tScore, percentileTables) {
+        if (percentileTables) {
+            var table = percentileTables[ageGroup] && percentileTables[ageGroup][scale];
+            var lookupValue = briefLookupTableValue(rawScore, table, { enforceMonotonic: true });
+            if (lookupValue !== null && lookupValue !== undefined) return lookupValue;
+        }
+        return briefTScoreToPercentile(tScore);
+    }
+
+    function briefGetClinicalInterpretation(tScore, scaleName) {
+        if (tScore === null) return null;
+
+        if (tScore >= 70) {
+            return {
+                level: 'Highly Elevated',
+                description: scaleName + ' score indicates significant executive dysfunction (≥2 SD above mean)',
+                clinical_significance: true
+            };
+        }
+        if (tScore >= 65) {
+            return {
+                level: 'Elevated',
+                description: scaleName + ' score indicates executive dysfunction (≥1.5 SD above mean)',
+                clinical_significance: true
+            };
+        }
+        return {
+            level: 'Average',
+            description: scaleName + ' score is within normal limits',
+            clinical_significance: false
+        };
+    }
+
+    function briefCalculateScales(responses, options) {
+        var vals = Array.isArray(responses) ? responses : [];
+        var opts = options || {};
+        var age = parseInt(opts.age, 10);
+        var normativeTables = opts.normativeTables || null;
+        var confidenceIntervals = opts.confidenceIntervals || null;
+        var percentileTables = opts.percentileTables || null;
+
+        var scales = {
+            'Inhibit': [5, 16, 29, 36, 43, 55, 58, 73],
+            'Shift': [8, 22, 32, 44, 61, 67],
+            'Emotional Control': [1, 12, 19, 28, 33, 42, 51, 57, 69, 72],
+            'Self-Monitor': [13, 23, 37, 50, 64, 70],
+            'Initiate': [6, 14, 20, 25, 45, 49, 53, 62],
+            'Working Memory': [4, 11, 17, 26, 35, 46, 56, 68],
+            'Plan/Organize': [9, 15, 21, 34, 39, 47, 54, 63, 66, 71],
+            'Task Monitor': [2, 18, 24, 41, 52, 75],
+            'Organization of Materials': [3, 7, 30, 31, 40, 60, 65, 74]
+        };
+        var strictScales = ['Shift', 'Self-Monitor', 'Task Monitor'];
+
+        var totalMissing = 0;
+        for (var i = 1; i <= 75; i++) {
+            if (!vals[i] || vals[i] === null) {
+                totalMissing++;
+            }
+        }
+
+        var protocolValid = totalMissing <= 14;
+        var rawScores = {};
+        var missingCounts = {};
+        var scaleValidity = {};
+
+        Object.keys(scales).forEach(function (scaleName) {
+            var itemNumbers = scales[scaleName];
+            var sum = 0;
+            var missing = 0;
+
+            for (var j = 0; j < itemNumbers.length; j++) {
+                var itemNum = itemNumbers[j];
+                if (vals[itemNum] && vals[itemNum] !== null) {
+                    sum += vals[itemNum];
+                } else {
+                    missing++;
+                }
+            }
+
+            missingCounts[scaleName] = missing;
+            var canScore = strictScales.indexOf(scaleName) >= 0 ? (missing <= 1) : (missing <= 2);
+            scaleValidity[scaleName] = canScore;
+
+            if (canScore && protocolValid) {
+                rawScores[scaleName] = sum + (missing * 1);
+            } else {
+                rawScores[scaleName] = null;
+            }
+        });
+
+        var briScales = ['Inhibit', 'Shift', 'Emotional Control', 'Self-Monitor'];
+        var briValid = true;
+        var briSum = 0;
+        briScales.forEach(function (scale) {
+            if (!scaleValidity[scale] || rawScores[scale] === null) {
+                briValid = false;
+            } else {
+                briSum += rawScores[scale];
+            }
+        });
+        rawScores.BRI = (briValid && protocolValid) ? briSum : null;
+
+        var miScales = ['Initiate', 'Working Memory', 'Plan/Organize', 'Task Monitor', 'Organization of Materials'];
+        var miValid = true;
+        var miSum = 0;
+        miScales.forEach(function (scale) {
+            if (!scaleValidity[scale] || rawScores[scale] === null) {
+                miValid = false;
+            } else {
+                miSum += rawScores[scale];
+            }
+        });
+        rawScores.MI = (miValid && protocolValid) ? miSum : null;
+
+        rawScores.GEC = (rawScores.BRI !== null && rawScores.MI !== null) ? (rawScores.BRI + rawScores.MI) : null;
+
+        var ageGroup = briefGetAgeGroup(age);
+        var tScores = {};
+        var percentiles = {};
+        var confidenceRanges = {};
+        var clinicalInterpretations = {};
+
+        if (ageGroup && normativeTables) {
+            var ciValues = confidenceIntervals ? confidenceIntervals[ageGroup] : null;
+            Object.keys(rawScores).forEach(function (scaleName) {
+                var rawScore = rawScores[scaleName];
+                if (rawScore !== null) {
+                    var tScore = briefLookupTScore(ageGroup, scaleName, rawScore, normativeTables);
+                    tScores[scaleName] = tScore;
+                    percentiles[scaleName] = briefLookupPercentile(ageGroup, scaleName, rawScore, tScore, percentileTables);
+
+                    if (ciValues && ciValues[scaleName] && tScore !== null) {
+                        var ciValue = ciValues[scaleName];
+                        confidenceRanges[scaleName] = {
+                            lower: Math.max(0, tScore - ciValue),
+                            upper: Math.min(100, tScore + ciValue),
+                            ci_value: ciValue
+                        };
+                    }
+
+                    clinicalInterpretations[scaleName] = briefGetClinicalInterpretation(tScore, scaleName);
+                }
+            });
+        }
+
+        return {
+            protocolValid: protocolValid,
+            totalMissingItems: totalMissing,
+            missingByScale: missingCounts,
+            scaleValidity: scaleValidity,
+            rawScores: rawScores,
+            tScores: tScores,
+            percentiles: percentiles,
+            confidenceIntervals: confidenceRanges,
+            clinicalInterpretations: clinicalInterpretations,
+            ageGroup: ageGroup
+        };
+    }
+
+    var ADHDScoring = {
+        asrs: {
+            calculateScores: asrsCalculateScores
+        },
+        wurs: {
+            calculateScores: wursCalculateScores
+        },
+        cbs: {
+            calculateCounts: cbsCalculateCounts
+        },
+        brief: {
+            checkValidity: briefCheckValidity,
+            calculateScales: briefCalculateScales,
+            getAgeGroup: briefGetAgeGroup,
+            lookupTableValue: briefLookupTableValue,
+            lookupTScore: briefLookupTScore,
+            lookupPercentile: briefLookupPercentile,
+            detectNormativeDrops: briefDetectNormativeDrops,
+            tScoreToPercentile: briefTScoreToPercentile,
+            getClinicalInterpretation: briefGetClinicalInterpretation
+        }
+    };
+
+    global.ADHDScoring = ADHDScoring;
+
+    if (typeof module !== 'undefined' && module.exports) {
+        module.exports = ADHDScoring;
+    }
+})(typeof window !== 'undefined' ? window : globalThis);
+
+</script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow">
@@ -179,14 +698,12 @@
                 <p style="margin-top: 10px; color: var(--text-secondary); font-size: 14px;">
                     Your responses have been saved. Please send your results to your child using one of the options below.
                 </p>
-                <p style="margin-top: 12px; font-size: 13px; color: #92400e; background: #fffbeb; border: 1px solid #fde68a; border-radius: 6px; padding: 10px 14px;">Your clinician will review these results and schedule the next step (a structured clinical interview) before any diagnostic conclusions can be reached.</p>
             </div>
 
             <div style="margin: 20px 0;">
                 <h3 style="font-size: 18px; margin-bottom: 15px;">Send Results to Your Child:</h3>
                 <div class="button-group">
                     <button class="btn-primary" onclick="emailToPatient()" style="font-size: 16px; padding: 14px 28px;">✉️ Email Results</button>
-                    <div id="emailAttachReminder" style="display:none;margin-top:10px;font-size:13px;color:#92400e;background:#fffbeb;border:1px solid #fde68a;border-radius:6px;padding:10px 14px;">Your results file is downloading now. Once it appears in your Downloads folder, attach it to the email that just opened and send.</div>
                     <button class="btn-secondary" onclick="downloadJSON()" style="font-size: 16px; padding: 14px 28px;">⬇️ Download Results File</button>
                 </div>
                 <p style="margin-top: 15px; font-size: 13px; color: var(--text-secondary); padding: 12px; background: #f8fafc; border-radius: 6px;">
@@ -212,20 +729,7 @@
         // ====================
         // CONFIG
         // ====================
-        // Asymmetric encryption: only the clinic private key can decrypt the export.
-        const CLINIC_PUBLIC_KEY = "MIICIjANBgkqhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEAsPFiNGJeHftu2ODxG5uzupG6ZqdaxyKiOst5TOVOw53ZO4FjW1+8Voe2RHbP4wVfZGK50p20ubIE2DOaFc6piPCGZYti7nKAvYY/MwFocMv/6q1g3Bgqdg+xLWUmhN6AgxmayrQcfUlrY7sbqBXMg6xsFwe0hYvAT6kqoHspw/dTqQz/sRATGIVLxBJ5W12ASjNhUSXBapEp2lSHxK0Jr6Q1/1pn0bL5rsCxb2ulCSO9q8suuMfZV2sxmyisqfMJ5wAXLqzueyqjZ9+kLd54qiSZ6W8DAkfXDGlbzA1WeWmQXhCEeMqSNPfiqx1ILCGFZQN4jBzNkg09HeCxVcgr5AghyNQ9oA04KOLMRzon6Vdx9aTxJghGKdG6CE5Z7nb6tWwMZLiROJl3DI10Eg5eDoBRUEoFuYCXPbp0Yywfd0tkhSrLTQvSQszJMcYNHBKjwPfmQo/1RGcPRrios191ejLF9aqasJussQz7s3YlVs+Z/fijjlJK2U673Q0liH4369zqMpplFnfbY/e1cqANpMgBm0hlMGm3ABQxEAjN7b6dXR5RHK8ahPgWyu0qUyiiScpQO8Q6En5P8Xsd59pUCq46Iz9qx1VnxfwWUXcW/IIJs/xf0jiFD7J1gb1wcjFafJcXV5Y1zWQGy8cOOf7P+BM8i3NXR65zI7HemheMaX0CAwEAAQ==";
-        function _b64ToBuf(b64){var bin=atob(b64);var u=new Uint8Array(bin.length);for(var i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);return u.buffer;}
-        function _bufToB64(buf){var u=new Uint8Array(buf);var s="";for(var i=0;i<u.length;i++)s+=String.fromCharCode(u[i]);return btoa(s);}
-        async function encryptForClinician(plaintext){
-            var data=new TextEncoder().encode(plaintext);
-            var pubKey=await crypto.subtle.importKey("spki",_b64ToBuf(CLINIC_PUBLIC_KEY),{name:"RSA-OAEP",hash:"SHA-256"},false,["wrapKey"]);
-            var aesKey=await crypto.subtle.generateKey({name:"AES-GCM",length:256},true,["encrypt"]);
-            var iv=crypto.getRandomValues(new Uint8Array(12));
-            var ct=await crypto.subtle.encrypt({name:"AES-GCM",iv:iv},aesKey,data);
-            var wrapped=await crypto.subtle.wrapKey("raw",aesKey,pubKey,{name:"RSA-OAEP"});
-            var digest=await crypto.subtle.digest("SHA-256",data);
-            return JSON.stringify({v:3,alg:"RSA-OAEP-256+AES-256-GCM",iv:_bufToB64(iv),key:_bufToB64(wrapped),data:_bufToB64(ct),hash:_bufToB64(digest)});
-        }
+        const CLINIC_MASTER_KEY = "Key123";
        
        const items = [
             {num: 1, text: "Failed to give close attention to details or made careless mistakes in their work"},
@@ -358,13 +862,19 @@
         }
 
         // ====================
+        // SCORING
+        // ====================
+        function calculateCounts(scores) {
+            return window.ADHDScoring.cbs.calculateCounts(scores);
+        }
+
+        // ====================
         // IMPORT/EXPORT
         // ====================
         function collectData() {
             return {
                 patientName: document.getElementById('patientName').value,
                 relationship: document.getElementById('relationship').value,
-                informantName: document.getElementById('informantName').value,
                 completionDate: document.getElementById('completionDate').value,
                 symptoms: getScores(),
                 impairment: getImpairment()
@@ -403,7 +913,6 @@
         function loadData(data) {
             if (data.patientName) document.getElementById('patientName').value = data.patientName;
             if (data.relationship) document.getElementById('relationship').value = data.relationship;
-            if (data.informantName) document.getElementById('informantName').value = data.informantName;
             
             data.symptoms.forEach(function(val, idx) {
                 if (val !== null) {
@@ -448,8 +957,18 @@
             
             document.getElementById('validationErrors').classList.add('hidden');
             
+            const counts = calculateCounts(data.symptoms);
+
+            const significantImpairments = data.impairment
+    .map((score, idx) => score >= 2 ? impairmentDomains[idx] : null)
+    .filter(domain => domain !== null);
+
+const summaryText = significantImpairments.length > 0 
+    ? "Parent notes problematic performance in: " + significantImpairments.join(", ") 
+    : "No performance problems noted by parent.";
+            
             const exportData = {
-                toolVersion: "4.0",
+                toolVersion: "3.0",
                 dataType: "CBS_PARENT",
                 patientName: data.patientName,
                 informantName: data.informantName,
@@ -462,7 +981,10 @@
                     completionPercent: 100 - skippedPercent
                 },
                 symptoms: data.symptoms,
-                impairment: data.impairment
+                impairment: data.impairment,
+                impairmentSummary: summaryText,
+                inattCount: counts.inattCount,
+                hyperCount: counts.hyperCount
             };
             
             document.getElementById('exportSection').classList.remove('hidden');
@@ -471,7 +993,7 @@
             window.exportData = exportData;
         }
 
-async function downloadJSON() {
+function downloadJSON() {
     if (!window.exportData) {
         alert('Please complete the form first.');
         return;
@@ -479,17 +1001,19 @@ async function downloadJSON() {
     try {
         window.exportData.assessmentType = "CBS-Parent";
         const dataStr = JSON.stringify(window.exportData);
-        const envelope = await encryptForClinician(dataStr);
+        const hash = CryptoJS.SHA256(dataStr).toString();
+        const ciphertext = CryptoJS.AES.encrypt(dataStr, CLINIC_MASTER_KEY).toString();
+        const envelope = JSON.stringify({v: 2, ciphertext: ciphertext, hash: hash});
         
         const blob = new Blob([envelope], {type: 'text/plain'});
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
         
+        // Save as .enc so it's clear it's an encrypted file
         const fileName = 'Behaviour_Parent_' + window.exportData.patientName.replace(/\s+/g, '_') + '.enc';
         link.download = fileName;
         link.click();
-            localStorage.setItem('cbs_parent_downloaded', new Date().toISOString());
         URL.revokeObjectURL(url);
 
         alert('Secure file downloaded. Please email this .enc file to your clinician.');
@@ -501,12 +1025,9 @@ async function downloadJSON() {
         function emailToPatient() {
             const data = window.exportData;
             const subject = encodeURIComponent('Behaviour Questionnaire - Parent Report for ' + data.patientName);
-            const body = encodeURIComponent('Hello,\n\nI have completed the childhood behaviour questionnaire you sent me.\n\nPatient: ' + data.patientName + '\nMy relationship: ' + data.relationship + '\nCompletion date: ' + data.completionDate + '\n\nInstructions:\n1. Download the results file using the "Download Results File" button\n2. Attach the downloaded .enc file to this email\n3. Send\n\nThank you.\n\nBest regards,\n' + data.informantName);
-            downloadJSON();
-            document.getElementById('emailAttachReminder').style.display = 'block';
-            setTimeout(function() {
-                window.location.href = 'mailto:draanashah@protonmail.com?subject=' + subject + '&body=' + body;
-            }, 800);
+            const body = encodeURIComponent('Hello,\n\nI have completed the childhood behaviour questionnaire you sent me.\n\nPatient: ' + data.patientName + '\nMy relationship: ' + data.relationship + '\nCompletion date: ' + data.completionDate + '\n\nInstructions:\n1. Download the results file using the "Download Results File" button\n2. Attach the downloaded .enc file to this email\n3. Send\n\nThank you.\n\nBest regards,\n' + data.parentName);
+            
+            window.location.href = 'mailto:draanashah@protonmail.com?subject=' + subject + '&body=' + body;
         }
     </script>
 </body>

@@ -1,14 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow">
-    <title>Behaviour Questionnaire - Informant</title>
+    <title>Behaviour Questionnaire - Parent</title>
     <style>
         :root {
-            --primary: #7c3aed;
-            --primary-dark: #5b21b6;
+            --primary: #059669;
+            --primary-dark: #047857;
             --success: #16a34a;
             --bg: #f8fafc;
             --card-bg: #ffffff;
@@ -22,13 +23,13 @@
         .header { background: var(--primary); color: white; padding: 30px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         .header h1 { margin-bottom: 5px; font-size: 26px; font-weight: 600; }
         .header p { font-size: 14px; opacity: 0.95; margin: 3px 0; }
-        .submission-box { background: #f3e8ff; border: 2px solid #a855f7; padding: 20px; margin-bottom: 20px; border-radius: 8px; }
-        .submission-box h3 { color: #6b21a8; margin-bottom: 10px; font-size: 16px; display: flex; align-items: center; gap: 8px; }
+        .submission-box { background: #d1fae5; border: 2px solid #10b981; padding: 20px; margin-bottom: 20px; border-radius: 8px; }
+        .submission-box h3 { color: #065f46; margin-bottom: 10px; font-size: 16px; display: flex; align-items: center; gap: 8px; }
         .submission-box ul { margin-left: 20px; margin-top: 8px; }
-        .submission-box li { margin: 5px 0; color: #6b21a8; font-size: 14px; }
+        .submission-box li { margin: 5px 0; color: #065f46; font-size: 14px; }
         .disclaimer-box { background: #fef3c7; border-left: 4px solid #f59e0b; padding: 18px; margin-bottom: 20px; border-radius: 4px; font-size: 14px; }
         .disclaimer-box strong { color: #92400e; font-size: 15px; }
-        .info-box { background: #faf5ff; border-left: 4px solid var(--primary); padding: 16px; margin-bottom: 16px; border-radius: 4px; font-size: 14px; }
+        .info-box { background: #f0fdf4; border-left: 4px solid var(--primary); padding: 16px; margin-bottom: 16px; border-radius: 4px; font-size: 14px; }
         .warning-box { background: #fff7ed; border-left: 4px solid #ea580c; padding: 15px; margin-bottom: 20px; border-radius: 4px; }
         .progress-bar { background: var(--border); height: 8px; border-radius: 4px; overflow: hidden; margin-bottom: 30px; }
         .progress-fill { background: var(--success); height: 100%; transition: width 0.3s ease; }
@@ -74,25 +75,25 @@
     <div class="container">
         <div class="header">
             <h1>Behaviour Questionnaire</h1>
-            <p>Current Behaviour Assessment (Past 6 Months)</p>
-            <p style="margin-top: 5px; font-size: 13px;">Informant Report - For Partner, Family, or Friend</p>
+            <p>Childhood Behaviour Assessment (Ages 7-12)</p>
+            <p style="margin-top: 5px; font-size: 13px;">Parent Report - For Parent or Guardian</p>
         </div>
 
         <div class="submission-box">
             <h3>📧 How to Submit Your Results</h3>
             <p style="margin-bottom: 8px; font-size: 14px;">After completing this questionnaire, you'll be able to:</p>
             <ul>
-                <li><strong>Email to the patient</strong> - Click a button to open your email with pre-filled details</li>
-                <li><strong>Download and send yourself</strong> - Download the results file and send it to the patient</li>
+                <li><strong>Email to your child</strong> - Click a button to open your email with pre-filled details</li>
+                <li><strong>Download and send yourself</strong> - Download the results file and send it to your child</li>
             </ul>
-            <p style="margin-top: 10px; font-size: 13px; padding: 10px; background: #faf5ff; border-radius: 4px;">
-                <strong>Note:</strong> The patient will then forward your results to their clinician.
+            <p style="margin-top: 10px; font-size: 13px; padding: 10px; background: #f0fdf4; border-radius: 4px;">
+                <strong>Note:</strong> Your child will then forward your results to their clinician.
             </p>
         </div>
 
         <div class="disclaimer-box">
             <strong>Important Notice:</strong><br>
-            This questionnaire is for <strong>information gathering purposes only</strong> and is not diagnostic. The responses you provide will be reviewed by a clinician as part of a comprehensive clinical assessment. Only a qualified healthcare professional can make diagnostic or treatment decisions. Please answer honestly based on your actual observations.
+            This questionnaire is for <strong>information gathering purposes only</strong> and is not diagnostic. The responses you provide will be reviewed by a clinician as part of a comprehensive clinical assessment. Only a qualified healthcare professional can make diagnostic or treatment decisions. Please answer honestly based on your actual memories.
         </div>
 
         <div class="info-box">
@@ -100,14 +101,14 @@
         </div>
 
         <div class="info-box">
-            <strong>Instructions for Informant:</strong> You have been asked to complete this questionnaire about someone close to you. Please rate their behaviour during <strong>the past six months</strong>.
+            <strong>Instructions for Parent:</strong> You have been asked to complete this questionnaire about your child's behaviour when they were <strong>between 7 and 12 years of age</strong>.
         </div>
 
         <div class="info-box" style="background: #eff6ff; border-left: 4px solid #3b82f6;">
             <strong>📝 Answering Questions:</strong> You may leave questions blank if you're unsure or they don't apply. Don't guess - skipped items will be excluded from score calculations. However, try to answer as many as you can for accurate results.
         </div>
 
-        <div class="progress-text" id="progressText">0 of 28 items answered (28 skipped) (0%)</div>
+        <div class="progress-text" id="progressText">0 of 26 items answered (26 skipped) (0%)</div>
         <div class="progress-bar">
             <div class="progress-fill" id="progressFill" style="width: 0%"></div>
         </div>
@@ -116,28 +117,29 @@
             <h2 style="margin-bottom: 20px; font-size: 20px;">Information</h2>
             <div class="patient-info">
                 <div class="form-group">
-                    <label>Patient's Full Name *</label>
+                    <label>Patient's Full Name (your child) *</label>
                     <input type="text" id="patientName" placeholder="John Doe" required>
                 </div>
                 <div class="form-group">
-        <label>Your Full Name (Informant) *</label>
-        <input type="text" id="informantName" placeholder="Jane Smith" required>
-    </div>
+    <label>Your Full Name (Parent/Guardian) *</label>
+    <input type="text" id="informantName" placeholder="Jane Doe" required>
+</div>
                 <div class="form-group">
-                    <label>Your Relationship to Patient *</label>
-                    <input type="text" id="relationship" placeholder="e.g., Partner, Friend, Sibling" required>
+                    <label>Your Relationship *</label>
+                    <input type="text" id="relationship" placeholder="e.g., Mother, Father, Guardian" required>
                 </div>
                 <div class="form-group">
-                    <label>Completion Date</label><input type="date" id="completionDate" readonly>
+                    <label>Completion Date</label>
+                    <input type="date" id="completionDate" readonly>
                 </div>
             </div>
         </div>
 
         <div class="card">
-            <h2 style="margin-bottom: 15px; color: var(--primary); font-size: 20px;">Current Behaviour (Past 6 Months)</h2>
+            <h2 style="margin-bottom: 15px; color: var(--primary); font-size: 20px;">Childhood Behaviour (Ages 7-12)</h2>
             
             <div class="warning-box">
-                <strong>Rate the patient's behaviour during the past six months</strong>
+                <strong>Rate your child's behaviour when they were between 7 and 12 years of age</strong>
             </div>
 
             <div class="scale-labels">
@@ -149,9 +151,9 @@
 
             <div id="symptoms"></div>
 
-            <h3 style="margin-top: 30px; margin-bottom: 15px; font-size: 18px;">Impact on Daily Life</h3>
+            <h3 style="margin-top: 30px; margin-bottom: 15px; font-size: 18px;">Impact on Daily Life (Ages 7-12)</h3>
             <p style="margin-bottom: 15px; color: var(--text-secondary); font-size: 14px;">
-                To what extent do these behaviours interfere with the patient's ability to function in each area?
+                To what extent did these behaviours interfere with your child's functioning between ages 7-12?
             </p>
             <div class="scale-labels">
                 <span>0 = Never/rarely</span>
@@ -176,22 +178,20 @@
             <div class="completion-message">
                 <h3>Thank you for completing this questionnaire</h3>
                 <p style="margin-top: 10px; color: var(--text-secondary); font-size: 14px;">
-                    Your responses have been saved. Please send your results to the patient using one of the options below.
+                    Your responses have been saved. Please send your results to your child using one of the options below.
                 </p>
-                <p style="margin-top: 12px; font-size: 13px; color: #92400e; background: #fffbeb; border: 1px solid #fde68a; border-radius: 6px; padding: 10px 14px;">Your clinician will review these results and schedule the next step (a structured clinical interview) before any diagnostic conclusions can be reached.</p>
             </div>
 
             <div style="margin: 20px 0;">
-                <h3 style="font-size: 18px; margin-bottom: 15px;">Send Results to Patient:</h3>
+                <h3 style="font-size: 18px; margin-bottom: 15px;">Send Results to Your Child:</h3>
                 <div class="button-group">
                     <button class="btn-primary" onclick="emailToPatient()" style="font-size: 16px; padding: 14px 28px;">✉️ Email Results</button>
-                    <div id="emailAttachReminder" style="display:none;margin-top:10px;font-size:13px;color:#92400e;background:#fffbeb;border:1px solid #fde68a;border-radius:6px;padding:10px 14px;">Your results file is downloading now. Once it appears in your Downloads folder, attach it to the email that just opened and send.</div>
                     <button class="btn-secondary" onclick="downloadJSON()" style="font-size: 16px; padding: 14px 28px;">⬇️ Download Results File</button>
                 </div>
                 <p style="margin-top: 15px; font-size: 13px; color: var(--text-secondary); padding: 12px; background: #f8fafc; border-radius: 6px;">
-                    <strong>Option 1:</strong> Click "Email Results" to open your email app with instructions. Attach the file and send to the patient.<br>
-                    <strong>Option 2:</strong> Download the file and send it to the patient yourself.<br><br>
-                    <em>The patient will then forward your responses to their clinician (Dr. Shah at <a href="mailto:draanashah@protonmail.com">draanashah@protonmail.com</a>).</em>
+                    <strong>Option 1:</strong> Click "Email Results" to open your email app with instructions. Attach the file and send to your child.<br>
+                    <strong>Option 2:</strong> Download the file and send it to your child yourself.<br><br>
+                    <em>Your child will then forward your responses to their clinician (Dr. Shah at <a href="mailto:draanashah@protonmail.com">draanashah@protonmail.com</a>).</em>
                 </p>
             </div>
         </div>
@@ -211,53 +211,38 @@
         // ====================
         // CONFIG
         // ====================
-        // Asymmetric encryption: only the clinic private key can decrypt the export.
-        const CLINIC_PUBLIC_KEY = "MIICIjANBgkqhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEAsPFiNGJeHftu2ODxG5uzupG6ZqdaxyKiOst5TOVOw53ZO4FjW1+8Voe2RHbP4wVfZGK50p20ubIE2DOaFc6piPCGZYti7nKAvYY/MwFocMv/6q1g3Bgqdg+xLWUmhN6AgxmayrQcfUlrY7sbqBXMg6xsFwe0hYvAT6kqoHspw/dTqQz/sRATGIVLxBJ5W12ASjNhUSXBapEp2lSHxK0Jr6Q1/1pn0bL5rsCxb2ulCSO9q8suuMfZV2sxmyisqfMJ5wAXLqzueyqjZ9+kLd54qiSZ6W8DAkfXDGlbzA1WeWmQXhCEeMqSNPfiqx1ILCGFZQN4jBzNkg09HeCxVcgr5AghyNQ9oA04KOLMRzon6Vdx9aTxJghGKdG6CE5Z7nb6tWwMZLiROJl3DI10Eg5eDoBRUEoFuYCXPbp0Yywfd0tkhSrLTQvSQszJMcYNHBKjwPfmQo/1RGcPRrios191ejLF9aqasJussQz7s3YlVs+Z/fijjlJK2U673Q0liH4369zqMpplFnfbY/e1cqANpMgBm0hlMGm3ABQxEAjN7b6dXR5RHK8ahPgWyu0qUyiiScpQO8Q6En5P8Xsd59pUCq46Iz9qx1VnxfwWUXcW/IIJs/xf0jiFD7J1gb1wcjFafJcXV5Y1zWQGy8cOOf7P+BM8i3NXR65zI7HemheMaX0CAwEAAQ==";
-        function _b64ToBuf(b64){var bin=atob(b64);var u=new Uint8Array(bin.length);for(var i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);return u.buffer;}
-        function _bufToB64(buf){var u=new Uint8Array(buf);var s="";for(var i=0;i<u.length;i++)s+=String.fromCharCode(u[i]);return btoa(s);}
-        async function encryptForClinician(plaintext){
-            var data=new TextEncoder().encode(plaintext);
-            var pubKey=await crypto.subtle.importKey("spki",_b64ToBuf(CLINIC_PUBLIC_KEY),{name:"RSA-OAEP",hash:"SHA-256"},false,["wrapKey"]);
-            var aesKey=await crypto.subtle.generateKey({name:"AES-GCM",length:256},true,["encrypt"]);
-            var iv=crypto.getRandomValues(new Uint8Array(12));
-            var ct=await crypto.subtle.encrypt({name:"AES-GCM",iv:iv},aesKey,data);
-            var wrapped=await crypto.subtle.wrapKey("raw",aesKey,pubKey,{name:"RSA-OAEP"});
-            var digest=await crypto.subtle.digest("SHA-256",data);
-            return JSON.stringify({v:3,alg:"RSA-OAEP-256+AES-256-GCM",iv:_bufToB64(iv),key:_bufToB64(wrapped),data:_bufToB64(ct),hash:_bufToB64(digest)});
-        }
-        
-        const items = [
-            {num: 1, text: "Fails to give close attention to details or makes careless mistakes in their work"},
-            {num: 2, text: "Fidgets with hands or feet or squirms in seat"},
-            {num: 3, text: "Has difficulty sustaining attention in tasks or fun activities"},
-            {num: 4, text: "Leaves their seat in situations in which sitting is expected"},
-            {num: 5, text: "Doesn't listen when spoken to directly"},
-            {num: 6, text: "Seems restless"},
-            {num: 7, text: "Doesn't follow through on instructions and fails to finish work"},
-            {num: 8, text: "Has difficulty engaging in leisure activities or doing fun things quietly"},
-            {num: 9, text: "Has difficulty organising tasks and activities"},
-            {num: 10, text: "Seems 'on the go' or 'driven by a motor'"},
-            {num: 11, text: "Avoids, dislikes or is reluctant to engage in work that requires sustained mental effort"},
-            {num: 12, text: "Talks excessively"},
-            {num: 13, text: "Loses things necessary for tasks or activities"},
-            {num: 14, text: "Blurts out answers before questions have been completed"},
-            {num: 15, text: "Is easily distracted"},
-            {num: 16, text: "Has difficulty awaiting turn"},
-            {num: 17, text: "Is forgetful in daily activities"},
-            {num: 18, text: "Interrupts or intrudes on others"}
+        const CLINIC_MASTER_KEY = "Key123";
+       
+       const items = [
+            {num: 1, text: "Failed to give close attention to details or made careless mistakes in their work"},
+            {num: 2, text: "Fidgeted with hands or feet or squirmed in seat"},
+            {num: 3, text: "Had difficulty sustaining attention in tasks or fun activities"},
+            {num: 4, text: "Left their seat in situations in which sitting was expected"},
+            {num: 5, text: "Didn't listen when spoken to directly"},
+            {num: 6, text: "Seemed restless"},
+            {num: 7, text: "Didn't follow through on instructions and failed to finish schoolwork or chores"},
+            {num: 8, text: "Had difficulty engaging in leisure activities or doing fun things quietly"},
+            {num: 9, text: "Had difficulty organising tasks and activities"},
+            {num: 10, text: "Seemed 'on the go' or 'driven by a motor'"},
+            {num: 11, text: "Avoided, disliked or was reluctant to engage in work that required sustained mental effort"},
+            {num: 12, text: "Talked excessively"},
+            {num: 13, text: "Lost things necessary for tasks or activities"},
+            {num: 14, text: "Blurted out answers before questions had been completed"},
+            {num: 15, text: "Was easily distracted"},
+            {num: 16, text: "Had difficulty awaiting turn"},
+            {num: 17, text: "Was forgetful in daily activities"},
+            {num: 18, text: "Interrupted or intruded on others"}
         ];
 
         const impairmentDomains = [
-            "Home life with immediate family",
-            "Work or occupation",
-            "Social interactions with others",
-            "Activities or dealings in the community",
-            "Educational activities",
-            "Dating or marital relationship",
-            "Management of money",
-            "Driving of a motor vehicle",
-            "Leisure or recreational activities",
-            "Management of daily responsibilities"
+            "In their home life with immediate family",
+            "In their social interactions with other children",
+            "In their activities or dealings in the community",
+            "In school",
+            "In sports, clubs or other organisations",
+            "In learning to take care of themselves",
+            "In their play, leisure or recreational activities",
+            "In their handling of daily chores or other responsibilities"
         ];
 
         // ====================
@@ -309,11 +294,8 @@
         // EVENT LISTENERS
         // ====================
         document.addEventListener('DOMContentLoaded', function() {
-            const dateInput = document.getElementById('completionDate');
-            if (dateInput) {
-                dateInput.valueAsDate = new Date();
-            }
-
+            document.getElementById('completionDate').valueAsDate = new Date();
+            
             renderSymptoms();
             renderImpairment();
             loadAutoSave();
@@ -322,7 +304,7 @@
         function updateProgress() {
             autoSave();
             let completed = 0;
-            const required = 28;
+            const required = 26;
             
             items.forEach(function(item) {
                 if (document.querySelector('input[name="s' + item.num + '"]:checked')) completed++;
@@ -362,12 +344,18 @@
         }
 
         // ====================
+        // SCORING
+        // ====================
+        function calculateCounts(scores) {
+            return window.ADHDScoring.cbs.calculateCounts(scores);
+        }
+
+        // ====================
         // IMPORT/EXPORT
         // ====================
         function collectData() {
             return {
                 patientName: document.getElementById('patientName').value,
-                informantName: document.getElementById('informantName').value,
                 relationship: document.getElementById('relationship').value,
                 completionDate: document.getElementById('completionDate').value,
                 symptoms: getScores(),
@@ -376,11 +364,11 @@
         }
 
         function autoSave() {
-            localStorage.setItem('behaviour_informant_autosave', JSON.stringify(collectData()));
+            localStorage.setItem('behaviour_parent_autosave', JSON.stringify(collectData()));
         }
 
         function loadAutoSave() {
-            const saved = localStorage.getItem('behaviour_informant_autosave');
+            const saved = localStorage.getItem('behaviour_parent_autosave');
             if (saved) {
                 const data = JSON.parse(saved);
                 if (confirm('Found saved progress. Continue where you left off?')) {
@@ -390,12 +378,12 @@
         }
 
         function saveProgress() {
-            localStorage.setItem('behaviour_informant_manual', JSON.stringify(collectData()));
+            localStorage.setItem('behaviour_parent_manual', JSON.stringify(collectData()));
             alert('Progress saved!');
         }
 
         function loadProgress() {
-            const saved = localStorage.getItem('behaviour_informant_manual');
+            const saved = localStorage.getItem('behaviour_parent_manual');
             if (saved) {
                 loadData(JSON.parse(saved));
                 alert('Progress loaded!');
@@ -429,7 +417,7 @@
             const errors = [];
             
             if (!data.patientName) errors.push('Please enter patient name');
-            if (!data.relationship) errors.push('Please enter your relationship to patient');
+            if (!data.relationship) errors.push('Please enter your relationship');
             
             if (errors.length > 0) {
                 const errorDiv = document.getElementById('validationErrors');
@@ -453,7 +441,7 @@
             
             const exportData = {
                 toolVersion: "4.0",
-                dataType: "CBS_INFORMANT",
+                dataType: "CBS_PARENT",
                 patientName: data.patientName,
                 informantName: data.informantName,
                 relationship: data.relationship,
@@ -474,50 +462,42 @@
             window.exportData = exportData;
         }
 
-      
-
-async function downloadJSON() {
+function downloadJSON() {
     if (!window.exportData) {
-        alert('Please complete the form and click "Submit/Save" first.');
+        alert('Please complete the form first.');
         return;
     }
-
     try {
-        window.exportData.assessmentType = "CBS-Informant";
+        window.exportData.assessmentType = "CBS-Parent";
         const dataStr = JSON.stringify(window.exportData);
-        
-        const envelope = await encryptForClinician(dataStr);
+        const hash = CryptoJS.SHA256(dataStr).toString();
+        const ciphertext = CryptoJS.AES.encrypt(dataStr, CLINIC_MASTER_KEY).toString();
+        const envelope = JSON.stringify({v: 2, ciphertext: ciphertext, hash: hash});
         
         const blob = new Blob([envelope], {type: 'text/plain'});
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
         
-       const fileName = 'Behaviour_Informant_' + window.exportData.patientName.replace(/\s+/g, '_') + '.enc';
+        // Save as .enc so it's clear it's an encrypted file
+        const fileName = 'Behaviour_Parent_' + window.exportData.patientName.replace(/\s+/g, '_') + '.enc';
         link.download = fileName;
         link.click();
-            localStorage.setItem('cbs_informant_downloaded', new Date().toISOString());
         URL.revokeObjectURL(url);
-        
-        alert('Encrypted results downloaded successfully. Please forward this .enc file to your clinician.');
+
+        alert('Secure file downloaded. Please email this .enc file to your clinician.');
     } catch (e) {
-        console.error(e);
-        alert('Error encrypting file. Please contact support.');
+        alert('Encryption error.');
     }
 }
 
         function emailToPatient() {
             const data = window.exportData;
-            const subject = encodeURIComponent('Behaviour Questionnaire - Informant Report for ' + data.patientName);
-            const body = encodeURIComponent('Hello,\n\nI have completed the behaviour questionnaire you sent me.\n\nPatient: ' + data.patientName + '\nMy relationship: ' + data.relationship + '\nCompletion date: ' + data.completionDate + '\n\nInstructions:\n1. Download the results file using the "Download Results File" button\n2. Attach the downloaded .enc file to this email\n3. Send\n\nThank you.\n\nBest regards,\n' + data.informantName);
-            downloadJSON();
-            document.getElementById('emailAttachReminder').style.display = 'block';
-            setTimeout(function() {
-                window.location.href = 'mailto:draanashah@protonmail.com?subject=' + subject + '&body=' + body;
-            }, 800);
+            const subject = encodeURIComponent('Behaviour Questionnaire - Parent Report for ' + data.patientName);
+            const body = encodeURIComponent('Hello,\n\nI have completed the childhood behaviour questionnaire you sent me.\n\nPatient: ' + data.patientName + '\nMy relationship: ' + data.relationship + '\nCompletion date: ' + data.completionDate + '\n\nInstructions:\n1. Download the results file using the "Download Results File" button\n2. Attach the downloaded .enc file to this email\n3. Send\n\nThank you.\n\nBest regards,\n' + data.parentName);
+            
+            window.location.href = 'mailto:draanashah@protonmail.com?subject=' + subject + '&body=' + body;
         }
-
-        
     </script>
 </body>
 </html>

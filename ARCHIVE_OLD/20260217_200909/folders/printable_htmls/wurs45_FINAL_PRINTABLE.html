@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow">
@@ -68,20 +69,97 @@
             .button-group { flex-direction: column; }
             .button-group button { width: 100%; }
         }
-        .form-nav { display: flex; gap: 12px; flex-wrap: wrap; justify-content: space-between; align-items: center; margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--border); }
-        .nav-btn { display: inline-block; padding: 11px 20px; border-radius: 6px; font-size: 14px; font-weight: 500; text-decoration: none; transition: all 0.2s; }
-        .nav-btn-back { background: var(--border); color: var(--text); }
-        .nav-btn-back:hover { background: #cbd5e1; }
-        .nav-btn-next { background: var(--success); color: white; }
-        .nav-btn-next:hover { opacity: 0.9; }
-        .recorded-badge { display: inline-flex; align-items: center; gap: 6px; background: #f0fdf4; border: 1px solid #86efac; color: #166534; font-size: 13px; padding: 6px 14px; border-radius: 20px; margin-top: 12px; font-weight: 500; opacity: 0; pointer-events: none; }
-        .question-item.skipped { background: #fff5f5; border-left: 3px solid #dc2626; padding-left: 12px; border-radius: 4px; }
-        @keyframes answeredFlash { 0% { background: #dcfce7; } 100% { background: transparent; } }
-        .question-item.just-answered { animation: answeredFlash 0.8s ease-out; }
-        @keyframes badgePop { 0% { opacity: 0; transform: translateY(4px); } 15% { opacity: 1; transform: translateY(0); } 80% { opacity: 1; } 100% { opacity: 0; } }
-        .recorded-badge.flashing { animation: badgePop 2.5s ease-out forwards; }
-        .bottom-progress { text-align: center; margin-top: 16px; padding: 10px; background: #f1f5f9; border-radius: 6px; font-size: 14px; color: var(--text-secondary); font-weight: 500; }
     </style>
+
+<style id="printable-plain-overrides">
+:root {
+  --primary: #111111 !important;
+  --primary-dark: #111111 !important;
+  --success: #111111 !important;
+  --bg: #ffffff !important;
+  --card-bg: #ffffff !important;
+  --border: #000000 !important;
+  --text: #000000 !important;
+  --text-secondary: #222222 !important;
+  --warning: #222222 !important;
+}
+body {
+  background: #ffffff !important;
+  color: #000000 !important;
+  font-family: Arial, Helvetica, sans-serif !important;
+  line-height: 1.4 !important;
+  padding: 8mm !important;
+}
+.container {
+  max-width: none !important;
+  margin: 0 !important;
+}
+.header,
+.card,
+.disclaimer-box,
+.warning-box,
+.info-box,
+.scale-labels {
+  background: #ffffff !important;
+  color: #000000 !important;
+  border: 1px solid #000000 !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+}
+.question-number,
+.part-badge {
+  background: #ffffff !important;
+  color: #000000 !important;
+  border: 1px solid #000000 !important;
+}
+.radio-option {
+  background: #ffffff !important;
+  border: 1px solid #000000 !important;
+  border-radius: 0 !important;
+  padding: 4px 8px !important;
+}
+input,
+select,
+textarea {
+  background: #ffffff !important;
+  color: #000000 !important;
+  border: 1px solid #000000 !important;
+}
+a {
+  color: #000000 !important;
+  text-decoration: none !important;
+}
+.submission-box,
+.progress-text,
+.progress-bar,
+.button-group,
+#exportSection,
+.validation-error,
+#__bs_notify__ {
+  display: none !important;
+}
+@media print {
+  body {
+    padding: 0 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .container {
+    padding: 0 !important;
+  }
+  .card,
+  .header,
+  .disclaimer-box,
+  .warning-box,
+  .info-box,
+  .scale-labels,
+  .question-item {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+}
+</style>
+
 </head>
 <body>
     <div class="container">
@@ -160,8 +238,6 @@
             <button class="btn-primary" onclick="loadProgress()">📂 Load Saved Progress</button>
             <button class="btn-success" onclick="validateAndExport()">✓ Complete Questionnaire</button>
         </div>
-        <div class="bottom-progress" id="progressTextBottom">0 of 45 items answered (45 skipped) (0%)</div>
-        <div id="recordedBadge" class="recorded-badge">✓ Latest response recorded</div>
 
         <div id="validationErrors" class="validation-error hidden"></div>
 
@@ -173,7 +249,6 @@
                 <p style="margin-top: 10px; color: var(--text-secondary); font-size: 14px;">
                     Your responses have been saved. Please send your results to Dr. Shah using one of the options below.
                 </p>
-                <p style="margin-top: 12px; font-size: 13px; color: #92400e; background: #fffbeb; border: 1px solid #fde68a; border-radius: 6px; padding: 10px 14px;">Your clinician will review these results and schedule the next step (a structured clinical interview) before any diagnostic conclusions can be reached.</p>
             </div>
 
             <div style="margin: 20px 0;">
@@ -182,16 +257,11 @@
                     <button class="btn-primary" onclick="emailToClinician()" style="font-size: 16px; padding: 14px 28px;">✉️ Email Results</button>
                     <button class="btn-secondary" onclick="downloadJSON()" style="font-size: 16px; padding: 14px 28px;">⬇️ Download Results File</button>
                 </div>
-                <div id="emailAttachReminder" style="display:none;margin-top:10px;font-size:13px;color:#92400e;background:#fffbeb;border:1px solid #fde68a;border-radius:6px;padding:10px 14px;">Your results file is downloading now. Once it appears in your Downloads folder, attach it to the email that just opened and send.</div>
                 <p style="margin-top: 15px; font-size: 13px; color: var(--text-secondary); padding: 12px; background: #f8fafc; border-radius: 6px;">
                     <strong>Option 1:</strong> Click "Email Results" to open your email app with everything pre-filled. Just attach the file and send.<br>
                     <strong>Option 2:</strong> Download the file and email it to <strong><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="40243221212e21332821280030322f342f2e2d21292c6e232f2d">[email&#160;protected]</a></strong> yourself.
                 </p>
             </div>
-        </div>
-        <div class="form-nav">
-            <a href="index.html" class="nav-btn nav-btn-back">← All questionnaires</a>
-            <a href="cognitive_tasks_MVP.html" class="nav-btn nav-btn-next">Next: Cognitive Tasks (optional) →</a>
         </div>
     </div>
 
@@ -209,39 +279,7 @@
         // ====================
         // CONFIG
         // ====================
-        // Asymmetric encryption: only the clinic private key can decrypt the export.
-        const CLINIC_PUBLIC_KEY = "MIICIjANBgkqhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEAsPFiNGJeHftu2ODxG5uzupG6ZqdaxyKiOst5TOVOw53ZO4FjW1+8Voe2RHbP4wVfZGK50p20ubIE2DOaFc6piPCGZYti7nKAvYY/MwFocMv/6q1g3Bgqdg+xLWUmhN6AgxmayrQcfUlrY7sbqBXMg6xsFwe0hYvAT6kqoHspw/dTqQz/sRATGIVLxBJ5W12ASjNhUSXBapEp2lSHxK0Jr6Q1/1pn0bL5rsCxb2ulCSO9q8suuMfZV2sxmyisqfMJ5wAXLqzueyqjZ9+kLd54qiSZ6W8DAkfXDGlbzA1WeWmQXhCEeMqSNPfiqx1ILCGFZQN4jBzNkg09HeCxVcgr5AghyNQ9oA04KOLMRzon6Vdx9aTxJghGKdG6CE5Z7nb6tWwMZLiROJl3DI10Eg5eDoBRUEoFuYCXPbp0Yywfd0tkhSrLTQvSQszJMcYNHBKjwPfmQo/1RGcPRrios191ejLF9aqasJussQz7s3YlVs+Z/fijjlJK2U673Q0liH4369zqMpplFnfbY/e1cqANpMgBm0hlMGm3ABQxEAjN7b6dXR5RHK8ahPgWyu0qUyiiScpQO8Q6En5P8Xsd59pUCq46Iz9qx1VnxfwWUXcW/IIJs/xf0jiFD7J1gb1wcjFafJcXV5Y1zWQGy8cOOf7P+BM8i3NXR65zI7HemheMaX0CAwEAAQ==";
-        function _b64ToBuf(b64){var bin=atob(b64);var u=new Uint8Array(bin.length);for(var i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);return u.buffer;}
-        function _bufToB64(buf){var u=new Uint8Array(buf);var s="";for(var i=0;i<u.length;i++)s+=String.fromCharCode(u[i]);return btoa(s);}
-        async function encryptForClinician(plaintext){
-            var data=new TextEncoder().encode(plaintext);
-            var pubKey=await crypto.subtle.importKey("spki",_b64ToBuf(CLINIC_PUBLIC_KEY),{name:"RSA-OAEP",hash:"SHA-256"},false,["wrapKey"]);
-            var aesKey=await crypto.subtle.generateKey({name:"AES-GCM",length:256},true,["encrypt"]);
-            var iv=crypto.getRandomValues(new Uint8Array(12));
-            var ct=await crypto.subtle.encrypt({name:"AES-GCM",iv:iv},aesKey,data);
-            var wrapped=await crypto.subtle.wrapKey("raw",aesKey,pubKey,{name:"RSA-OAEP"});
-            var digest=await crypto.subtle.digest("SHA-256",data);
-            return JSON.stringify({v:3,alg:"RSA-OAEP-256+AES-256-GCM",iv:_bufToB64(iv),key:_bufToB64(wrapped),data:_bufToB64(ct),hash:_bufToB64(digest)});
-        }
-        const IDENTITY_KEY = 'adhd_patient_identity';
-
-        function saveIdentity() {
-            const name = document.getElementById('patientName').value;
-            const dob = document.getElementById('dob').value;
-            if (name || dob) localStorage.setItem(IDENTITY_KEY, JSON.stringify({patientName: name, dob: dob}));
-        }
-
-        function loadIdentity() {
-            const saved = localStorage.getItem(IDENTITY_KEY);
-            if (!saved) return;
-            try {
-                const id = JSON.parse(saved);
-                const nameEl = document.getElementById('patientName');
-                const dobEl = document.getElementById('dob');
-                if (id.patientName && nameEl && !nameEl.value) nameEl.value = id.patientName;
-                if (id.dob && dobEl && !dobEl.value) dobEl.value = id.dob;
-            } catch(e) {}
-        }
+        const CLINIC_MASTER_KEY = "Key123";
 
 
         const items = [
@@ -313,8 +351,7 @@
             displayOrder.forEach(function(item, displayIndex) {
                 const div = document.createElement('div');
                 div.className = 'question-item';
-                div.id = 'qitem_q' + item.id;
-
+                
                 let html = '<div class="question-text">';
                 html += '<span class="question-number">' + (displayIndex + 1) + '</span>';
                 html += item.text;
@@ -322,15 +359,12 @@
                 html += '<div class="radio-group">';
                 for (let val = 0; val <= 4; val++) {
                     html += '<div class="radio-option">';
-                    html += '<input type="radio" name="q' + item.id + '" value="' + val + '" id="q' + item.id + '_' + val + '" onchange="onQuestionChange(this)">';
+                    html += '<input type="radio" name="q' + item.id + '" value="' + val + '" id="q' + item.id + '_' + val + '" onchange="updateProgress()">';
                     html += '<label for="q' + item.id + '_' + val + '">' + val + '</label>';
                     html += '</div>';
                 }
                 html += '</div>';
-                if (item.id === 45) {
-                    html += '<div style="margin-top:10px;"><input type="text" id="q45_grades" placeholder="Which grades? (leave blank if not applicable)" style="max-width:380px;font-size:14px;"></div>';
-                }
-
+                
                 div.innerHTML = html;
                 container.appendChild(div);
             });
@@ -344,51 +378,28 @@
             document.getElementById('completionDate').valueAsDate = new Date();
             renderQuestions();
             loadAutoSave();
-            loadIdentity();
-            document.getElementById('patientName').addEventListener('input', saveIdentity);
-            document.getElementById('dob').addEventListener('change', saveIdentity);
         });
-
-        let _hasValidated = false;
-
-        function onQuestionChange(radioEl) {
-            if (_hasValidated) {
-                const item = radioEl.closest('.question-item');
-                if (item) {
-                    item.classList.remove('skipped');
-                    item.classList.remove('just-answered');
-                    void item.offsetWidth;
-                    item.classList.add('just-answered');
-                }
-            }
-            updateProgress();
-        }
-
-        function highlightSkipped() {
-            items.forEach(function(item) {
-                const el = document.getElementById('qitem_q' + item.id);
-                if (!el) return;
-                el.classList.toggle('skipped', !document.querySelector('input[name="q' + item.id + '"]:checked'));
-            });
-        }
 
         function updateProgress() {
             autoSave();
             let completed = 0;
             const required = 45;
+            
             items.forEach(function(item) {
                 if (document.querySelector('input[name="q' + item.id + '"]:checked')) completed++;
             });
+            
             const skipped = required - completed;
             const percent = Math.round((completed / required) * 100);
+            
             let progressText = completed + ' of ' + required + ' items answered';
-            if (skipped > 0) progressText += ' (' + skipped + ' skipped)';
+            if (skipped > 0) {
+                progressText += ' (' + skipped + ' skipped)';
+            }
             progressText += ' (' + percent + '%)';
+            
             document.getElementById('progressText').textContent = progressText;
             document.getElementById('progressFill').style.width = percent + '%';
-            const btm = document.getElementById('progressTextBottom');
-            if (btm) btm.textContent = progressText;
-            if (_hasValidated) highlightSkipped();
         }
 
         // ====================
@@ -404,18 +415,103 @@
         }
 
         // ====================
+        // SCORING
+        // ====================
+        function calculateScores(responses) {
+            // Helper: Calculate AVERAGE for factor items (handling negative loadings)
+            function calcFactorAverage(itemNums, negativeItems) {
+                let sum = 0;
+                let count = 0;
+                
+                itemNums.forEach(function(itemNum) {
+                    if (responses[itemNum - 1] !== null) {
+                        sum += responses[itemNum - 1];
+                        count++;
+                    }
+                });
+                
+                // Subtract negative loading items (counted twice: once added, once subtracted)
+                if (negativeItems) {
+                    negativeItems.forEach(function(itemNum) {
+                        if (responses[itemNum - 1] !== null) {
+                            sum -= 2 * responses[itemNum - 1]; // Subtract twice to reverse the add
+                        }
+                    });
+                }
+                
+                return count > 0 ? sum / count : 0;
+            }
+
+            // WURS-25 total (sum of 25 specific items)
+            const wurs25Items = [1,3,4,5,6,9,10,11,12,14,15,16,17,19,20,21,23,24,25,26,33,34,37,41,44];
+            let wurs25Total = 0;
+            wurs25Items.forEach(function(itemNum) {
+                if (responses[itemNum - 1] !== null) {
+                    wurs25Total += responses[itemNum - 1];
+                }
+            });
+
+            // Factor 1: Disruptive mood/behavior (18 items)
+            const disruptive = calcFactorAverage([7,9,11,13,14,16,19,20,24,25,29,30,31,33,34,45], null);
+
+            // Factor 2: ADHD (7 items, minus item 22)
+            const adhd = calcFactorAverage([3,6,10,18,21,22,44], [22]);
+
+            // Factor 3: Academic (7 items)
+            const academic = calcFactorAverage([37,38,39,40,41,42,43], null);
+
+            // Factor 4: Social (7 items, minus items 1 and 17)
+            const social = calcFactorAverage([1,8,15,17,26,27,32], [1,17]);
+
+            // Factor 5: Anxiety/dysthymia (8 items)
+            const anxiety = calcFactorAverage([2,4,5,12,23,28,35,36], null);
+
+            // Fitted values (logistic regression)
+            // vs Non-Clinical
+            const fittedNonClinical = -5.56 + 
+                (disruptive * 2.12) +
+                (adhd * 2.50) +
+                (academic * 0.05) -
+                (social * 0.14) -
+                (anxiety * 0.35);
+
+            // vs MDD/GAD
+            const fittedMDDGAD = -5.88 +
+                (disruptive * 1.20) +
+                (adhd * 2.78) +
+                (academic * 1.08) -
+                (social * 1.24) -
+                (anxiety * 0.99);
+
+            return {
+                wurs25Total: wurs25Total,
+                factors: {
+                    disruptive: disruptive.toFixed(2),
+                    adhd: adhd.toFixed(2),
+                    academic: academic.toFixed(2),
+                    social: social.toFixed(2),
+                    anxiety: anxiety.toFixed(2)
+                },
+                fittedValues: {
+                    vsNonClinical: fittedNonClinical.toFixed(2),
+                    vsMDDGAD: fittedMDDGAD.toFixed(2),
+                    adhdVsNonClinical: fittedNonClinical >= 0,
+                    adhdVsMDDGAD: fittedMDDGAD >= 0
+                }
+            };
+        }
+
+        // ====================
         // IMPORT/EXPORT
         // ====================
         function collectData() {
             const emailEl = document.getElementById('patientEmail');
-            const gradesEl = document.getElementById('q45_grades');
             return {
                 patientName: document.getElementById('patientName').value,
                 patientEmail: emailEl ? emailEl.value : '',
                 dob: document.getElementById('dob').value,
                 completionDate: document.getElementById('completionDate').value,
-                responses: getResponses(),
-                suspendedGrades: gradesEl ? gradesEl.value : ''
+                responses: getResponses()
             };
         }
 
@@ -433,17 +529,9 @@
             }
         }
 
-        function flashBadge() {
-            const b = document.getElementById('recordedBadge');
-            if (!b) return;
-            b.classList.remove('flashing');
-            void b.offsetWidth;
-            b.classList.add('flashing');
-        }
-
         function saveProgress() {
             localStorage.setItem('childhood_behaviour_manual', JSON.stringify(collectData()));
-            flashBadge();
+            alert('Progress saved!');
         }
 
         function loadProgress() {
@@ -467,9 +555,7 @@
                     if (radio) radio.checked = true;
                 }
             });
-            const gradesEl = document.getElementById('q45_grades');
-            if (data.suspendedGrades && gradesEl) gradesEl.value = data.suspendedGrades;
-
+            
             updateProgress();
         }
 
@@ -498,11 +584,11 @@
             }
             
             document.getElementById('validationErrors').classList.add('hidden');
-            _hasValidated = true;
-            highlightSkipped();
-
+            
+            const scores = calculateScores(data.responses);
+            
             const exportData = {
-                toolVersion: "4.0",
+                toolVersion: "3.0",
                 dataType: "WURS45",
                 patientName: data.patientName,
                 patientEmail: data.patientEmail,
@@ -516,19 +602,23 @@
                     completionPercent: 100 - skippedPercent
                 },
                 responses: data.responses,
-                suspendedGrades: data.suspendedGrades
+                wurs25Total: scores.wurs25Total,
+                factors: scores.factors,
+                fittedValues: scores.fittedValues
             };
-
+            
             document.getElementById('exportSection').classList.remove('hidden');
             document.getElementById('exportSection').scrollIntoView({behavior: 'smooth'});
-            flashBadge();
+            
             window.exportData = exportData;
         }
 
-        async function downloadJSON() {
+        function downloadJSON() {
     try {
         const plaintext = JSON.stringify(window.exportData);
-        const envelope = await encryptForClinician(plaintext);
+        const hash = CryptoJS.SHA256(plaintext).toString();
+        const ciphertext = CryptoJS.AES.encrypt(plaintext, CLINIC_MASTER_KEY).toString();
+        const envelope = JSON.stringify({v: 2, ciphertext: ciphertext, hash: hash});
         const blob = new Blob([envelope], { type: 'text/plain' });
         const url = URL.createObjectURL(blob);
 
@@ -542,7 +632,6 @@
             '.enc';
 
         link.click();
-            localStorage.setItem('wurs_downloaded', new Date().toISOString());
         URL.revokeObjectURL(url);
     } catch (err) {
         console.error(err);
@@ -556,15 +645,7 @@
             const subject = encodeURIComponent('Wender Scale - ' + data.patientName + ' - ' + data.completionDate);
             const body = encodeURIComponent('Dear Dr. Shah,\n\nPlease find attached my completed Wender Scale questionnaire.\n\nPatient Name: ' + data.patientName + '\nDate of Birth: ' + data.dob + '\nCompletion Date: ' + data.completionDate + '\n\nInstructions:\n1. Download the results file using the "Download Results File" button\n2. Attach the downloaded enc file to this email\n3. Send\n\nThank you.\n\nBest regards,\n' + data.patientName);
             
-            downloadJSON();
-            document.getElementById('emailAttachReminder').style.display = 'block';
-            setTimeout(function() {
-            var a = document.createElement('a');
-            a.href = 'mailto:draanashah@protonmail.com?subject=' + subject + '&body=' + body;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            }, 800);
+            window.location.href = 'mailto:draanashah@protonmail.com?subject=' + subject + '&body=' + body;
         }
     </script>
 </body>

@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow">
@@ -43,9 +44,10 @@
         .question-text { font-weight: 500; margin-bottom: 12px; color: var(--text); font-size: 15px; line-height: 1.5; }
         .question-number { display: inline-block; background: var(--primary); color: white; min-width: 28px; height: 28px; border-radius: 50%; text-align: center; line-height: 28px; margin-right: 10px; font-size: 14px; font-weight: 600; padding: 0 8px; }
         .radio-group { display: flex; gap: 12px; flex-wrap: wrap; }
-        .radio-option { display: flex; align-items: center; gap: 6px; padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px; cursor: pointer; transition: all 0.2s; margin: 0; font-weight: normal; }
+        .radio-option { display: flex; align-items: center; gap: 6px; padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px; cursor: pointer; transition: all 0.2s; }
         .radio-option:hover { background: #fef2f2; border-color: var(--primary); }
-        .radio-option input[type="radio"] { width: 18px; height: 18px; cursor: pointer; flex-shrink: 0; }
+        .radio-option input[type="radio"] { width: 18px; height: 18px; cursor: pointer; }
+        .radio-option label { margin: 0; cursor: pointer; font-weight: normal; font-size: 14px; }
         .scale-labels { display: flex; justify-content: space-between; margin-bottom: 15px; padding: 12px; background: #fef2f2; border-radius: 6px; font-size: 13px; color: var(--text-secondary); font-weight: 500; }
         .button-group { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 24px; }
         button { padding: 12px 24px; border: none; border-radius: 6px; font-size: 15px; font-weight: 500; cursor: pointer; transition: all 0.2s; }
@@ -70,19 +72,6 @@
             .button-group { flex-direction: column; }
             .button-group button { width: 100%; }
         }
-        .form-nav { display: flex; gap: 12px; flex-wrap: wrap; justify-content: space-between; align-items: center; margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--border); }
-        .nav-btn { display: inline-block; padding: 11px 20px; border-radius: 6px; font-size: 14px; font-weight: 500; text-decoration: none; transition: all 0.2s; }
-        .nav-btn-back { background: var(--border); color: var(--text); }
-        .nav-btn-back:hover { background: #cbd5e1; }
-        .nav-btn-next { background: var(--success); color: white; }
-        .nav-btn-next:hover { opacity: 0.9; }
-        .recorded-badge { display: inline-flex; align-items: center; gap: 6px; background: #f0fdf4; border: 1px solid #86efac; color: #166534; font-size: 13px; padding: 6px 14px; border-radius: 20px; margin-top: 12px; font-weight: 500; opacity: 0; pointer-events: none; }
-        .question-item.skipped { background: #fff5f5; border-left: 3px solid #dc2626; padding-left: 12px; border-radius: 4px; }
-        @keyframes answeredFlash { 0% { background: #dcfce7; } 100% { background: transparent; } }
-        .question-item.just-answered { animation: answeredFlash 0.8s ease-out; }
-        @keyframes badgePop { 0% { opacity: 0; transform: translateY(4px); } 15% { opacity: 1; transform: translateY(0); } 80% { opacity: 1; } 100% { opacity: 0; } }
-        .recorded-badge.flashing { animation: badgePop 2.5s ease-out forwards; }
-        .bottom-progress { text-align: center; margin-top: 16px; padding: 10px; background: #f1f5f9; border-radius: 6px; font-size: 14px; color: var(--text-secondary); font-weight: 500; }
     </style>
 </head>
 <body>
@@ -172,8 +161,6 @@
             <button class="btn-primary" onclick="loadProgress()">📂 Load Saved Progress</button>
             <button class="btn-success" onclick="validateAndExport()">✓ Complete Questionnaire</button>
         </div>
-        <div class="bottom-progress" id="progressTextBottom">0 of 18 items answered (18 skipped) (0%)</div>
-        <div id="recordedBadge" class="recorded-badge">✓ Latest response recorded</div>
 
         <div id="validationErrors" class="validation-error hidden"></div>
 
@@ -185,7 +172,6 @@
                 <p style="margin-top: 10px; color: var(--text-secondary); font-size: 14px;">
                     Your responses have been saved. Please send your results to Dr. Shah using one of the options below.
                 </p>
-                <p style="margin-top: 12px; font-size: 13px; color: #92400e; background: #fffbeb; border: 1px solid #fde68a; border-radius: 6px; padding: 10px 14px;">Your clinician will review these results and schedule the next step (a structured clinical interview) before any diagnostic conclusions can be reached.</p>
             </div>
 
             <div style="margin: 20px 0;">
@@ -194,16 +180,11 @@
                     <button class="btn-primary" onclick="emailToClinician()" style="font-size: 16px; padding: 14px 28px;">✉️ Email Results</button>
                     <button class="btn-secondary" onclick="downloadJSON()" style="font-size: 16px; padding: 14px 28px;">⬇️ Download Results File</button>
                 </div>
-                <div id="emailAttachReminder" style="display:none;margin-top:10px;font-size:13px;color:#92400e;background:#fffbeb;border:1px solid #fde68a;border-radius:6px;padding:10px 14px;">Your results file is downloading now. Once it appears in your Downloads folder, attach it to the email that just opened and send.</div>
                 <p style="margin-top: 15px; font-size: 13px; color: var(--text-secondary); padding: 12px; background: #f8fafc; border-radius: 6px;">
                     <strong>Option 1:</strong> Click "Email Results" to open your email app with everything pre-filled. Just attach the file and send.<br>
                     <strong>Option 2:</strong> Download the file and email it to <strong><a href="mailto:draanashah@protonmail.com">draanashah@protonmail.com</a></strong> yourself.
                 </p>
             </div>
-        </div>
-        <div class="form-nav">
-            <a href="index.html" class="nav-btn nav-btn-back">← All questionnaires</a>
-            <a href="briefa_FINAL.html" class="nav-btn nav-btn-next">Next: Behaviour &amp; Daily Functioning →</a>
         </div>
     </div>
 
@@ -221,39 +202,7 @@
         // ====================
         // CONFIG
         // ====================
-        // Asymmetric encryption: only the clinic private key can decrypt the export.
-        const CLINIC_PUBLIC_KEY = "MIICIjANBgkqhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEAsPFiNGJeHftu2ODxG5uzupG6ZqdaxyKiOst5TOVOw53ZO4FjW1+8Voe2RHbP4wVfZGK50p20ubIE2DOaFc6piPCGZYti7nKAvYY/MwFocMv/6q1g3Bgqdg+xLWUmhN6AgxmayrQcfUlrY7sbqBXMg6xsFwe0hYvAT6kqoHspw/dTqQz/sRATGIVLxBJ5W12ASjNhUSXBapEp2lSHxK0Jr6Q1/1pn0bL5rsCxb2ulCSO9q8suuMfZV2sxmyisqfMJ5wAXLqzueyqjZ9+kLd54qiSZ6W8DAkfXDGlbzA1WeWmQXhCEeMqSNPfiqx1ILCGFZQN4jBzNkg09HeCxVcgr5AghyNQ9oA04KOLMRzon6Vdx9aTxJghGKdG6CE5Z7nb6tWwMZLiROJl3DI10Eg5eDoBRUEoFuYCXPbp0Yywfd0tkhSrLTQvSQszJMcYNHBKjwPfmQo/1RGcPRrios191ejLF9aqasJussQz7s3YlVs+Z/fijjlJK2U673Q0liH4369zqMpplFnfbY/e1cqANpMgBm0hlMGm3ABQxEAjN7b6dXR5RHK8ahPgWyu0qUyiiScpQO8Q6En5P8Xsd59pUCq46Iz9qx1VnxfwWUXcW/IIJs/xf0jiFD7J1gb1wcjFafJcXV5Y1zWQGy8cOOf7P+BM8i3NXR65zI7HemheMaX0CAwEAAQ==";
-        function _b64ToBuf(b64){var bin=atob(b64);var u=new Uint8Array(bin.length);for(var i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);return u.buffer;}
-        function _bufToB64(buf){var u=new Uint8Array(buf);var s="";for(var i=0;i<u.length;i++)s+=String.fromCharCode(u[i]);return btoa(s);}
-        async function encryptForClinician(plaintext){
-            var data=new TextEncoder().encode(plaintext);
-            var pubKey=await crypto.subtle.importKey("spki",_b64ToBuf(CLINIC_PUBLIC_KEY),{name:"RSA-OAEP",hash:"SHA-256"},false,["wrapKey"]);
-            var aesKey=await crypto.subtle.generateKey({name:"AES-GCM",length:256},true,["encrypt"]);
-            var iv=crypto.getRandomValues(new Uint8Array(12));
-            var ct=await crypto.subtle.encrypt({name:"AES-GCM",iv:iv},aesKey,data);
-            var wrapped=await crypto.subtle.wrapKey("raw",aesKey,pubKey,{name:"RSA-OAEP"});
-            var digest=await crypto.subtle.digest("SHA-256",data);
-            return JSON.stringify({v:3,alg:"RSA-OAEP-256+AES-256-GCM",iv:_bufToB64(iv),key:_bufToB64(wrapped),data:_bufToB64(ct),hash:_bufToB64(digest)});
-        }
-        const IDENTITY_KEY = 'adhd_patient_identity';
-
-        function saveIdentity() {
-            const name = document.getElementById('patientName').value;
-            const dob = document.getElementById('dob').value;
-            if (name || dob) localStorage.setItem(IDENTITY_KEY, JSON.stringify({patientName: name, dob: dob}));
-        }
-
-        function loadIdentity() {
-            const saved = localStorage.getItem(IDENTITY_KEY);
-            if (!saved) return;
-            try {
-                const id = JSON.parse(saved);
-                const nameEl = document.getElementById('patientName');
-                const dobEl = document.getElementById('dob');
-                if (id.patientName && nameEl && !nameEl.value) nameEl.value = id.patientName;
-                if (id.dob && dobEl && !dobEl.value) dobEl.value = id.dob;
-            } catch(e) {}
-        }
+        const CLINIC_MASTER_KEY = "Key123";
 
  // ASRS v1.1 Questions
         const partA = [
@@ -288,20 +237,19 @@
             questions.forEach(function(q) {
                 const div = document.createElement('div');
                 div.className = 'question-item';
-                div.id = 'qitem_q' + q.id;
-
+                
                 let html = '<div class="question-text">';
                 html += '<span class="question-number">' + part + q.id + '</span>';
                 html += q.text;
                 html += '</div>';
                 html += '<div class="radio-group">';
-
+                
                 const labels = ['Never', 'Rarely', 'Sometimes', 'Often', 'Very Often'];
                 for (let val = 0; val <= 4; val++) {
-                    html += '<label class="radio-option">';
-                    html += '<input type="radio" name="q' + q.id + '" value="' + val + '" id="q' + q.id + '_' + val + '" onchange="onQuestionChange(this)">';
-                    html += val + ' - ' + labels[val];
-                    html += '</label>';
+                    html += '<div class="radio-option">';
+                    html += '<input type="radio" name="q' + q.id + '" value="' + val + '" id="q' + q.id + '_' + val + '" onchange="updateProgress()">';
+                    html += '<label for="q' + q.id + '_' + val + '">' + val + ' - ' + labels[val] + '</label>';
+                    html += '</div>';
                 }
                 html += '</div>';
                 
@@ -315,54 +263,32 @@
         // ====================
         document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('completionDate').valueAsDate = new Date();
+            
             renderQuestions('partAQuestions', partA, 'A');
             renderQuestions('partBQuestions', partB, 'B');
             loadAutoSave();
-            loadIdentity();
-            document.getElementById('patientName').addEventListener('input', saveIdentity);
-            document.getElementById('dob').addEventListener('change', saveIdentity);
         });
-
-        let _hasValidated = false;
-
-        function onQuestionChange(radioEl) {
-            if (_hasValidated) {
-                const item = radioEl.closest('.question-item');
-                if (item) {
-                    item.classList.remove('skipped');
-                    item.classList.remove('just-answered');
-                    void item.offsetWidth;
-                    item.classList.add('just-answered');
-                }
-            }
-            updateProgress();
-        }
-
-        function highlightSkipped() {
-            for (let i = 1; i <= 18; i++) {
-                const item = document.getElementById('qitem_q' + i);
-                if (!item) continue;
-                item.classList.toggle('skipped', !document.querySelector('input[name="q' + i + '"]:checked'));
-            }
-        }
 
         function updateProgress() {
             autoSave();
             let completed = 0;
             const required = 18;
+            
             for (let i = 1; i <= 18; i++) {
                 if (document.querySelector('input[name="q' + i + '"]:checked')) completed++;
             }
+            
             const skipped = required - completed;
             const percent = Math.round((completed / required) * 100);
+            
             let progressText = completed + ' of ' + required + ' items answered';
-            if (skipped > 0) progressText += ' (' + skipped + ' skipped)';
+            if (skipped > 0) {
+                progressText += ' (' + skipped + ' skipped)';
+            }
             progressText += ' (' + percent + '%)';
+            
             document.getElementById('progressText').textContent = progressText;
             document.getElementById('progressFill').style.width = percent + '%';
-            const btm = document.getElementById('progressTextBottom');
-            if (btm) btm.textContent = progressText;
-            if (_hasValidated) highlightSkipped();
         }
 
         // ====================
@@ -376,6 +302,60 @@
             }
             return responses;
         }
+
+        // ====================
+        // SCORING
+        // ====================
+        function calculateScores(responses) {
+    let partASum = 0;   // Likert Sum (0-24)
+    let partBSum = 0;   // Likert Sum (0-48)
+    let partACount = 0; // Dichotomous Count (0-6)
+    let partBCount = 0; // Dichotomous Count (0-12)
+
+   for (let i = 0; i < 18; i++) {
+        const val = responses[i];
+
+        // Only process if not null/unanswered
+        if (val !== null) {
+
+            // Part A = indices 0–5
+            if (i < 6) {
+                partASum += val;
+                // Screening thresholds:
+                // Items 0–2 => threshold >=2,
+                // Items 3–5 => threshold >=3
+                const threshold = i < 3 ? 2 : 3;
+                if (val >= threshold) {
+                    partACount++;
+                }
+            }
+
+            // Part B = indices 6–17
+            else {
+                partBSum += val;
+                if (val >= 2) {
+                    partBCount++;
+                }
+ }
+        }
+    }
+
+    // NovoPsych Severity Classification (based on Part A Sum)
+    let classification = "Low";
+    if (partASum >= 18) classification = "Very High";
+    else if (partASum >= 14) classification = "High";
+    else if (partASum >= 11) classification = "Mild to Moderate";
+
+    return {
+        partASum,
+        partBSum,
+        totalScore: partASum + partBSum,
+        partACount,
+        partBCount,
+        classification,
+        screeningPositive: partACount >= 4
+    };
+}
 
 
         // ====================
@@ -406,17 +386,9 @@
             }
         }
 
-        function flashBadge() {
-            const b = document.getElementById('recordedBadge');
-            if (!b) return;
-            b.classList.remove('flashing');
-            void b.offsetWidth;
-            b.classList.add('flashing');
-        }
-
         function saveProgress() {
             localStorage.setItem('asrs_manual', JSON.stringify(collectData()));
-            flashBadge();
+            alert('Progress saved!');
         }
 
         function loadProgress() {
@@ -469,11 +441,11 @@
             }
             
             document.getElementById('validationErrors').classList.add('hidden');
-            _hasValidated = true;
-            highlightSkipped();
-
+            
+            const scores = calculateScores(data.responses);
+            
             const exportData = {
-                toolVersion: "4.0",
+                toolVersion: "3.0",
                 dataType: "ASRS",
                 patientName: data.patientName,
                 patientEmail: data.patientEmail,
@@ -485,16 +457,27 @@
                     skipped: skipped,
                     completionPercent: 100 - skippedPercent
                 },
-                responses: data.responses
+                responses: data.responses,
+             partASum: scores.partASum,
+    partBSum: scores.partBSum,
+    totalScore: scores.totalScore,
+    partACount: scores.partACount, 
+    partBCount: scores.partBCount,
+    screeningPositive: scores.screeningPositive,
+    classification: scores.classification, // NovoPsych Severity
+    norms: {
+        adhdGroupMean: 49.45,
+        communityMean: 32.48
+    }
             };
             
             document.getElementById('exportSection').classList.remove('hidden');
             document.getElementById('exportSection').scrollIntoView({behavior: 'smooth'});
-            flashBadge();
+            
             window.exportData = exportData;
         }
 
-        async function downloadJSON() {
+        function downloadJSON() {
            if (!window.exportData) {
         alert('Please complete the form first.');
         return;
@@ -502,16 +485,18 @@
     try {
         window.exportData.assessmentType = "ASRS";
         const dataStr = JSON.stringify(window.exportData);
-        const envelope = await encryptForClinician(dataStr);
+        const hash = CryptoJS.SHA256(dataStr).toString();
+        const ciphertext = CryptoJS.AES.encrypt(dataStr, CLINIC_MASTER_KEY).toString();
+        const envelope = JSON.stringify({v: 2, ciphertext: ciphertext, hash: hash});
         
             const blob = new Blob([envelope], {type: 'text/plain'});
             const url = URL.createObjectURL(blob);
             const link = document.createElement('a');
             link.href = url;
+            // Save as .enc so it's clear it's an encrypted file
         const fileName = 'ASRS_' + window.exportData.patientName.replace(/\s+/g, '_') + '.enc';
         link.download = fileName;
         link.click();
-            localStorage.setItem('asrs_downloaded', new Date().toISOString());
         URL.revokeObjectURL(url);
 
         alert('Secure file downloaded. Please email this .enc file to your clinician.');
@@ -525,15 +510,7 @@
             const subject = encodeURIComponent('ASRS Screening - ' + data.patientName + ' - ' + data.completionDate);
             const body = encodeURIComponent('Dear Dr. Shah,\n\nPlease find attached my completed ASRS screening questionnaire.\n\nPatient Name: ' + data.patientName + '\nDate of Birth: ' + data.dob + '\nCompletion Date: ' + data.completionDate + '\n\nInstructions:\n1. Download the results file using the "Download Results File" button\n2. Attach the downloaded enc file to this email\n3. Send\n\nThank you.\n\nBest regards,\n' + data.patientName);
             
-            downloadJSON();
-            document.getElementById('emailAttachReminder').style.display = 'block';
-            setTimeout(function() {
-            var a = document.createElement('a');
-            a.href = 'mailto:draanashah@protonmail.com?subject=' + subject + '&body=' + body;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            }, 800);
+            window.location.href = 'mailto:draanashah@protonmail.com?subject=' + subject + '&body=' + body;
         }
     </script>
 </body>

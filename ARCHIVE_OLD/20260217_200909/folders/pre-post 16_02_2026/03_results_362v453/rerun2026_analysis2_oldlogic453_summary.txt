@@ -1,0 +1,6 @@
+Responders (colleague matched): 362
+Non-responders (old logic, excludes all-3-contact-missing): 453
+Statistical framework: Age via Welch t-test; categorical via Chi-square/Fisher exact; confidence via Wilcoxon rank-sum.
+Variables with p<0.05:
+- GBV caseload per week (Chi-square test, p=0.0494)
+- State (Chi-square test (simulated p), p=<0.001)

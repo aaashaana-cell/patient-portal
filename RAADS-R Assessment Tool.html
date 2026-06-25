@@ -547,52 +547,5 @@
         document.getElementById('dob').addEventListener('change', saveIdentity);
     });
 </script>
-<script>
-/* PsychChart direct-submit */
-(function () {
-  var SCALE_ID = "raadsr";
-  var PORTAL   = "https://app.draanashah.com/public/assessment/submit";
-  var token    = new URLSearchParams(window.location.search).get("psychchart_token");
-  if (!token) return;
-  var injected = false;
-  function tryInject() {
-    if (injected) return;
-    var section = document.getElementById("exportSection");
-    if (!section || section.classList.contains("hidden")) return;
-    injected = true;
-    var btn = document.createElement("button");
-    btn.className = "btn-success";
-    btn.style.cssText = "margin-top:10px;font-size:15px;padding:13px 26px;background:#0ea5e9;";
-    btn.textContent = "\u{1F4E4} Send to Dr Shah";
-    var msg = document.createElement("p");
-    msg.style.cssText = "margin-top:8px;font-size:13px;min-height:1.2em;";
-    var grp = section.querySelector(".button-group");
-    if (grp) { grp.appendChild(btn); grp.parentNode.insertBefore(msg, grp.nextSibling); }
-    btn.addEventListener("click", async function () {
-      if (!window.exportData) { msg.textContent = "Complete the questionnaire first."; msg.style.color="#dc2626"; return; }
-      btn.disabled = true; msg.textContent = "Submitting…"; msg.style.color="";
-      try {
-        var r = await fetch(PORTAL, {
-          method:"POST", headers:{"Content-Type":"application/json"},
-          body: JSON.stringify({token:token, scale:SCALE_ID, responses:window.exportData})
-        });
-        var j = await r.json().catch(function(){return{};});
-        if (r.ok && j.ok) {
-          btn.textContent = "\u2713 Sent to Dr Shah";
-          btn.style.background = "#059669";
-          msg.textContent = "Sent. Download below as a backup if needed.";
-          msg.style.color = "#059669";
-        } else { throw new Error(j.error || "Error " + r.status); }
-      } catch(e) {
-        msg.textContent = "Could not submit: " + e.message + ". Use the download option instead.";
-        msg.style.color = "#dc2626"; btn.disabled = false;
-      }
-    });
-  }
-  var obs = new MutationObserver(tryInject);
-  obs.observe(document.body, {childList:true,subtree:true,attributes:true,attributeFilter:["class"]});
-  tryInject();
-})();
-</script>
 </body>
 </html>

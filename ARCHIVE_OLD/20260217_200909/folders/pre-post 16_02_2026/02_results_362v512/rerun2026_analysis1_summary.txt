@@ -1,0 +1,7 @@
+Responders (colleague matched): 362
+All non-responders: 512
+Any contact field missing among non-responders: 191 (37.3%)
+All contact fields missing among non-responders: 59 (11.5%)
+Any demographic field missing among non-responders: 121 (23.6%)
+All demographic fields missing among non-responders: 22 (4.3%)
+Any contact OR demographic field missing among non-responders: 240 (46.9%)

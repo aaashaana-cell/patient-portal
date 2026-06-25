@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow">
@@ -69,6 +70,96 @@
             .button-group button { width: 100%; }
         }
     </style>
+
+<style id="printable-plain-overrides">
+:root {
+  --primary: #111111 !important;
+  --primary-dark: #111111 !important;
+  --success: #111111 !important;
+  --bg: #ffffff !important;
+  --card-bg: #ffffff !important;
+  --border: #000000 !important;
+  --text: #000000 !important;
+  --text-secondary: #222222 !important;
+  --warning: #222222 !important;
+}
+body {
+  background: #ffffff !important;
+  color: #000000 !important;
+  font-family: Arial, Helvetica, sans-serif !important;
+  line-height: 1.4 !important;
+  padding: 8mm !important;
+}
+.container {
+  max-width: none !important;
+  margin: 0 !important;
+}
+.header,
+.card,
+.disclaimer-box,
+.warning-box,
+.info-box,
+.scale-labels {
+  background: #ffffff !important;
+  color: #000000 !important;
+  border: 1px solid #000000 !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+}
+.question-number,
+.part-badge {
+  background: #ffffff !important;
+  color: #000000 !important;
+  border: 1px solid #000000 !important;
+}
+.radio-option {
+  background: #ffffff !important;
+  border: 1px solid #000000 !important;
+  border-radius: 0 !important;
+  padding: 4px 8px !important;
+}
+input,
+select,
+textarea {
+  background: #ffffff !important;
+  color: #000000 !important;
+  border: 1px solid #000000 !important;
+}
+a {
+  color: #000000 !important;
+  text-decoration: none !important;
+}
+.submission-box,
+.progress-text,
+.progress-bar,
+.button-group,
+#exportSection,
+.validation-error,
+#__bs_notify__ {
+  display: none !important;
+}
+@media print {
+  body {
+    padding: 0 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .container {
+    padding: 0 !important;
+  }
+  .card,
+  .header,
+  .disclaimer-box,
+  .warning-box,
+  .info-box,
+  .scale-labels,
+  .question-item {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+}
+</style>
+
 </head>
 <body>
     <div class="container">
@@ -178,14 +269,12 @@
                 <p style="margin-top: 10px; color: var(--text-secondary); font-size: 14px;">
                     Your responses have been saved. Please send your results to the patient using one of the options below.
                 </p>
-                <p style="margin-top: 12px; font-size: 13px; color: #92400e; background: #fffbeb; border: 1px solid #fde68a; border-radius: 6px; padding: 10px 14px;">Your clinician will review these results and schedule the next step (a structured clinical interview) before any diagnostic conclusions can be reached.</p>
             </div>
 
             <div style="margin: 20px 0;">
                 <h3 style="font-size: 18px; margin-bottom: 15px;">Send Results to Patient:</h3>
                 <div class="button-group">
                     <button class="btn-primary" onclick="emailToPatient()" style="font-size: 16px; padding: 14px 28px;">✉️ Email Results</button>
-                    <div id="emailAttachReminder" style="display:none;margin-top:10px;font-size:13px;color:#92400e;background:#fffbeb;border:1px solid #fde68a;border-radius:6px;padding:10px 14px;">Your results file is downloading now. Once it appears in your Downloads folder, attach it to the email that just opened and send.</div>
                     <button class="btn-secondary" onclick="downloadJSON()" style="font-size: 16px; padding: 14px 28px;">⬇️ Download Results File</button>
                 </div>
                 <p style="margin-top: 15px; font-size: 13px; color: var(--text-secondary); padding: 12px; background: #f8fafc; border-radius: 6px;">
@@ -211,20 +300,7 @@
         // ====================
         // CONFIG
         // ====================
-        // Asymmetric encryption: only the clinic private key can decrypt the export.
-        const CLINIC_PUBLIC_KEY = "MIICIjANBgkqhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEAsPFiNGJeHftu2ODxG5uzupG6ZqdaxyKiOst5TOVOw53ZO4FjW1+8Voe2RHbP4wVfZGK50p20ubIE2DOaFc6piPCGZYti7nKAvYY/MwFocMv/6q1g3Bgqdg+xLWUmhN6AgxmayrQcfUlrY7sbqBXMg6xsFwe0hYvAT6kqoHspw/dTqQz/sRATGIVLxBJ5W12ASjNhUSXBapEp2lSHxK0Jr6Q1/1pn0bL5rsCxb2ulCSO9q8suuMfZV2sxmyisqfMJ5wAXLqzueyqjZ9+kLd54qiSZ6W8DAkfXDGlbzA1WeWmQXhCEeMqSNPfiqx1ILCGFZQN4jBzNkg09HeCxVcgr5AghyNQ9oA04KOLMRzon6Vdx9aTxJghGKdG6CE5Z7nb6tWwMZLiROJl3DI10Eg5eDoBRUEoFuYCXPbp0Yywfd0tkhSrLTQvSQszJMcYNHBKjwPfmQo/1RGcPRrios191ejLF9aqasJussQz7s3YlVs+Z/fijjlJK2U673Q0liH4369zqMpplFnfbY/e1cqANpMgBm0hlMGm3ABQxEAjN7b6dXR5RHK8ahPgWyu0qUyiiScpQO8Q6En5P8Xsd59pUCq46Iz9qx1VnxfwWUXcW/IIJs/xf0jiFD7J1gb1wcjFafJcXV5Y1zWQGy8cOOf7P+BM8i3NXR65zI7HemheMaX0CAwEAAQ==";
-        function _b64ToBuf(b64){var bin=atob(b64);var u=new Uint8Array(bin.length);for(var i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);return u.buffer;}
-        function _bufToB64(buf){var u=new Uint8Array(buf);var s="";for(var i=0;i<u.length;i++)s+=String.fromCharCode(u[i]);return btoa(s);}
-        async function encryptForClinician(plaintext){
-            var data=new TextEncoder().encode(plaintext);
-            var pubKey=await crypto.subtle.importKey("spki",_b64ToBuf(CLINIC_PUBLIC_KEY),{name:"RSA-OAEP",hash:"SHA-256"},false,["wrapKey"]);
-            var aesKey=await crypto.subtle.generateKey({name:"AES-GCM",length:256},true,["encrypt"]);
-            var iv=crypto.getRandomValues(new Uint8Array(12));
-            var ct=await crypto.subtle.encrypt({name:"AES-GCM",iv:iv},aesKey,data);
-            var wrapped=await crypto.subtle.wrapKey("raw",aesKey,pubKey,{name:"RSA-OAEP"});
-            var digest=await crypto.subtle.digest("SHA-256",data);
-            return JSON.stringify({v:3,alg:"RSA-OAEP-256+AES-256-GCM",iv:_bufToB64(iv),key:_bufToB64(wrapped),data:_bufToB64(ct),hash:_bufToB64(digest)});
-        }
+        const CLINIC_MASTER_KEY = "Key123";
         
         const items = [
             {num: 1, text: "Fails to give close attention to details or makes careless mistakes in their work"},
@@ -362,6 +438,20 @@
         }
 
         // ====================
+        // SCORING
+        // ====================
+        function calculateCounts(scores) {
+            let inattCount = 0, hyperCount = 0;
+            items.forEach(function(item, idx) {
+                if (scores[idx] !== null && scores[idx] >= 2) {
+                    if (idx % 2 === 0) inattCount++;
+                    else hyperCount++;
+                }
+            });
+            return {inattCount: inattCount, hyperCount: hyperCount};
+        }
+
+        // ====================
         // IMPORT/EXPORT
         // ====================
         function collectData() {
@@ -451,8 +541,18 @@
             
             document.getElementById('validationErrors').classList.add('hidden');
             
+            const counts = calculateCounts(data.symptoms);
+
+            const significantImpairments = data.impairment
+        .map((score, idx) => score >= 2 ? impairmentDomains[idx] : null)
+        .filter(domain => domain !== null);
+
+    const summaryText = significantImpairments.length > 0 
+        ? "Significant impact in: " + significantImpairments.join(", ") 
+        : "No significant impacts reported.";
+            
             const exportData = {
-                toolVersion: "4.0",
+                toolVersion: "3.0",
                 dataType: "CBS_INFORMANT",
                 patientName: data.patientName,
                 informantName: data.informantName,
@@ -465,7 +565,12 @@
                     completionPercent: 100 - skippedPercent
                 },
                 symptoms: data.symptoms,
-                impairment: data.impairment
+                impairment: data.impairment,
+                impairmentSummary: summaryText,
+                inattCount: counts.inattCount,
+                hyperCount: counts.hyperCount,
+                meetsDSM5Inatt: counts.inattCount >= 5,
+                meetsDSM5Hyper: counts.hyperCount >= 5
             };
             
             document.getElementById('exportSection').classList.remove('hidden');
@@ -476,7 +581,7 @@
 
       
 
-async function downloadJSON() {
+function downloadJSON() {
     if (!window.exportData) {
         alert('Please complete the form and click "Submit/Save" first.');
         return;
@@ -484,19 +589,24 @@ async function downloadJSON() {
 
     try {
         window.exportData.assessmentType = "CBS-Informant";
+        // 1. Convert data to string
         const dataStr = JSON.stringify(window.exportData);
+        const hash = CryptoJS.SHA256(dataStr).toString();
         
-        const envelope = await encryptForClinician(dataStr);
+        // 2. Encrypt the string
+        const ciphertext = CryptoJS.AES.encrypt(dataStr, CLINIC_MASTER_KEY).toString();
+        const envelope = JSON.stringify({v: 2, ciphertext: ciphertext, hash: hash});
         
+        // 3. Create blob and download
         const blob = new Blob([envelope], {type: 'text/plain'});
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
         
+        // Use .enc extension to signal it is encrypted
        const fileName = 'Behaviour_Informant_' + window.exportData.patientName.replace(/\s+/g, '_') + '.enc';
         link.download = fileName;
         link.click();
-            localStorage.setItem('cbs_informant_downloaded', new Date().toISOString());
         URL.revokeObjectURL(url);
         
         alert('Encrypted results downloaded successfully. Please forward this .enc file to your clinician.');
@@ -510,11 +620,8 @@ async function downloadJSON() {
             const data = window.exportData;
             const subject = encodeURIComponent('Behaviour Questionnaire - Informant Report for ' + data.patientName);
             const body = encodeURIComponent('Hello,\n\nI have completed the behaviour questionnaire you sent me.\n\nPatient: ' + data.patientName + '\nMy relationship: ' + data.relationship + '\nCompletion date: ' + data.completionDate + '\n\nInstructions:\n1. Download the results file using the "Download Results File" button\n2. Attach the downloaded .enc file to this email\n3. Send\n\nThank you.\n\nBest regards,\n' + data.informantName);
-            downloadJSON();
-            document.getElementById('emailAttachReminder').style.display = 'block';
-            setTimeout(function() {
-                window.location.href = 'mailto:draanashah@protonmail.com?subject=' + subject + '&body=' + body;
-            }, 800);
+            
+            window.location.href = 'mailto:draanashah@protonmail.com?subject=' + subject + '&body=' + body;
         }
 
         

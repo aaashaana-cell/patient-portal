@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="900" viewBox="0 0 1280 900">
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#334155"/></marker></defs>
+<rect x="390" y="40" width="500" height="110" rx="14" fill="#dbeafe" stroke="#274060" stroke-width="1.5"/>
+<text x="640.0" y="78" font-family="Inter,Segoe UI,Arial" font-size="20" font-weight="650" fill="#0f172a" text-anchor="middle">Overall pre-assessment dataset</text>
+<text x="640.0" y="114" font-family="Inter,Segoe UI,Arial" font-size="34" font-weight="800" fill="#0b3b7a" text-anchor="middle">n = 1085</text>
+<text x="640.0" y="138" font-family="Inter,Segoe UI,Arial" font-size="16" font-weight="500" fill="#334155" text-anchor="middle">Raw total entries</text>
+<rect x="110" y="230" width="470" height="130" rx="14" fill="#dcfce7" stroke="#274060" stroke-width="1.5"/>
+<text x="345.0" y="268" font-family="Inter,Segoe UI,Arial" font-size="20" font-weight="650" fill="#0f172a" text-anchor="middle">Matched entries</text>
+<text x="345.0" y="304" font-family="Inter,Segoe UI,Arial" font-size="34" font-weight="800" fill="#1d4ed8" text-anchor="middle">n = 362</text>
+<text x="345.0" y="328" font-family="Inter,Segoe UI,Arial" font-size="16" font-weight="500" fill="#334155" text-anchor="middle">Included in matched set</text>
+<rect x="700" y="230" width="470" height="130" rx="14" fill="#fee2e2" stroke="#274060" stroke-width="1.5"/>
+<text x="935.0" y="268" font-family="Inter,Segoe UI,Arial" font-size="20" font-weight="650" fill="#0f172a" text-anchor="middle">Unmatched entries (before cleanup)</text>
+<text x="935.0" y="304" font-family="Inter,Segoe UI,Arial" font-size="34" font-weight="800" fill="#b91c1c" text-anchor="middle">n = 512</text>
+<text x="935.0" y="328" font-family="Inter,Segoe UI,Arial" font-size="16" font-weight="500" fill="#334155" text-anchor="middle">Starting unmatched pool</text>
+<rect x="700" y="450" width="470" height="130" rx="14" fill="#ffedd5" stroke="#274060" stroke-width="1.5"/>
+<text x="935.0" y="488" font-family="Inter,Segoe UI,Arial" font-size="20" font-weight="650" fill="#0f172a" text-anchor="middle">Excluded from unmatched pool</text>
+<text x="935.0" y="524" font-family="Inter,Segoe UI,Arial" font-size="34" font-weight="800" fill="#9a3412" text-anchor="middle">n = 59</text>
+<text x="935.0" y="548" font-family="Inter,Segoe UI,Arial" font-size="16" font-weight="500" fill="#334155" text-anchor="middle">Duplicate / insufficient data</text>
+<rect x="390" y="670" width="500" height="130" rx="14" fill="#e0f2fe" stroke="#274060" stroke-width="1.5"/>
+<text x="640.0" y="708" font-family="Inter,Segoe UI,Arial" font-size="20" font-weight="650" fill="#0f172a" text-anchor="middle">Final unmatched entries</text>
+<text x="640.0" y="744" font-family="Inter,Segoe UI,Arial" font-size="34" font-weight="800" fill="#166534" text-anchor="middle">n = 453</text>
+<text x="640.0" y="768" font-family="Inter,Segoe UI,Arial" font-size="16" font-weight="500" fill="#334155" text-anchor="middle">Used for unmatched analysis</text>
+<line x1="640" y1="150" x2="345" y2="230" stroke="#334155" stroke-width="2.4" marker-end="url(#arrow)"/>
+<line x1="640" y1="150" x2="935" y2="230" stroke="#334155" stroke-width="2.4" marker-end="url(#arrow)"/>
+<line x1="935" y1="360" x2="935" y2="450" stroke="#334155" stroke-width="2.4" marker-end="url(#arrow)"/>
+<line x1="935" y1="580" x2="640" y2="670" stroke="#334155" stroke-width="2.4" marker-end="url(#arrow)"/>
+<line x1="935" y1="360" x2="640" y2="670" stroke="#334155" stroke-width="2.4" marker-end="url(#arrow)"/>
+<text x="640" y="625" font-family="Inter,Segoe UI,Arial" font-size="18" font-weight="700" fill="#14532d" text-anchor="middle">Final unmatched = 512 - 59 = 453</text>
+<text x="640" y="855" font-family="Inter,Segoe UI,Arial" font-size="15" font-weight="500" fill="#334155" text-anchor="middle">Derivation requested: 1085 total, 362 matched, 512 unmatched, 453 final unmatched after cleanup</text>
+</svg>
