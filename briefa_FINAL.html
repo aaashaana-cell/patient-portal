@@ -629,5 +629,34 @@
             }, 800);
         }
     </script>
+<script>
+/* Clear-my-data control: lets the patient wipe their saved answers and identity from this device */
+(function () {
+  var KEYS = ['briefa_autosave', 'briefa_manual', 'briefa_downloaded'];
+  var IDENTITY = 'adhd_patient_identity';   // null on forms that do not store name/DOB
+  function clearAll() {
+    var msg = IDENTITY
+      ? "This permanently removes your saved answers and your name and date of birth from this device. Make sure you have already downloaded your .enc file. Continue?"
+      : "This permanently removes your saved answers from this device. Make sure you have already downloaded your .enc file. Continue?";
+    if (!confirm(msg)) return;
+    KEYS.forEach(function (k) { try { localStorage.removeItem(k); } catch (e) {} });
+    if (IDENTITY) { try { localStorage.removeItem(IDENTITY); } catch (e) {} }
+    alert("Your answers have been cleared from this device.");
+    location.reload();
+  }
+  function inject() {
+    if (document.getElementById('clearMyData')) return;
+    var host = document.querySelector('#exportSection .button-group') || document.getElementById('exportSection') || document.body;
+    var b = document.createElement('button');
+    b.id = 'clearMyData';
+    b.type = 'button';
+    b.textContent = 'Clear my answers from this device';
+    b.style.cssText = 'display:block;margin:14px auto 0;padding:11px 22px;font-size:14px;font-weight:600;border:1px solid #c0403f;color:#c0403f;background:#fff;border-radius:8px;cursor:pointer;';
+    b.addEventListener('click', clearAll);
+    host.appendChild(b);
+  }
+  if (document.readyState !== 'loading') inject(); else document.addEventListener('DOMContentLoaded', inject);
+})();
+</script>
 </body>
 </html>
