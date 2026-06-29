@@ -508,7 +508,7 @@ async function downloadJSON() {
 
         function emailToPatient() {
             const data = window.exportData;
-            const subject = encodeURIComponent('Behaviour Questionnaire - Informant Report for ' + data.patientName);
+            const subject = encodeURIComponent('[Patient Assessment] Behaviour Questionnaire - Informant Report for ' + data.patientName);
             const body = encodeURIComponent('Hello,\n\nI have completed the behaviour questionnaire you sent me.\n\nPatient: ' + data.patientName + '\nMy relationship: ' + data.relationship + '\nCompletion date: ' + data.completionDate + '\n\nInstructions:\n1. Download the results file using the "Download Results File" button\n2. Attach the downloaded .enc file to this email\n3. Send\n\nThank you.\n\nBest regards,\n' + data.informantName);
             downloadJSON();
             document.getElementById('emailAttachReminder').style.display = 'block';

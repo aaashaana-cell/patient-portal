@@ -615,7 +615,7 @@
 
         function emailToClinician() {
             const data = window.exportData;
-            const subject = encodeURIComponent('BRIEF-A Questionnaire - ' + data.patientName + ' - ' + data.completionDate);
+            const subject = encodeURIComponent('[Patient Assessment] BRIEF-A Questionnaire - ' + data.patientName + ' - ' + data.completionDate);
             const body = encodeURIComponent('Dear Dr. Shah,\n\nPlease find attached my completed BRIEF-A questionnaire.\n\nPatient Name: ' + data.patientName + '\nAge: ' + data.age + '\nDate of Birth: ' + data.dob + '\nCompletion Date: ' + data.completionDate + '\n\nInstructions:\n1. Download the results file using the "Download Results File" button\n2. Attach the downloaded .enc file to this email\n3. Send\n\nThank you.\n\nBest regards,\n' + data.patientName);
             
             downloadJSON();

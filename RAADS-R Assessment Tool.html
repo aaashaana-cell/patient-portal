@@ -522,7 +522,7 @@
 
     function emailToClinician() {
         const data = window.exportData;
-        const subject = encodeURIComponent('RAADS-R Screening - ' + data.patientName + ' - ' + data.completionDate);
+        const subject = encodeURIComponent('[Patient Assessment] RAADS-R Screening - ' + data.patientName + ' - ' + data.completionDate);
         const body = encodeURIComponent(
             'Dear Dr. Shah,\n\nPlease find attached my completed RAADS-R questionnaire.\n\n' +
             'Patient Name: ' + data.patientName + '\nDate of Birth: ' + data.dob +
