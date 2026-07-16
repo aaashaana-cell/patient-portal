@@ -43,13 +43,16 @@
         .question-text { font-weight: 500; margin-bottom: 12px; color: var(--text); font-size: 15px; line-height: 1.5; }
         .question-number { display: inline-block; background: var(--primary); color: white; min-width: 28px; height: 28px; border-radius: 50%; text-align: center; line-height: 28px; margin-right: 10px; font-size: 14px; font-weight: 600; padding: 0 8px; }
         .radio-group { display: flex; gap: 12px; flex-wrap: wrap; }
-        .radio-option { display: flex; align-items: center; gap: 6px; padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px; cursor: pointer; transition: all 0.2s; }
+        .radio-option { display: flex; align-items: center; gap: 6px; min-height: 44px; padding: 10px 12px; border: 1px solid var(--border); border-radius: 6px; cursor: pointer; transition: all 0.2s; }
         .radio-option:hover { background: #eef2ff; border-color: var(--primary); }
-        .radio-option input[type="radio"] { width: 18px; height: 18px; cursor: pointer; }
-        .radio-option label { margin: 0; cursor: pointer; font-weight: normal; font-size: 14px; }
+        .radio-option:active { background: #e0e7ff; }
+        .radio-option input[type="radio"] { width: 20px; height: 20px; cursor: pointer; }
+        .radio-option span { margin: 0; cursor: pointer; font-weight: normal; font-size: 14px; }
+        @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; scroll-behavior: auto !important; } }
         .scale-labels { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin-bottom: 15px; padding: 12px; background: #eef2ff; border-radius: 6px; font-size: 13px; color: var(--text-secondary); font-weight: 500; }
         .button-group { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 24px; }
         button { padding: 12px 24px; border: none; border-radius: 6px; font-size: 15px; font-weight: 500; cursor: pointer; transition: all 0.2s; }
+        button:disabled { opacity: 0.5; cursor: not-allowed; }
         .btn-primary { background: var(--primary); color: white; }
         .btn-primary:hover { background: var(--primary-dark); }
         .btn-success { background: var(--success); color: white; }
@@ -95,12 +98,13 @@
     </div>
 
     <div class="submission-box">
-        <h3>📧 How to Submit Your Results</h3>
-        <p style="margin-bottom: 8px; font-size: 14px;">After completing this questionnaire, you'll be able to:</p>
+        <h3>How to Submit Your Results</h3>
+        <p style="margin-bottom: 8px; font-size: 14px;">After completing this questionnaire, sending your results takes two steps:</p>
         <ul>
-            <li><strong>Email directly to Dr. Shah</strong> - Click a button to open your email app with pre-filled details</li>
-            <li><strong>Download and send yourself</strong> - Download the results file and email it to: <strong><a href="mailto:draanashah@protonmail.com">draanashah@protonmail.com</a></strong></li>
+            <li><strong>Step 1: Download</strong> - Tap "Download results file" to save it to this device.</li>
+            <li><strong>Step 2: Email</strong> - Tap "Open email to Dr. Shah", attach the file you just downloaded, and send. Your email will not attach it for you.</li>
         </ul>
+        <p style="margin-top: 8px; font-size: 13px; color: var(--text-secondary);">If you prefer, you can email the file yourself to <strong><a href="mailto:draanashah@protonmail.com">draanashah@protonmail.com</a></strong>.</p>
     </div>
 
     <div class="disclaimer-box">
@@ -109,7 +113,7 @@
     </div>
 
     <div class="info-box">
-        <strong>Privacy:</strong> All data is processed locally on your device. Nothing is sent anywhere until you choose to download and share your results file with your clinician.
+        <strong>Privacy:</strong> All data is processed locally on your device. Nothing is sent anywhere until you choose to download and share your results file with your clinician. Your answers are also saved automatically on this device as you go, so you can close this page and come back later to finish.
     </div>
 
     <div class="info-box" style="background: #eff6ff; border-left: 4px solid #3b82f6;">
@@ -181,13 +185,18 @@
         <div style="margin: 20px 0;">
             <h3 style="font-size: 18px; margin-bottom: 15px;">Send Results to Dr. Shah:</h3>
             <div class="button-group">
-                <button class="btn-primary" onclick="emailToClinician()" style="font-size: 16px; padding: 14px 28px;">✉️ Email Results</button>
-                    <div id="emailAttachReminder" style="display:none;margin-top:10px;font-size:13px;color:#92400e;background:#fffbeb;border:1px solid #fde68a;border-radius:6px;padding:10px 14px;">Your results file is downloading now. Once it appears in your Downloads folder, attach it to the email that just opened and send.</div>
-                <button class="btn-secondary" onclick="downloadJSON()" style="font-size: 16px; padding: 14px 28px;">⬇️ Download Results File</button>
+                <button class="btn-primary" id="downloadBtn" onclick="downloadJSON()" style="font-size: 16px; padding: 14px 28px;">Step 1: Download results file</button>
+                <button class="btn-secondary" id="openEmailBtn" onclick="openEmail()" disabled style="font-size: 16px; padding: 14px 28px;">Step 2: Open email to Dr. Shah</button>
+            </div>
+            <div id="attachBanner" style="display:none;margin-top:16px;border:2px solid #d97706;background:#fffbeb;border-radius:12px;padding:16px 18px;">
+                <div style="font-size:17px;font-weight:700;color:#92400e;margin-bottom:8px;">Before you send: attach your file</div>
+                <p style="margin:0 0 12px;font-size:14px;color:#78350f;line-height:1.5;">Your email does <strong>not</strong> attach the file for you. Please attach the file below to your email, then send.</p>
+                <div style="font-size:13px;color:#78350f;margin-bottom:6px;">The file to attach (saved to this device just now):</div>
+                <code class="attach-fname" style="display:inline-block;background:#fff;border:1px solid #fcd34d;border-radius:6px;padding:8px 12px;font-size:14px;color:#92400e;word-break:break-all;"></code>
+                <p style="margin:12px 0 0;font-size:13px;color:#a16207;">If it saved as .bin or .txt instead of .enc, that is fine, your clinician can still open it.</p>
             </div>
             <p style="margin-top: 15px; font-size: 13px; color: var(--text-secondary); padding: 12px; background: #f8fafc; border-radius: 6px;">
-                <strong>Option 1:</strong> Click "Email Results" to open your email app with everything pre-filled. Just attach the file and send.<br>
-                <strong>Option 2:</strong> Download the file and email it to <strong><a href="mailto:draanashah@protonmail.com">draanashah@protonmail.com</a></strong> yourself.
+                <strong>How to send:</strong> First tap "Download results file". Then tap "Open email to Dr. Shah", attach the downloaded file shown above, and send. If you prefer, you can email the file to <strong><a href="mailto:draanashah@protonmail.com">draanashah@protonmail.com</a></strong> yourself.
             </p>
         </div>
     </div>
@@ -330,10 +339,10 @@
             html += '<div class="question-text"><span class="question-number">' + qNum + '</span>' + q.text + '</div>';
             html += '<div class="radio-group">';
             options.forEach(function(opt) {
-                html += '<div class="radio-option">';
+                html += '<label class="radio-option">';
                 html += '<input type="radio" name="q' + qNum + '" id="q' + qNum + '_' + opt.val + '" value="' + opt.val + '" onchange="onQuestionChange(this)">';
-                html += '<label for="q' + qNum + '_' + opt.val + '">' + opt.label + '</label>';
-                html += '</div>';
+                html += '<span>' + opt.label + '</span>';
+                html += '</label>';
             });
             html += '</div></div>';
         });
@@ -514,26 +523,36 @@
             link.click();
             localStorage.setItem('raadsr_downloaded', new Date().toISOString());
             URL.revokeObjectURL(url);
-            alert('Secure file downloaded. Please email this .enc file to your clinician.');
+            window.__lastFileName = fileName;
+            onDownloaded();
         } catch (e) {
             alert('Encryption error.');
         }
     }
 
-    function emailToClinician() {
+    function onDownloaded() {
+        var banner = document.getElementById('attachBanner');
+        if (banner) {
+            var chip = banner.querySelector('.attach-fname');
+            if (chip) chip.textContent = window.__lastFileName || 'your results file';
+            banner.style.display = 'block';
+            banner.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+        var eb = document.getElementById('openEmailBtn');
+        if (eb) eb.disabled = false;
+    }
+
+    function openEmail() {
         const data = window.exportData;
+        const fname = window.__lastFileName || 'your results file';
         const subject = encodeURIComponent('[Patient Assessment] RAADS-R Screening - ' + data.patientName + ' - ' + data.completionDate);
         const body = encodeURIComponent(
-            'Dear Dr. Shah,\n\nPlease find attached my completed RAADS-R questionnaire.\n\n' +
+            'Dear Dr. Shah,\n\nIMPORTANT: This email does not attach the file automatically. Please attach the file named "' + fname + '" (it was saved to this device) before sending.\n\n' +
             'Patient Name: ' + data.patientName + '\nDate of Birth: ' + data.dob +
             '\nCompletion Date: ' + data.completionDate +
-            '\n\nInstructions:\n1. Download the results file using the "Download Results File" button\n2. Attach the downloaded enc file to this email\n3. Send\n\nThank you.\n\nBest regards,\n' + data.patientName
+            '\n\nThank you.\n\nBest regards,\n' + data.patientName
         );
-        var a = document.createElement('a');
-        a.href = 'mailto:draanashah@protonmail.com?subject=' + subject + '&body=' + body;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
+        window.location.href = 'mailto:draanashah@protonmail.com?subject=' + subject + '&body=' + body;
     }
 
     // Init
