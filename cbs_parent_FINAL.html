@@ -321,7 +321,7 @@
             
             renderSymptoms();
             renderImpairment();
-            loadAutoSave();
+            offerRestore({ autosaveKey:'behaviour_parent_autosave', onResume:function(){ loadAutoSave(); } });
         });
 
         function updateProgress() {
@@ -382,6 +382,21 @@
 
         function autoSave() {
             localStorage.setItem('behaviour_parent_autosave', JSON.stringify(collectData()));
+        }
+
+        function offerRestore(cfg){
+            var hasSave=false;
+            try{ hasSave = !!localStorage.getItem(cfg.autosaveKey) || (cfg.identityKey && !!localStorage.getItem(cfg.identityKey)); }catch(e){}
+            if(!hasSave) return;
+            var when='';
+            try{ var o=JSON.parse(localStorage.getItem(cfg.autosaveKey)||'{}'); when=(o.completionDate||o.savedAt||o.date||''); }catch(e){}
+            var bar=document.createElement('div');
+            bar.style.cssText='margin:0 0 16px;border:2px solid #d97706;background:#fffbeb;border-radius:10px;padding:14px 16px;font-size:14px;color:#78350f;line-height:1.5;';
+            bar.innerHTML='<strong>Saved answers or details were found on this device'+(when?(' (from '+String(when).slice(0,10)+')'):'')+'.</strong><br>If you are returning to finish your own questionnaire, choose Resume. If you are a different person, or starting a new questionnaire, choose Start fresh so you begin with a blank form.<div style="margin-top:10px;display:flex;gap:10px;flex-wrap:wrap;"><button type="button" id="__resumeBtn" style="min-height:44px;padding:9px 16px;background:#2563eb;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:14px;font-weight:600;">Resume saved answers</button><button type="button" id="__freshBtn" style="min-height:44px;padding:9px 16px;background:#e2e8f0;color:#1e293b;border:none;border-radius:6px;cursor:pointer;font-size:14px;font-weight:600;">Start fresh</button></div>';
+            var host=document.querySelector('.container')||document.body;
+            host.insertBefore(bar, host.firstChild);
+            document.getElementById('__resumeBtn').addEventListener('click',function(){ if(cfg.onResume){ try{cfg.onResume();}catch(e){} } if(bar.parentNode) bar.parentNode.removeChild(bar); });
+            document.getElementById('__freshBtn').addEventListener('click',function(){ var keys=[cfg.autosaveKey, cfg.autosaveKey.replace('_autosave','_manual')]; if(cfg.identityKey) keys.push(cfg.identityKey); keys.forEach(function(k){ try{ localStorage.removeItem(k); }catch(e){} }); if(bar.parentNode) bar.parentNode.removeChild(bar); });
         }
 
         function loadAutoSave() {
