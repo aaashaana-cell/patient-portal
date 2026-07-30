@@ -44,6 +44,9 @@
         .question-number { display: inline-block; background: var(--primary); color: white; width: 28px; height: 28px; border-radius: 50%; text-align: center; line-height: 28px; margin-right: 10px; font-size: 14px; font-weight: 600; }
         .radio-group { display: flex; gap: 15px; flex-wrap: wrap; }
         .radio-option { display: flex; align-items: center; justify-content: center; gap: 6px; min-height: 44px; min-width: 44px; padding: 8px 12px; cursor: pointer; border-radius: 8px; transition: background 0.15s; }
+        .attest-option { display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 8px 12px; cursor: pointer; border: 1px solid var(--border, #e2e8f0); border-radius: 8px; margin-bottom: 8px; font-size: 14px; line-height: 1.45; }
+        .attest-option:hover { background: rgba(37,99,235,0.06); }
+        .attest-option input[type="radio"] { width: 20px; height: 20px; flex-shrink: 0; cursor: pointer; }
         .radio-option:hover { background: rgba(37,99,235,0.06); }
         .radio-option:active { background: rgba(37,99,235,0.12); }
         .radio-option input[type="radio"] { width: 20px; height: 20px; cursor: pointer; }
@@ -135,6 +138,18 @@
                     <label>Completion Date</label>
                     <input type="date" id="completionDate" readonly>
                 </div>
+                <div class="form-group">
+                    <label>Your email or phone (optional)</label>
+                    <input type="text" id="informantContact" placeholder="Optional">
+                    <small style="color: var(--text-secondary); font-size: 12px;">Only used if Dr Shah needs to clarify something with you directly. You do not have to provide this.</small>
+                </div>
+            </div>
+
+            <div class="form-group" style="margin-top: 18px;">
+                <label>How was this questionnaire completed? *</label>
+                <label class="attest-option"><input type="radio" name="completionMode" value="Completed independently by the named informant" onchange="updateProgress()"><span>I filled this in myself</span></label>
+                <label class="attest-option"><input type="radio" name="completionMode" value="Completed by the named informant with assistance reading or explaining the questions" onchange="updateProgress()"><span>I filled this in myself, with someone reading or explaining the questions to me</span></label>
+                <label class="attest-option"><input type="radio" name="completionMode" value="Entered by another person on the informant's behalf, based on the informant's answers" onchange="updateProgress()"><span>Someone else entered the answers for me, based on what I told them</span></label>
             </div>
         </div>
 
@@ -369,11 +384,18 @@
         // ====================
         // IMPORT/EXPORT
         // ====================
+        function getCompletionMode() {
+            const sel = document.querySelector('input[name="completionMode"]:checked');
+            return sel ? sel.value : '';
+        }
+
         function collectData() {
             return {
                 patientName: document.getElementById('patientName').value,
                 relationship: document.getElementById('relationship').value,
                 informantName: document.getElementById('informantName').value,
+                informantContact: document.getElementById('informantContact').value,
+                completionMode: getCompletionMode(),
                 completionDate: document.getElementById('completionDate').value,
                 symptoms: getScores(),
                 impairment: getImpairment()
@@ -427,6 +449,11 @@
         function loadData(data) {
             if (data.patientName) document.getElementById('patientName').value = data.patientName;
             if (data.relationship) document.getElementById('relationship').value = data.relationship;
+            if (data.informantContact) document.getElementById('informantContact').value = data.informantContact;
+            if (data.completionMode) {
+                const cm = document.querySelector('input[name="completionMode"][value="' + data.completionMode + '"]');
+                if (cm) cm.checked = true;
+            }
             if (data.informantName) document.getElementById('informantName').value = data.informantName;
             
             data.symptoms.forEach(function(val, idx) {
@@ -451,7 +478,8 @@
             
             if (!data.patientName) errors.push('Please enter patient name');
             if (!data.relationship) errors.push('Please enter your relationship');
-            
+            if (!data.completionMode) errors.push('Please indicate how this questionnaire was completed');
+
             if (errors.length > 0) {
                 const errorDiv = document.getElementById('validationErrors');
                 errorDiv.innerHTML = '<strong>Please complete:</strong><br>' + errors.join('<br>');
