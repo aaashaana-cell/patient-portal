@@ -515,34 +515,68 @@
             document.getElementById('exportSection').scrollIntoView({behavior: 'smooth'});
             flashBadge();
             window.exportData = exportData;
+            window.__envelopeBlob = null;
+            prepareEnvelope();
+        }
+
+        /*
+         * Encrypt as soon as the questionnaire is completed, not when Download is
+         * clicked. Safari only saves a file if the click that triggers it is still
+         * inside the user gesture, and an await beforehand breaks that chain.
+         */
+        async function prepareEnvelope() {
+            try {
+                if (!window.exportData) return;
+                window.exportData.assessmentType = "ASRS";
+                const envelope = await encryptForClinician(JSON.stringify(window.exportData));
+                window.__envelopeBlob = new Blob([envelope], { type: 'application/octet-stream' });
+            } catch (err) {
+                console.error(err);
+                window.__envelopeBlob = null;   // downloadJSON falls back to encrypting inline
+            }
         }
 
         async function downloadJSON() {
-           if (!window.exportData) {
-        alert('Please complete the form first.');
-        return;
-    }
-    try {
-        window.exportData.assessmentType = "ASRS";
-        const dataStr = JSON.stringify(window.exportData);
-        const envelope = await encryptForClinician(dataStr);
-        
-            const blob = new Blob([envelope], {type: 'text/plain'});
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-        const fileName = 'ASRS_' + window.exportData.patientName.replace(/\s+/g, '_') + '.enc';
-        link.download = fileName;
-        link.click();
-            localStorage.setItem('asrs_downloaded', new Date().toISOString());
-        URL.revokeObjectURL(url);
+            if (!window.exportData) {
+                alert('Please complete the form first.');
+                return;
+            }
+            try {
+                let blob = window.__envelopeBlob;
+                if (!blob) {
+                    window.exportData.assessmentType = "ASRS";
+                    const envelope = await encryptForClinician(JSON.stringify(window.exportData));
+                    blob = new Blob([envelope], { type: 'application/octet-stream' });
+                }
 
-        window.__lastFileName = fileName;
-        onDownloaded();
-    } catch (e) {
-        alert('Encryption error.');
-    }
-}
+                // Strip anything that is not filename-safe, so unusual names cannot
+                // produce a broken or path-like filename.
+                const safeName =
+                    String(window.exportData.patientName || '')
+                        .replace(/[^A-Za-z0-9]+/g, '_')
+                        .replace(/^_+|_+$/g, '') || 'patient';
+                const fileName = 'ASRS_' + safeName + '.enc';
+
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = fileName;
+                link.style.display = 'none';
+                // Safari ignores a click on an anchor that is not in the document.
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+
+                localStorage.setItem('asrs_downloaded', new Date().toISOString());
+                window.__lastFileName = fileName;
+                onDownloaded();
+                // Revoking straight away can cancel a download that is still starting.
+                setTimeout(function () { URL.revokeObjectURL(url); }, 60000);
+            } catch (err) {
+                console.error(err);
+                alert('Sorry, your results file could not be created. Please try again. If it still does not work, reply to Dr Shah by email and she will help.');
+            }
+        }
 
         function onDownloaded() {
             var banner = document.getElementById('attachBanner');
