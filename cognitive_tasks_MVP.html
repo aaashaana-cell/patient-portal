@@ -534,18 +534,28 @@
         runNextDigitTrial();
     }
 
-    // ── TASK 2 — CPT (25% targets, ISI jitter) ───────────────────────────────
+    // ── TASK 2 — CPT (40% targets, ISI jitter) ───────────────────────────────
+    // 40% rather than 25%: at 25% an 80-trial run yields only ~20 targets, which
+    // is too few to split into halves for a vigilance decrement. 40% gives ~32
+    // targets, about 16 a side, at no extra cost in time to the patient.
     function buildCptTrials() {
-        const out = [];
-        for (let i = 0; i < 80; i++) {
-            const target = Math.random() < 0.25;
-            out.push({
+        // Guaranteed 32 targets : 48 non-targets, then shuffled. Drawing each
+        // trial independently made the target count itself random (17 to 48 in
+        // testing), so a third of runs had too few targets to split into halves.
+        const flags = [];
+        for (let i = 0; i < 32; i++) flags.push(true);
+        for (let i = 0; i < 48; i++) flags.push(false);
+        for (let i = flags.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            const tmp = flags[i]; flags[i] = flags[j]; flags[j] = tmp;
+        }
+        return flags.map(function (target, i) {
+            return {
                 index: i + 1, target: target,
                 stimulus: target ? 'X' : LETTERS[Math.floor(Math.random() * LETTERS.length)],
                 responded: false, rt: null
-            });
-        }
-        return out;
+            };
+        });
     }
 
     function startCpt() {
