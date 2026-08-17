@@ -104,7 +104,7 @@
                 <li><strong>Step 1: Download</strong> - Tap "Download results file" to save it to this device.</li>
                 <li><strong>Step 2: Email</strong> - Tap "Open email to Dr. Shah", attach the file you just downloaded, and send. Your email will not attach it for you.</li>
             </ul>
-            <p style="margin-top: 8px; font-size: 13px; color: var(--text-secondary);">If you prefer, you can email the file yourself to <strong><a href="mailto:draanashah@protonmail.com">draanashah@protonmail.com</a></strong>.</p>
+            <p style="margin-top: 8px; font-size: 13px; color: var(--text-secondary);">If you prefer, you can email the file yourself to <strong><a href="mailto:contact@draanashah.com">contact@draanashah.com</a></strong>.</p>
         </div>
 
         <div class="disclaimer-box">
@@ -204,7 +204,7 @@
                     <p style="margin:12px 0 0;font-size:13px;color:#a16207;">If it saved as .bin or .txt instead of .enc, that is fine, your clinician can still open it.</p>
                 </div>
                 <p style="margin-top: 15px; font-size: 13px; color: var(--text-secondary); padding: 12px; background: #f8fafc; border-radius: 6px;">
-                    <strong>How to send:</strong> First tap "Download results file". Then tap "Open email to Dr. Shah", attach the downloaded file shown above, and send. If you prefer, you can email the file to <strong><a href="mailto:draanashah@protonmail.com">draanashah@protonmail.com</a></strong> yourself.
+                    <strong>How to send:</strong> First tap "Download results file". Then tap "Open email to Dr. Shah", attach the downloaded file shown above, and send. If you prefer, you can email the file to <strong><a href="mailto:contact@draanashah.com">contact@draanashah.com</a></strong> yourself.
                 </p>
             </div>
         </div>
@@ -690,7 +690,7 @@
             const fname = window.__lastFileName || 'your results file';
             const subject = encodeURIComponent('[Patient Assessment] BRIEF-A Questionnaire - ' + data.patientName + ' - ' + data.completionDate);
             const body = encodeURIComponent('Dear Dr. Shah,\n\nIMPORTANT: This email does not attach the file automatically. Please attach the file named "' + fname + '" (it was saved to this device) before sending.\n\nPatient Name: ' + data.patientName + '\nAge: ' + data.age + '\nDate of Birth: ' + data.dob + '\nCompletion Date: ' + data.completionDate + '\n\nThank you.\n\nBest regards,\n' + data.patientName);
-            window.location.href = 'mailto:draanashah@protonmail.com?subject=' + subject + '&body=' + body;
+            window.location.href = 'mailto:contact@draanashah.com?subject=' + subject + '&body=' + body;
         }
     </script>
 <script>

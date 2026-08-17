@@ -216,7 +216,7 @@
                 </div>
                 <p style="margin-top: 15px; font-size: 13px; color: var(--text-secondary); padding: 12px; background: #f8fafc; border-radius: 6px;">
                     <strong>How to send:</strong> First tap "Download results file". Then tap "Open email", enter your child's email address, attach the downloaded file shown above, and send it to them.<br><br>
-                    <em>Your child will then forward your responses to their clinician (Dr. Shah at <a href="mailto:draanashah@protonmail.com">draanashah@protonmail.com</a>).</em>
+                    <em>Your child will then forward your responses to their clinician (Dr. Shah at <a href="mailto:contact@draanashah.com">contact@draanashah.com</a>).</em>
                 </p>
             </div>
         </div>
@@ -602,7 +602,7 @@ async function downloadJSON() {
             const data = window.exportData;
             const fname = window.__lastFileName || 'your results file';
             const subject = encodeURIComponent('Behaviour questionnaire completed - please forward to Dr. Shah (' + data.patientName + ')');
-            const body = encodeURIComponent('Hello,\n\nI have completed the childhood behaviour questionnaire for your assessment. Please forward this email, with the attached file, to your clinician Dr. Shah at draanashah@protonmail.com.\n\nIMPORTANT: This email does not attach the file automatically. Please attach the file named "' + fname + '" (it was saved to this device) before sending.\n\nPatient: ' + data.patientName + '\nMy relationship: ' + data.relationship + '\nCompletion date: ' + data.completionDate + '\n\nThank you.\n\nBest regards,\n' + data.informantName);
+            const body = encodeURIComponent('Hello,\n\nI have completed the childhood behaviour questionnaire for your assessment. Please forward this email, with the attached file, to your clinician Dr. Shah at contact@draanashah.com.\n\nIMPORTANT: This email does not attach the file automatically. Please attach the file named "' + fname + '" (it was saved to this device) before sending.\n\nPatient: ' + data.patientName + '\nMy relationship: ' + data.relationship + '\nCompletion date: ' + data.completionDate + '\n\nThank you.\n\nBest regards,\n' + data.informantName);
             window.location.href = 'mailto:?subject=' + subject + '&body=' + body;
         }
     </script>
