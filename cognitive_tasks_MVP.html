@@ -177,7 +177,7 @@
         <!-- TASK 1: Digit Span -->
         <div class="task" id="digitTask">
             <h2><span class="task-num">1</span>Digit Span</h2>
-            <p>Digits will appear one at a time. You will do <strong>10 FORWARD trials first</strong> (type digits in the same order you saw them), then <strong>10 BACKWARD trials</strong> (type them in reverse order). A banner will appear clearly before the direction changes.</p>
+            <p>Digits will appear one at a time. The task runs in two halves, one <strong>FORWARD</strong> (type the digits in the same order you saw them) and one <strong>BACKWARD</strong> (type them in reverse order). A banner will appear clearly before the direction changes, and the on-screen label always tells you which direction you are on.</p>
             <div style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;padding:12px 16px;font-size:13px;color:#0c4a6e;margin:0 0 8px;line-height:1.8;">
               <strong>Examples</strong><br>
               <span style="display:inline-block;margin-top:4px;">
@@ -217,7 +217,7 @@
         <!-- TASK 3: Corsi -->
         <div class="task" id="corsiTask">
             <h2><span class="task-num">3</span>Corsi Block Task</h2>
-            <p>Watch the sequence in which the blocks are highlighted, then tap them in the same order. After 10 rounds, the direction switches: you will tap the sequence in reverse. A banner will appear on screen before the direction changes.</p>
+            <p>Watch the sequence in which the blocks are highlighted, then tap them back. The task runs in two halves, one <strong>FORWARD</strong> (tap in the same order) and one <strong>BACKWARD</strong> (tap in reverse order). A banner will appear on screen before the direction changes, and the on-screen label always tells you which direction you are on.</p>
             <div style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;padding:12px 16px;font-size:13px;color:#0c4a6e;margin:0 0 8px;line-height:1.8;">
               <strong>Examples</strong><br>
               <span style="display:inline-block;margin-top:4px;">
@@ -298,7 +298,7 @@
         digitSpan: {
             trials: [], index: 0, current: null,
             promptedAt: null, startedAt: null, endedAt: null,
-            earlyStop: false
+            earlyStop: false, modeOrder: null
         },
         cpt: {
             trials: [], index: 0, active: false,
@@ -308,7 +308,7 @@
         corsi: {
             trials: [], index: 0, current: null, response: [],
             sequenceEndedAt: null, startedAt: null, endedAt: null,
-            earlyStop: false
+            earlyStop: false, modeOrder: null
         },
         goNoGo: {
             trials: [], index: 0, active: false,
@@ -325,7 +325,13 @@
     // ── Task plans ───────────────────────────────────────────────────────────
     // Plans are generated fresh each time a task starts so resume/restart sessions
     // always get a new structure rather than reusing the same load-time plan.
-    const SPAN_PLAN_LENGTH = 20; // 2 modes × 5 spans (3–7) × 2 reps
+    const SPAN_MIN_LENGTH = 3;
+    const SPAN_MAX_LENGTH = 9;   // raised from 7: a ceiling of 7 censored high performers,
+                                 // so a reported span of 7 could not be distinguished from
+                                 // "7 or more". The Corsi grid has 9 blocks and sequences
+                                 // allow non-consecutive repeats, so 9 is reachable on both tasks.
+    const SPAN_REPS = 2;
+    const SPAN_PLAN_LENGTH = 2 * (SPAN_MAX_LENGTH - SPAN_MIN_LENGTH + 1) * SPAN_REPS; // 2 modes x 7 spans x 2 reps
     let digitPlan = null;
     let corsiPlan = null;
     const LETTERS = 'ABCDEFGHJKLMNPQRSTUVWYZ'.split(''); // X excluded — it is the CPT target
@@ -356,6 +362,15 @@
     }
 
     // ── Utility ──────────────────────────────────────────────────────────────
+    // Mode order is randomised per task per session and recorded in the export.
+    // Forward-first is the clinical convention, but running it first every time gives
+    // the backward trials the benefit of a full block of task familiarity, which
+    // inflates backward span relative to forward for every patient. Randomising
+    // removes the systematic bias; recording the order keeps each run interpretable.
+    function randomisedSpanModes() {
+        return Math.random() < 0.5 ? ['forward', 'backward'] : ['backward', 'forward'];
+    }
+
     function buildSpanPlan(modes, minLen, maxLen, reps) {
         const plan = [];
         modes.forEach(function(mode) {
@@ -434,7 +449,8 @@
 
     // ── TASK 1 — Digit Span ──────────────────────────────────────────────────
     function startDigitSpan() {
-        digitPlan = buildSpanPlan(['forward', 'backward'], 3, 7, 2);
+        state.digitSpan.modeOrder = randomisedSpanModes();
+        digitPlan = buildSpanPlan(state.digitSpan.modeOrder, SPAN_MIN_LENGTH, SPAN_MAX_LENGTH, SPAN_REPS);
         state.digitSpan.trials = [];
         state.digitSpan.index = 0;
         state.digitSpan.startedAt = new Date().toISOString();
@@ -616,7 +632,8 @@
     }
 
     function startCorsi() {
-        corsiPlan = buildSpanPlan(['forward', 'backward'], 3, 7, 2);
+        state.corsi.modeOrder = randomisedSpanModes();
+        corsiPlan = buildSpanPlan(state.corsi.modeOrder, SPAN_MIN_LENGTH, SPAN_MAX_LENGTH, SPAN_REPS);
         state.corsi.trials = [];
         state.corsi.index = 0;
         state.corsi.startedAt = new Date().toISOString();
@@ -954,16 +971,16 @@
         })();
 
         // Digit Span: perfect high span — first span-7 forward trial answered correctly
-        const firstDigit7Fwd = state.digitSpan.trials.find(function(t) {
-            return t.mode === 'forward' && t.length === 7;
+        const firstDigitMaxFwd = state.digitSpan.trials.find(function(t) {
+            return t.mode === 'forward' && t.length === SPAN_MAX_LENGTH;
         });
-        const digitPerfectHighSpanFlag = !!(firstDigit7Fwd && firstDigit7Fwd.correct);
+        const digitPerfectHighSpanFlag = !!(firstDigitMaxFwd && firstDigitMaxFwd.correct);
 
         // Corsi: perfect high span — first span-7 forward trial answered correctly
-        const firstCorsi7Fwd = state.corsi.trials.find(function(t) {
-            return t.mode === 'forward' && t.length === 7;
+        const firstCorsiMaxFwd = state.corsi.trials.find(function(t) {
+            return t.mode === 'forward' && t.length === SPAN_MAX_LENGTH;
         });
-        const corsiPerfectHighSpanFlag = !!(firstCorsi7Fwd && firstCorsi7Fwd.correct);
+        const corsiPerfectHighSpanFlag = !!(firstCorsiMaxFwd && firstCorsiMaxFwd.correct);
 
         // Completion time validity flags
         // CPT: 80 trials × min ~1.25s each (900ms stimulus + 350ms min ISI) ≈ 100s minimum
@@ -1022,6 +1039,71 @@
         };
     }
 
+    // ── Summaries ─────────────────────────────────────────────────────────────
+    // Every derived rate is emitted alongside the raw counts it came from. Reports
+    // written from this export previously had to reconstruct denominators by hand,
+    // which produced figures such as "go accuracy 97.6 per cent" with no trial count
+    // attached, and percentages quoted to a precision the task cannot support.
+    function summariseCpt(trials) {
+        const targets    = trials.filter(function(t) { return t.target; });
+        const nonTargets = trials.filter(function(t) { return !t.target; });
+        const hits        = targets.filter(function(t) { return t.responded; }).length;
+        const commissions = nonTargets.filter(function(t) { return t.responded; }).length;
+        const hitRts = targets.filter(function(t) { return t.responded && t.rt !== null; })
+                              .map(function(t) { return t.rt; });
+        const mid = Math.ceil(targets.length / 2);
+        const firstHalf  = targets.slice(0, mid);
+        const secondHalf = targets.slice(mid);
+        const fhHits = firstHalf.filter(function(t) { return t.responded; }).length;
+        const shHits = secondHalf.filter(function(t) { return t.responded; }).length;
+        const fhRate = pct(fhHits, firstHalf.length);
+        const shRate = pct(shHits, secondHalf.length);
+        const m = mean(hitRts), sd = sdCalc(hitRts);
+        return {
+            totalTrials:      trials.length,
+            targetTrials:     targets.length,
+            nonTargetTrials:  nonTargets.length,
+            hits:             hits,
+            omissions:        targets.length - hits,
+            commissions:      commissions,
+            hitRate:          pct(hits, targets.length),
+            commissionRate:   pct(commissions, nonTargets.length),
+            meanHitRt:        m  !== null ? roundTo(m, 0)  : null,
+            sdHitRt:          sd !== null ? roundTo(sd, 0) : null,
+            firstHalfTargets:  firstHalf.length,
+            firstHalfHits:     fhHits,
+            secondHalfTargets: secondHalf.length,
+            secondHalfHits:    shHits,
+            vigilanceDecrementPp: (fhRate !== null && shRate !== null) ? roundTo(fhRate - shRate, 1) : null
+        };
+    }
+
+    // Span score is the longest sequence length at which at least one of the two
+    // trials was correct. trialsByLength is emitted so the denominator behind that
+    // single number is visible, and atCeiling marks a score that is censored rather
+    // than measured.
+    function summariseSpan(trials, mode) {
+        const modeTrials = trials.filter(function(t) { return t.mode === mode; });
+        const byLength = {};
+        modeTrials.forEach(function(t) {
+            if (!byLength[t.length]) byLength[t.length] = { attempted: 0, correct: 0 };
+            byLength[t.length].attempted++;
+            if (t.correct) byLength[t.length].correct++;
+        });
+        let span = null;
+        Object.keys(byLength).forEach(function(len) {
+            const n = parseInt(len, 10);
+            if (byLength[len].correct > 0 && (span === null || n > span)) span = n;
+        });
+        return {
+            span: span,
+            atCeiling: span === SPAN_MAX_LENGTH,
+            maxLengthOffered: SPAN_MAX_LENGTH,
+            trialsAttempted: modeTrials.length,
+            trialsByLength: byLength
+        };
+    }
+
     // ── Payload ───────────────────────────────────────────────────────────────
     function collectPayload() {
         const flags = computeValidityFlags();
@@ -1045,10 +1127,14 @@
                     trials: state.digitSpan.trials,
                     completionTimeSeconds: computeSeconds(state.digitSpan.startedAt, state.digitSpan.endedAt),
                     earlyStoppingApplied: state.digitSpan.earlyStop,
-                    perfectHighSpanFlag: flags.digitPerfectHighSpanFlag
+                    perfectHighSpanFlag: flags.digitPerfectHighSpanFlag,
+                    modeOrder: state.digitSpan.modeOrder,
+                    forward:  summariseSpan(state.digitSpan.trials, 'forward'),
+                    backward: summariseSpan(state.digitSpan.trials, 'backward')
                 },
                 cpt: {
                     trials: state.cpt.trials,
+                    summary: summariseCpt(state.cpt.trials),
                     completionTimeSeconds: computeSeconds(state.cpt.startedAt, state.cpt.endedAt),
                     anticipatoryResponses: flags.cptAnticipatoryResponses,
                     disengagementFlag: flags.cptDisengagementFlag,
@@ -1058,7 +1144,10 @@
                     trials: state.corsi.trials,
                     completionTimeSeconds: computeSeconds(state.corsi.startedAt, state.corsi.endedAt),
                     earlyStoppingApplied: state.corsi.earlyStop,
-                    perfectHighSpanFlag: flags.corsiPerfectHighSpanFlag
+                    perfectHighSpanFlag: flags.corsiPerfectHighSpanFlag,
+                    modeOrder: state.corsi.modeOrder,
+                    forward:  summariseSpan(state.corsi.trials, 'forward'),
+                    backward: summariseSpan(state.corsi.trials, 'backward')
                 },
                 goNoGo: {
                     trials: state.goNoGo.trials,
