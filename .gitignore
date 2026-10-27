@@ -25,3 +25,4 @@ tmp/
 
 # Local archive only: never publish (removed from the site 27.10.2026)
 ARCHIVE_OLD/
+DOWNLOADS_ORGANIZER.md
