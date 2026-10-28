@@ -329,7 +329,7 @@
     const SPAN_MAX_LENGTH = 9;   // raised from 7: a ceiling of 7 censored high performers,
                                  // so a reported span of 7 could not be distinguished from
                                  // "7 or more". The Corsi grid has 9 blocks and sequences
-                                 // allow non-consecutive repeats, so 9 is reachable on both tasks.
+                                 // never repeat a tile, so 9 (every block once) is the ceiling.
     const SPAN_REPS = 2;
     const SPAN_PLAN_LENGTH = 2 * (SPAN_MAX_LENGTH - SPAN_MIN_LENGTH + 1) * SPAN_REPS; // 2 modes x 7 spans x 2 reps
     let digitPlan = null;
