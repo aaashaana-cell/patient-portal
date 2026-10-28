@@ -391,13 +391,16 @@
         return out;
     }
 
+    // Standard Corsi convention: no tile appears twice in a sequence. The response
+    // collector ignores a second tap on a tile already tapped, so sequences with a
+    // repeated tile could never be reproduced and were always scored incorrect.
     function randomCorsiSequence(length) {
-        const out = [];
-        while (out.length < length) {
-            const next = Math.floor(Math.random() * 9);
-            if (out[out.length - 1] !== next) out.push(next);
+        const tiles = [0, 1, 2, 3, 4, 5, 6, 7, 8];
+        for (let i = tiles.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            const tmp = tiles[i]; tiles[i] = tiles[j]; tiles[j] = tmp;
         }
-        return out;
+        return tiles.slice(0, Math.min(length, tiles.length));
     }
 
     function setText(id, text) { document.getElementById(id).textContent = text; }
